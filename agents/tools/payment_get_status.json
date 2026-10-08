@@ -1,0 +1,9 @@
+{
+  "name": "payment_get_status",
+  "description": "Protected. Check the latest payment request on this call. Waits up to 8 seconds for the caller to approve. Returns pending, approved (with txn_code), declined or expired, and what to do next.",
+  "timeout_secs": 15,
+  "params": {},
+  "required": [],
+  "no_interrupt": true,
+  "pre_speech": true
+}

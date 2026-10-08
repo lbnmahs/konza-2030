@@ -1,0 +1,36 @@
+{
+  "name": "id_report_loss",
+  "description": "Protected. Record the caller's confirmed loss declaration and block their old national ID card at once (ID-01). Only after reading back when and where it was lost and hearing a clear yes. Returns loss_ref and card_status.",
+  "params": {
+    "lost_days_ago": {
+      "type": "integer",
+      "description": "How many days ago it was lost: 0 today, 1 yesterday (jana), 2 the day before. Use this when the caller gives a relative day"
+    },
+    "lost_on": {
+      "type": "string",
+      "description": "Only if the caller gave a calendar date: YYYY-MM-DD"
+    },
+    "location_description": {
+      "type": "string",
+      "description": "Where it was lost, in a few of the caller's words"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "lost",
+        "stolen"
+      ],
+      "description": "stolen if the caller says it was stolen or is being misused"
+    },
+    "confirmation_id": {
+      "type": "string",
+      "description": "Only on country agents: leave empty the first time; after the caller says yes to the read-back, call again with the same arguments and the confirmation_id you were given."
+    }
+  },
+  "required": [
+    "location_description",
+    "kind"
+  ],
+  "no_interrupt": true,
+  "pre_speech": true
+}

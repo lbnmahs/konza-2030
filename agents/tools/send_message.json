@@ -1,0 +1,21 @@
+{
+  "name": "send_message",
+  "description": "Text the verified caller a summary of what was done on this call. The system writes the message itself from this call's records; you only choose the template. Use only after the caller agrees.",
+  "params": {
+    "template": {
+      "type": "string",
+      "description": "Template key for this service",
+      "enum": [
+        "s3_permit_issued_sw",
+        "id_replacement_ke_sw",
+        "k1_summary_sw",
+        "n2_summary_sw",
+        "passport_ke_sw"
+      ]
+    }
+  },
+  "required": [
+    "template"
+  ],
+  "no_interrupt": true
+}

@@ -1,0 +1,19 @@
+{
+  "name": "registry_book_slot",
+  "description": "Protected. Book the chosen office slot. Only after reading back office, date and time and hearing a clear yes. Refused until the rules allow it (fee paid, photo received). Two-step: the first call changes nothing; after a clear yes, call again with the same arguments and the confirmation_id.",
+  "params": {
+    "slot_id": {
+      "type": "string",
+      "description": "slot_id from registry_list_offices"
+    },
+    "confirmation_id": {
+      "type": "string",
+      "description": "Empty the first time; after the caller says yes, the confirmation_id you were given"
+    }
+  },
+  "required": [
+    "slot_id"
+  ],
+  "no_interrupt": true,
+  "pre_speech": true
+}

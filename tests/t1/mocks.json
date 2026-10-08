@@ -1,0 +1,1584 @@
+{
+  "_note": "T1 mock replies (fictional seed values). Each tool lists mocks in order; the first whose conditions match is used. `when` maps a parameter to a regex. Installed on the workspace tools by deno task t1; mocks only apply inside tests. K3: SIA mocks (service_open, rules_lookup by topic, two-step tools answer needs_confirmation until a confirmation_id is sent). K3 rerun: per-service service_open, rules topics and application_submit results by fields_json.",
+  "capability_enter": [
+    {
+      "result": {
+        "ok": true
+      }
+    }
+  ],
+  "identity_start_otp": [
+    {
+      "when": {
+        "id_number": ".+"
+      },
+      "result": {
+        "verification_id": "6b5f2027-0000-4000-8000-000000000001",
+        "phone_last3": "123",
+        "code_sent": true
+      }
+    }
+  ],
+  "identity_check_otp": [
+    {
+      "result": {
+        "verified": true
+      }
+    }
+  ],
+  "record_adjustment": [
+    {
+      "result": {
+        "recorded": true
+      }
+    }
+  ],
+  "create_case": [
+    {
+      "when": {
+        "type": "identity_concern"
+      },
+      "result": {
+        "case_created": true,
+        "officer_will_call_back": true,
+        "session_held": true,
+        "next": "Tell the caller calmly that, for safety, nothing more can be changed on this call and an officer will review what was done today and call the record holder. Do not say the earlier action was fine."
+      }
+    },
+    {
+      "result": {
+        "case_created": true,
+        "officer_will_call_back": true
+      }
+    }
+  ],
+  "send_message": [
+    {
+      "result": {
+        "sent": true,
+        "phone_last3": "123"
+      }
+    }
+  ],
+  "get_history": [
+    {
+      "result": {
+        "items": [],
+        "next": "Answer only what the caller asked."
+      }
+    }
+  ],
+  "permit_lookup": [
+    {
+      "result": {
+        "permit_id": "per_001",
+        "permit_no": "PWN-SBP-10492",
+        "category": "small_trader_market_stall",
+        "business_name": "Mama Aisha Mboga",
+        "market": "Soko Kuu Mjini",
+        "stall": "B-17",
+        "expires_spoken_sw": "Jumapili, tarehe kumi na moja Oktoba",
+        "status": "active",
+        "say": {
+          "references": {
+            "permit_no": {
+              "last4": "moja sifuri nne tisa",
+              "full": "P W N, S B P, moja sifuri nne, tisa mbili"
+            }
+          },
+          "rule": "Usisome kumbukumbu hizi bila kuombwa."
+        }
+      }
+    }
+  ],
+  "rules_calculate_renewal": [
+    {
+      "result": {
+        "permit_fee_kes": 3000,
+        "market_levy_kes": 500,
+        "total_kes": 3500,
+        "total_spoken_sw": "shilingi elfu tatu mia tano",
+        "rule_ids": [
+          "PN-01",
+          "PN-02"
+        ]
+      }
+    }
+  ],
+  "payment_request": [
+    {
+      "when": {
+        "deliver": "sms|call|pesa",
+        "confirmation_id": ".+"
+      },
+      "result": {
+        "payment_id": "6b5f2027-0000-4000-8000-0000000000p1",
+        "status": "pending",
+        "amount_kes": 7550,
+        "amount_spoken_sw": "shilingi elfu saba mia tano na hamsini",
+        "next": "Tell the caller a DEMO payment prompt is on its way with a 6-digit code. Ask them to say or text you the code to approve; doing nothing declines. Then call payment_confirm with the code."
+      }
+    },
+    {
+      "when": {
+        "confirmation_id": ".+"
+      },
+      "result": {
+        "payment_id": "pay-test",
+        "status": "pending",
+        "next": "Tell the caller to enter their PIN on the payment prompt and tell you when done. Then call payment_get_status."
+      }
+    },
+    {
+      "result": {
+        "needs_confirmation": true,
+        "confirmation_id": "c0000000-0000-4000-8000-000000000001",
+        "next": "Nothing has happened yet. Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, and ask for a clear yes. Only after the caller says yes, in their next turn, call payment_request again with the same arguments and this confirmation_id.",
+        "readback": {
+          "en": "Send a DEMO payment prompt for 7,550 shillings to Savanahlands Passport Services, Kenyan passport renewal, 34-page booklet. You approve it by telling me the 6-digit code; doing nothing declines it.",
+          "sw": "Kutuma ombi la malipo la DEMO la shilingi elfu saba mia tano na hamsini kwa Savanahlands Passport Services. Utaidhinisha kwa kuniambia namba ya siri yenye tarakimu sita; usipofanya chochote, malipo yatakataliwa.",
+          "items": [
+            {
+              "kind": "amount",
+              "value": 7550,
+              "spoken_en": "7,550 shillings",
+              "spoken_sw": "shilingi elfu saba mia tano na hamsini"
+            },
+            {
+              "kind": "name",
+              "value": "Savanahlands Passport Services",
+              "spoken_en": "Savanahlands Passport Services",
+              "spoken_sw": "Savanahlands Passport Services"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "payment_get_status": [
+    {
+      "result": {
+        "status": "approved",
+        "txn_code": "SIMLZNA5HT",
+        "amount_kes": 3500,
+        "say": {
+          "references": {
+            "txn_code": {
+              "last4": "A tano H T",
+              "full": "S I M, L Z N, A tano H, T"
+            }
+          },
+          "rule": "Usisome kumbukumbu hizi bila kuombwa."
+        },
+        "next": "Payment received."
+      }
+    }
+  ],
+  "permit_issue": [
+    {
+      "result": {
+        "issued": true,
+        "new_expiry_spoken_sw": "Jumapili, tarehe kumi Oktoba 2027",
+        "next": "Say the new expiry; the codes are in the SMS."
+      }
+    }
+  ],
+  "id_report_loss": [
+    {
+      "when": {
+        "confirmation_id": ".+"
+      },
+      "result": {
+        "loss_ref": "UN-LOSS-48213",
+        "card_status": "BLOCKED",
+        "card_last4": "2219",
+        "next": "Tell the caller the old card is blocked now, then explain the replacement with rules_id_replacement."
+      }
+    },
+    {
+      "result": {
+        "needs_confirmation": true,
+        "confirmation_id": "c0000000-0000-4000-8000-000000000003",
+        "next": "Nothing has happened yet. Read back card ending, day and place, ask a clear yes, then call again with this confirmation_id."
+      }
+    }
+  ],
+  "rules_id_replacement": [
+    {
+      "result": {
+        "fee_kes": 1000,
+        "fee_spoken_sw": "shilingi elfu moja",
+        "steps": [
+          {
+            "sw": "Lipa ada"
+          },
+          {
+            "sw": "Tuma picha mpya kwa link ya SMS"
+          },
+          {
+            "sw": "Alama za vidole ofisini"
+          }
+        ],
+        "rule_ids": [
+          "ID-02",
+          "ID-03",
+          "ID-04"
+        ]
+      }
+    }
+  ],
+  "id_create_replacement": [
+    {
+      "result": {
+        "application_ref": "UN-APP-30418",
+        "fee_kes": 1000,
+        "fee_spoken_sw": "shilingi elfu moja"
+      }
+    }
+  ],
+  "refund_request": [
+    {
+      "when": {
+        "confirmation_id": ".+"
+      },
+      "result": {
+        "status": "processed",
+        "refund_ref": "RF-204118",
+        "amount": 1000,
+        "currency": "KES",
+        "rule_id": "RF-04",
+        "reason": "Paid within 14 days and the service has not started.",
+        "next": "Tell the caller the refund is approved and on its way back to the account that paid. Offer the SMS summary."
+      }
+    },
+    {
+      "result": {
+        "needs_confirmation": true,
+        "confirmation_id": "c0000000-0000-4000-8000-000000000004",
+        "next": "Nothing has happened yet. Read back which payment will be refunded and why, ask for a clear yes, then call again with this confirmation_id."
+      }
+    }
+  ],
+  "create_upload_link": [
+    {
+      "result": {
+        "sent": true,
+        "phone_last3": "123",
+        "next": "Ask the caller to open the SMS link and upload, then check with get_upload_status."
+      }
+    }
+  ],
+  "get_upload_status": [
+    {
+      "result": {
+        "status": "received"
+      }
+    }
+  ],
+  "registry_list_offices": [
+    {
+      "result": {
+        "offices": [
+          {
+            "office": "Usajili Njema Mjini Office",
+            "slots": [
+              {
+                "slot_id": "un_slot_1",
+                "spoken_sw": "Ijumaa tarehe mbili Oktoba, saa tatu asubuhi"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "registry_book_slot": [
+    {
+      "result": {
+        "booked": true,
+        "booking_ref": "UN-BIO-55120",
+        "spoken_sw": "Ijumaa tarehe mbili Oktoba, saa tatu asubuhi"
+      }
+    }
+  ],
+  "health_get_member_status": [
+    {
+      "result": {
+        "member_no": "TN-88213",
+        "cover_active": false,
+        "last_paid_month_sw": "Julai",
+        "months_missed": 2
+      }
+    }
+  ],
+  "rules_contribution_due": [
+    {
+      "result": {
+        "amount_kes": 300,
+        "amount_spoken_sw": "shilingi mia tatu",
+        "cover_starts_spoken_sw": "Jumatano, tarehe thelathini Septemba"
+      }
+    }
+  ],
+  "health_record_contribution": [
+    {
+      "result": {
+        "recorded": true,
+        "cover_active": true
+      }
+    }
+  ],
+  "health_issue_cover_confirmation": [
+    {
+      "result": {
+        "sent": true,
+        "code": "ZDRXTV",
+        "say": {
+          "references": {
+            "code": {
+              "last4": "R X T V",
+              "full": "Z D R, X T V"
+            }
+          },
+          "rule": "Usisome kumbukumbu hizi bila kuombwa."
+        }
+      }
+    }
+  ],
+  "health_add_dependant": [
+    {
+      "result": {
+        "status": "pending",
+        "decision_by_spoken_sw": "Jumatatu, tarehe tano Oktoba"
+      }
+    }
+  ],
+  "disability_get_status": [
+    {
+      "result": {
+        "registered": true,
+        "exemption": null
+      }
+    }
+  ],
+  "rules_disability_exemption": [
+    {
+      "result": {
+        "monthly_limit_spoken_sw": "shilingi laki moja na elfu hamsini",
+        "documents": [
+          "disability_assessment",
+          "income_proof"
+        ],
+        "valid_years": 5
+      }
+    }
+  ],
+  "disability_submit_application": [
+    {
+      "when": {
+        "confirmation_id": ".+"
+      },
+      "result": {
+        "status": "awaiting vetting",
+        "application_ref": "WN-TX-71920"
+      }
+    },
+    {
+      "result": {
+        "needs_confirmation": true,
+        "confirmation_id": "c0000000-0000-4000-8000-000000000005",
+        "next": "Nothing has happened yet. Read back what will be submitted, ask a clear yes, then call again with this confirmation_id."
+      }
+    }
+  ],
+  "partner_list_options": [
+    {
+      "result": {
+        "partners": [
+          {
+            "partner_id": "njema_freight",
+            "name": "Njema Freight Ltd (payroll)",
+            "send_when": "on_approval"
+          },
+          {
+            "partner_id": "tembea_njema",
+            "name": "Tembea Njema Mobility Trust",
+            "send_when": "now"
+          }
+        ]
+      }
+    }
+  ],
+  "partner_notify": [
+    {
+      "result": {
+        "status": "recorded"
+      }
+    }
+  ],
+  "passport_quote": [
+    {
+      "result": {
+        "fees": [
+          {
+            "pages": 34,
+            "fee_kes": 7550,
+            "fee_spoken_sw": "shilingi elfu saba mia tano hamsini"
+          },
+          {
+            "pages": 50,
+            "fee_kes": 9550,
+            "fee_spoken_sw": "shilingi elfu tisa mia tano hamsini"
+          },
+          {
+            "pages": 66,
+            "fee_kes": 12050,
+            "fee_spoken_sw": "shilingi elfu kumi na mbili hamsini"
+          }
+        ],
+        "steps": [
+          "Apply on this call",
+          "Biometrics at a desk",
+          "Ready about 10 working days after biometrics (modelled)"
+        ],
+        "next": "Answer the question."
+      }
+    }
+  ],
+  "passport_status": [
+    {
+      "result": {
+        "passport_last4": "8273",
+        "pages": 34,
+        "expires_spoken_sw": "tarehe moja Machi 2027",
+        "renewal_open": true
+      }
+    }
+  ],
+  "passport_apply": [
+    {
+      "when": {
+        "confirmation_id": ".+"
+      },
+      "result": {
+        "application_ref": "NPS-APP-30418",
+        "fee_kes": 7550,
+        "fee_spoken_sw": "shilingi elfu saba mia tano hamsini",
+        "desk": "London"
+      }
+    },
+    {
+      "result": {
+        "needs_confirmation": true,
+        "confirmation_id": "c0000000-0000-4000-8000-000000000006",
+        "next": "Nothing has happened yet. Read back booklet, desk and fee, ask a clear yes, then call again with this confirmation_id."
+      }
+    }
+  ],
+  "calendar_email": [
+    {
+      "result": {
+        "sent": true,
+        "next": "Say the calendar file is on its way to the email on file."
+      }
+    }
+  ],
+  "service_open": [
+    {
+      "when": {
+        "service": "address_registration"
+      },
+      "result": {
+        "service": "srr.address_registration",
+        "title": "Address registration and resident card",
+        "steps": "Requirements need no personal details: rules_lookup topic requirements. Verify the resident. Paper handed in at Lango Square is already recorded: application_submit with fields_json {\"evidence\":\"desk\"}; read back, clear yes, then again with the confirmation_id. Say the decision and its reason and the review route. Offer delivery_book home or method collect at Lango Square.",
+        "rule_topics": [
+          "requirements"
+        ]
+      }
+    },
+    {
+      "when": {
+        "service": "child_registration"
+      },
+      "result": {
+        "service": "srr.child_registration",
+        "title": "Registering a child",
+        "steps": "Verify the parent. Record consent first (consent_record, scope registration). application_submit with on_behalf_of the child and fields_json {\"evidence\":\"desk\"}; read back, clear yes, then again with the confirmation_id. First names only.",
+        "rule_topics": [
+          "requirements"
+        ]
+      }
+    },
+    {
+      "when": {
+        "service": "contribution"
+      },
+      "result": {
+        "service": "sca.contribution",
+        "title": "Monthly health cover contribution",
+        "steps": "Minimum: rules_lookup topic minimum. Verify, then rules_lookup topic cover_status. To pay: application_submit with fields_json {\"amount_kes\":300,\"month\":\"2026-10\"} (two-step), then payment_request and payment_confirm.",
+        "rule_topics": [
+          "minimum",
+          "cover_status"
+        ]
+      }
+    },
+    {
+      "when": {
+        "service": "dependant"
+      },
+      "result": {
+        "service": "sca.dependant",
+        "title": "Adding a child to health cover",
+        "steps": "Verify the parent. Record consent first (consent_record, scope health_cover). application_submit with on_behalf_of the child and fields_json {\"evidence\":\"desk\"} (two-step). First names only.",
+        "rule_topics": [
+          "minimum"
+        ]
+      }
+    },
+    {
+      "when": {
+        "service": "business_registration"
+      },
+      "result": {
+        "service": "sco.business_registration",
+        "title": "Business registration with a tax number",
+        "steps": "Fees and a name check need no personal details: rules_lookup topic business_fees, topic name_check. Verify, then application_submit with fields_json {\"name\":...,\"type\":\"business_name\"} (two-step); the tax number comes with it. A government-sounding name goes to an officer: never say refused; offer to try a different name.",
+        "rule_topics": [
+          "business_fees",
+          "name_check"
+        ]
+      }
+    },
+    {
+      "when": {
+        "service": "trading_permit"
+      },
+      "result": {
+        "service": "sco.trading_permit",
+        "title": "Trading permit",
+        "steps": "Verify; application_submit with fields_json {\"business_ref\":...} (two-step); then pay.",
+        "rule_topics": [
+          "business_fees"
+        ]
+      }
+    },
+    {
+      "when": {
+        "service": "primary_place"
+      },
+      "result": {
+        "service": "siln.primary_place",
+        "title": "Primary school place",
+        "steps": "Places are free and go by catchment first, then distance, then space: rules_lookup topic eligibility; topic schools for the zone. Verify the parent; record consent (consent_record, scope school_application); application_submit with on_behalf_of the child and fields_json {\"preferred_school_id\":...} (two-step). If an officer must confirm an offer, say so and never say refused.",
+        "rule_topics": [
+          "eligibility",
+          "schools"
+        ]
+      }
+    },
+    {
+      "result": {
+        "service": "sps.passport_renewal",
+        "title": "Kenyan passport renewal",
+        "steps": "Fees and the renewal rules need no personal details: rules_lookup topic fees, topic renewal_rules. A returning caller: rules_lookup topic my_application gives their application and the fee still owed (owed_kes, the amount for payment_request). To renew: verify the caller, rules_lookup topic renewal, application_submit (two-step), payment_request and payment_confirm, appointment_book (biometrics), delivery_book (home or collect). Say each decision with its reason and the review route.\nOnce the fee is paid and biometrics are booked, delivery_book books home delivery or collection at the Konza Passport Desk (method collect).\nDelivery is handed only to the holder in person, with ID and a one-time code. Biometrics (PP-03): a working day (Monday to Friday, not a public holiday) within the next 10 working days, morning or afternoon; appointment_book checks the day.",
+        "rule_topics": [
+          "fees",
+          "renewal_rules",
+          "renewal",
+          "my_application",
+          "delivery"
+        ]
+      }
+    }
+  ],
+  "rules_lookup": [
+    {
+      "when": {
+        "topic": "my_application"
+      },
+      "result": {
+        "topic": "my_application",
+        "values": {
+          "has_application": true,
+          "ref": "SPS-4F2A9C1D",
+          "outcome": "granted",
+          "paid": false,
+          "owed_kes": 7550,
+          "biometrics": null,
+          "delivery": null
+        },
+        "rule_ids": [
+          "PP-03",
+          "PP-04"
+        ],
+        "reason_en": "Application SPS-4F2A9C1D: granted; fee not paid yet (KES 7550 owed); biometrics not booked; no delivery or collection booked."
+      }
+    },
+    {
+      "when": {
+        "topic": "renewal_rules"
+      },
+      "result": {
+        "topic": "renewal_rules",
+        "values": {
+          "opens_months_before_expiry": 12,
+          "full_or_damaged": true,
+          "pages_left_matter": false
+        },
+        "rule_ids": [
+          "PP-02"
+        ],
+        "reason_en": "A passport can be renewed within 12 months of its expiry date, after it has expired, or at any time if it is full or damaged. Otherwise the number of pages left does not matter."
+      }
+    },
+    {
+      "when": {
+        "topic": "business_fees"
+      },
+      "result": {
+        "topic": "business_fees",
+        "values": {
+          "business_name_kes": 950,
+          "company_kes": 10500,
+          "trading_permit_kes": 5000
+        },
+        "rule_ids": [
+          "BZ-01",
+          "BZ-02",
+          "BZ-03",
+          "BZ-04"
+        ],
+        "reason_en": "A business name is KES 950, a private limited company KES 10,500, each with a tax number at no extra cost; a trading permit is KES 5,000 a year."
+      }
+    },
+    {
+      "when": {
+        "topic": "minimum"
+      },
+      "result": {
+        "topic": "minimum",
+        "values": {
+          "minimum_kes": 300
+        },
+        "rule_ids": [
+          "SH-01",
+          "SH-02"
+        ],
+        "reason_en": "The minimum contribution is KES 300 a month; cover is active once this month's contribution has cleared."
+      }
+    },
+    {
+      "when": {
+        "topic": "schools"
+      },
+      "result": {
+        "topic": "schools",
+        "values": {
+          "zone": 3,
+          "schools": [
+            {
+              "id": "z3_primary",
+              "name": "Zone 3 Primary School",
+              "places_left": 0
+            },
+            {
+              "id": "z3_north",
+              "name": "Zone 3 North Primary School",
+              "places_left": 18
+            }
+          ]
+        },
+        "rule_ids": [
+          "ED-03"
+        ],
+        "reason_en": "Schools in zone 3, with places left. Places go to children in the zone first; for a school outside the zone or one that is full, an officer confirms an offer, and any decision can be reviewed."
+      }
+    },
+    {
+      "when": {
+        "topic": "eligibility"
+      },
+      "result": {
+        "topic": "eligibility",
+        "values": {
+          "free": true,
+          "ages": [
+            5,
+            13
+          ]
+        },
+        "rule_ids": [
+          "ED-01",
+          "ED-02",
+          "ED-06"
+        ],
+        "reason_en": "Public primary places are free for children aged 5 to 13."
+      }
+    },
+    {
+      "when": {
+        "topic": "fees"
+      },
+      "result": {
+        "topic": "fees",
+        "values": {
+          "fees_kes": {
+            "34": 7550,
+            "50": 9550,
+            "66": 12050
+          }
+        },
+        "rule_ids": [
+          "PP-01"
+        ],
+        "reason_en": "Fees by booklet: 34 pages KES 7,550, 50 pages KES 9,550, 66 pages KES 12,050."
+      }
+    },
+    {
+      "when": {
+        "topic": "renewal"
+      },
+      "result": {
+        "topic": "renewal",
+        "values": {
+          "has_passport": true,
+          "open": true,
+          "expires": "2027-03-05",
+          "pages": 34
+        },
+        "rule_ids": [
+          "PP-02"
+        ],
+        "reason_en": "Renewal is open now for this passport (it expires on 2027-03-05): it expires within 12 months.",
+        "say": "Say whether renewal is open exactly as reason_en says. Never compare dates yourself."
+      }
+    },
+    {
+      "when": {
+        "topic": "cover_status"
+      },
+      "result": {
+        "topic": "cover_status",
+        "values": {
+          "active": false,
+          "month": "2026-10"
+        },
+        "rule_ids": [
+          "SH-01"
+        ],
+        "reason_en": "Cover is not active yet: this month's contribution has not cleared."
+      }
+    },
+    {
+      "when": {
+        "topic": "name_check"
+      },
+      "result": {
+        "topic": "name_check",
+        "values": {
+          "available": true,
+          "reserved": false,
+          "taken": false
+        },
+        "rule_ids": [
+          "BZ-05"
+        ],
+        "reason_en": "That name looks free."
+      }
+    },
+    {
+      "when": {
+        "topic": "delivery"
+      },
+      "result": {
+        "topic": "delivery",
+        "values": {
+          "fee_kes": 200,
+          "windows": [
+            "morning",
+            "afternoon"
+          ],
+          "holder_only": true
+        },
+        "rule_ids": [
+          "AD-03",
+          "AD-04",
+          "AD-06"
+        ],
+        "reason_en": "Delivery is the next working day, morning or afternoon, for KES 200; a passport is handed only to its holder, who shows ID and gives a one-time code. Collection at the desk is free."
+      }
+    },
+    {
+      "result": {
+        "topic": "requirements",
+        "values": {
+          "free": true
+        },
+        "rule_ids": [
+          "AR-01",
+          "AR-02",
+          "AR-03",
+          "DK-01"
+        ],
+        "reason_en": "Registering is free. An address needs a tenancy agreement or an employer letter; paper can be handed in at Lango Square."
+      }
+    }
+  ],
+  "application_submit": [
+    {
+      "when": {
+        "fields_json": "Konza|Government|Authority|Technopolis",
+        "confirmation_id": ".+"
+      },
+      "result": {
+        "ref": "SCO-7B1C2D3E",
+        "application_id": "6b5f2027-0000-4000-8000-0000000000a5",
+        "decision_id": "6b5f2027-0000-4000-8000-0000000000d5",
+        "outcome": "pending_officer",
+        "decided_by": null,
+        "reason": "The name suggests a government body, so an officer will decide on it.",
+        "next": null,
+        "review": {
+          "panel": "Aminia Review Panel",
+          "ask_by": "2026-11-14",
+          "free": true,
+          "answer_within_working_days": 10
+        },
+        "say": "Say an officer will decide, why, and when. Do not guess the outcome."
+      }
+    },
+    {
+      "when": {
+        "fields_json": "Konza|Government|Authority|Technopolis"
+      },
+      "result": {
+        "needs_confirmation": true,
+        "confirmation_id": "6b5f2027-0000-4000-8000-0000000000c2",
+        "summary_en": "Register \"Konza Government Solar\" as a business name with a tax number, fee 950 shillings.",
+        "next": "Nothing has happened yet. Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, then ask for a clear yes. Only after the yes, in their next turn, call application_submit again with the same arguments and this confirmation_id.",
+        "readback": {
+          "en": "Register \"Konza Government Solar\" as a business name with a tax number, fee 950 shillings.",
+          "sw": "Kusajili \"Konza Government Solar\" kama jina la biashara pamoja na namba ya kodi, ada shilingi mia tisa na hamsini.",
+          "items": [
+            {
+              "kind": "name",
+              "value": "Konza Government Solar",
+              "spoken_en": "Konza Government Solar",
+              "spoken_sw": "Konza Government Solar"
+            },
+            {
+              "kind": "amount",
+              "value": 950,
+              "spoken_en": "950 shillings",
+              "spoken_sw": "shilingi mia tisa na hamsini"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "when": {
+        "fields_json": "business_ref",
+        "confirmation_id": ".+"
+      },
+      "result": {
+        "ref": "SCO-8C2D3E4F",
+        "application_id": "6b5f2027-0000-4000-8000-0000000000a6",
+        "decision_id": "6b5f2027-0000-4000-8000-0000000000d6",
+        "outcome": "granted",
+        "decided_by": "rule",
+        "reason": "The trading permit is granted: the business is registered to this resident.",
+        "next": "Pay KES 5000; the permit runs for a year.",
+        "review": {
+          "panel": "Aminia Review Panel",
+          "ask_by": "2026-11-14",
+          "free": true,
+          "answer_within_working_days": 10
+        },
+        "say": "Say what was decided, the reason, what happens next, and that they can ask for a review."
+      }
+    },
+    {
+      "when": {
+        "fields_json": "business_ref"
+      },
+      "result": {
+        "needs_confirmation": true,
+        "confirmation_id": "6b5f2027-0000-4000-8000-0000000000c2",
+        "summary_en": "Apply for a trading permit for the business you registered, 5,000 shillings a year.",
+        "next": "Nothing has happened yet. Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, then ask for a clear yes. Only after the yes, in their next turn, call application_submit again with the same arguments and this confirmation_id.",
+        "readback": {
+          "en": "Apply for a trading permit for the business you registered, 5,000 shillings a year.",
+          "sw": "Kuomba kibali cha biashara kwa biashara uliyosajili, shilingi elfu tano kwa mwaka.",
+          "items": [
+            {
+              "kind": "amount",
+              "value": 5000,
+              "spoken_en": "5,000 shillings",
+              "spoken_sw": "shilingi elfu tano"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "when": {
+        "fields_json": "\"name\"",
+        "confirmation_id": ".+"
+      },
+      "result": {
+        "ref": "SCO-4A5B6C7D",
+        "application_id": "6b5f2027-0000-4000-8000-0000000000a4",
+        "decision_id": "6b5f2027-0000-4000-8000-0000000000d4",
+        "outcome": "granted",
+        "decided_by": "rule",
+        "reason": "The business name is registered: the name is free and does not suggest a government body.",
+        "next": "Pay KES 950. The tax number QK-T-10293847 is issued with the registration.",
+        "review": {
+          "panel": "Aminia Review Panel",
+          "ask_by": "2026-11-14",
+          "free": true,
+          "answer_within_working_days": 10
+        },
+        "say": "Say what was decided, the reason, what happens next, and that they can ask for a review."
+      }
+    },
+    {
+      "when": {
+        "fields_json": "\"name\""
+      },
+      "result": {
+        "needs_confirmation": true,
+        "confirmation_id": "6b5f2027-0000-4000-8000-0000000000c2",
+        "summary_en": "Register \"Njoroge Solar Repairs\" as a business name with a tax number, fee 950 shillings.",
+        "next": "Nothing has happened yet. Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, then ask for a clear yes. Only after the yes, in their next turn, call application_submit again with the same arguments and this confirmation_id.",
+        "readback": {
+          "en": "Register \"Njoroge Solar Repairs\" as a business name with a tax number, fee 950 shillings.",
+          "sw": "Kusajili \"Njoroge Solar Repairs\" kama jina la biashara pamoja na namba ya kodi, ada shilingi mia tisa na hamsini.",
+          "items": [
+            {
+              "kind": "name",
+              "value": "Njoroge Solar Repairs",
+              "spoken_en": "Njoroge Solar Repairs",
+              "spoken_sw": "Njoroge Solar Repairs"
+            },
+            {
+              "kind": "amount",
+              "value": 950,
+              "spoken_en": "950 shillings",
+              "spoken_sw": "shilingi mia tisa na hamsini"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "when": {
+        "fields_json": "amount_kes",
+        "confirmation_id": ".+"
+      },
+      "result": {
+        "ref": "SCA-1D2E3F4A",
+        "application_id": "6b5f2027-0000-4000-8000-0000000000a7",
+        "decision_id": "6b5f2027-0000-4000-8000-0000000000d7",
+        "outcome": "granted",
+        "decided_by": "rule",
+        "reason": "The contribution is accepted: KES 300 is at least the KES 300 minimum.",
+        "next": "Pay KES 300; cover is active once it has cleared.",
+        "review": {
+          "panel": "Aminia Review Panel",
+          "ask_by": "2026-11-14",
+          "free": true,
+          "answer_within_working_days": 10
+        },
+        "say": "Say what was decided, the reason, what happens next, and that they can ask for a review."
+      }
+    },
+    {
+      "when": {
+        "fields_json": "amount_kes"
+      },
+      "result": {
+        "needs_confirmation": true,
+        "confirmation_id": "6b5f2027-0000-4000-8000-0000000000c2",
+        "summary_en": "Pay the health cover contribution of 300 shillings for October 2026.",
+        "next": "Nothing has happened yet. Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, then ask for a clear yes. Only after the yes, in their next turn, call application_submit again with the same arguments and this confirmation_id.",
+        "readback": {
+          "en": "Pay the health cover contribution of 300 shillings for October 2026.",
+          "sw": "Kulipa mchango wa bima ya afya wa shilingi mia tatu kwa Oktoba mwaka elfu mbili na ishirini na sita.",
+          "items": [
+            {
+              "kind": "amount",
+              "value": 300,
+              "spoken_en": "300 shillings",
+              "spoken_sw": "shilingi mia tatu"
+            },
+            {
+              "kind": "date",
+              "value": "2026-10",
+              "spoken_en": "October 2026",
+              "spoken_sw": "Oktoba mwaka elfu mbili na ishirini na sita"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "when": {
+        "fields_json": "preferred_school_id",
+        "confirmation_id": ".+"
+      },
+      "result": {
+        "ref": "SILN-5E6F7A8B",
+        "application_id": "6b5f2027-0000-4000-8000-0000000000a8",
+        "decision_id": "6b5f2027-0000-4000-8000-0000000000d8",
+        "outcome": "pending_officer",
+        "decided_by": null,
+        "reason": "The preferred school is full, so an officer will confirm an offer (proposed: Zone 3 North Primary School) within 5 working days.",
+        "next": null,
+        "review": {
+          "panel": "Aminia Review Panel",
+          "ask_by": "2026-11-14",
+          "free": true,
+          "answer_within_working_days": 10
+        },
+        "say": "Say an officer will decide, why, and when. Do not guess the outcome."
+      }
+    },
+    {
+      "when": {
+        "fields_json": "preferred_school_id"
+      },
+      "result": {
+        "needs_confirmation": true,
+        "confirmation_id": "6b5f2027-0000-4000-8000-0000000000c2",
+        "summary_en": "Apply for a primary school place for Imani at school z3_primary.",
+        "next": "Nothing has happened yet. Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, then ask for a clear yes. Only after the yes, in their next turn, call application_submit again with the same arguments and this confirmation_id.",
+        "readback": {
+          "en": "Apply for a primary school place for Imani at school z3_primary.",
+          "sw": "Kuomba nafasi ya shule ya msingi kwa Imani katika shule z3_primary.",
+          "items": [
+            {
+              "kind": "name",
+              "value": "Imani",
+              "spoken_en": "Imani",
+              "spoken_sw": "Imani"
+            },
+            {
+              "kind": "place",
+              "value": "z3_primary",
+              "spoken_en": "z3_primary",
+              "spoken_sw": "z3_primary"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "when": {
+        "fields_json": "evidence",
+        "on_behalf_of": ".+",
+        "confirmation_id": ".+"
+      },
+      "result": {
+        "ref": "SRR-2B3C4D5E",
+        "application_id": "6b5f2027-0000-4000-8000-0000000000a9",
+        "decision_id": "6b5f2027-0000-4000-8000-0000000000d9",
+        "outcome": "granted",
+        "decided_by": "rule",
+        "reason": "The request for the child is granted: the parent is on record and the birth certificate checks out.",
+        "next": "The child's card or cover is confirmed by SMS.",
+        "review": {
+          "panel": "Aminia Review Panel",
+          "ask_by": "2026-11-14",
+          "free": true,
+          "answer_within_working_days": 10
+        },
+        "say": "Say what was decided, the reason, what happens next, and that they can ask for a review."
+      }
+    },
+    {
+      "when": {
+        "fields_json": "evidence",
+        "on_behalf_of": ".+"
+      },
+      "result": {
+        "needs_confirmation": true,
+        "confirmation_id": "6b5f2027-0000-4000-8000-0000000000c2",
+        "summary_en": "Register Tumaini as a resident with the birth certificate you gave.",
+        "next": "Nothing has happened yet. Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, then ask for a clear yes. Only after the yes, in their next turn, call application_submit again with the same arguments and this confirmation_id.",
+        "readback": {
+          "en": "Register Tumaini as a resident with the birth certificate you gave.",
+          "sw": "Kumsajili Tumaini kama mkazi kwa cheti cha kuzaliwa ulichotoa.",
+          "items": [
+            {
+              "kind": "name",
+              "value": "Tumaini",
+              "spoken_en": "Tumaini",
+              "spoken_sw": "Tumaini"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "when": {
+        "fields_json": "evidence",
+        "confirmation_id": ".+"
+      },
+      "result": {
+        "ref": "SRR-6F7A8B9C",
+        "application_id": "6b5f2027-0000-4000-8000-0000000000a10",
+        "decision_id": "6b5f2027-0000-4000-8000-0000000000d10",
+        "outcome": "granted",
+        "decided_by": "rule",
+        "reason": "The address is registered: the document checks out for this resident.",
+        "next": "Your resident card can be delivered home or collected free at Lango Square.",
+        "review": {
+          "panel": "Aminia Review Panel",
+          "ask_by": "2026-11-14",
+          "free": true,
+          "answer_within_working_days": 10
+        },
+        "say": "Say what was decided, the reason, what happens next, and that they can ask for a review."
+      }
+    },
+    {
+      "when": {
+        "fields_json": "evidence"
+      },
+      "result": {
+        "needs_confirmation": true,
+        "confirmation_id": "6b5f2027-0000-4000-8000-0000000000c2",
+        "summary_en": "Register your address with the document you gave, and issue your resident card.",
+        "next": "Nothing has happened yet. Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, then ask for a clear yes. Only after the yes, in their next turn, call application_submit again with the same arguments and this confirmation_id.",
+        "readback": {
+          "en": "Register your address with the document you gave, and issue your resident card.",
+          "sw": "Kusajili anwani yako kwa hati uliyotoa, na kukupa kadi yako ya mkazi.",
+          "items": []
+        }
+      }
+    },
+    {
+      "when": {
+        "confirmation_id": ".+"
+      },
+      "result": {
+        "ref": "SPS-4F2A9C1D",
+        "application_id": "6b5f2027-0000-4000-8000-0000000000a1",
+        "decision_id": "6b5f2027-0000-4000-8000-0000000000d1",
+        "outcome": "granted",
+        "decided_by": "rule",
+        "reason": "The renewal is accepted: it expires within 12 months.",
+        "next": "Pay KES 7550, then give biometrics at the Konza Passport Desk. The old passport stays valid until the new one is handed over.",
+        "review": {
+          "panel": "Aminia Review Panel",
+          "ask_by": "2026-11-14",
+          "free": true,
+          "answer_within_working_days": 10
+        },
+        "say": "Say what was decided, the reason, what happens next, and that they can ask for a review."
+      }
+    },
+    {
+      "result": {
+        "needs_confirmation": true,
+        "confirmation_id": "6b5f2027-0000-4000-8000-0000000000c1",
+        "summary_en": "Apply to renew the Kenyan passport with a 34-page booklet, fee 7,550 shillings, collected at the Konza Passport Desk.",
+        "next": "Nothing has happened yet. Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, then ask for a clear yes. Only after the yes, in their next turn, call application_submit again with the same arguments and this confirmation_id.",
+        "readback": {
+          "en": "Apply to renew the Kenyan passport with a 34-page booklet, fee 7,550 shillings, collected at the Konza Passport Desk.",
+          "sw": "Kuomba kurenew pasipoti ya Kenya yenye kurasa thelathini na nne, ada shilingi elfu saba mia tano na hamsini, utaichukua kwenye Konza Passport Desk.",
+          "items": [
+            {
+              "kind": "number",
+              "value": 34,
+              "spoken_en": "34",
+              "spoken_sw": "thelathini na nne"
+            },
+            {
+              "kind": "amount",
+              "value": 7550,
+              "spoken_en": "7,550 shillings",
+              "spoken_sw": "shilingi elfu saba mia tano na hamsini"
+            },
+            {
+              "kind": "place",
+              "value": "Konza Passport Desk",
+              "spoken_en": "Konza Passport Desk",
+              "spoken_sw": "Konza Passport Desk"
+            }
+          ]
+        }
+      },
+      "when": {
+        "fields_json": "collect"
+      }
+    },
+    {
+      "result": {
+        "needs_confirmation": true,
+        "confirmation_id": "6b5f2027-0000-4000-8000-0000000000c1",
+        "summary_en": "Apply to renew the Kenyan passport with a 34-page booklet, fee 7,550 shillings, delivered home.",
+        "next": "Nothing has happened yet. Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, then ask for a clear yes. Only after the yes, in their next turn, call application_submit again with the same arguments and this confirmation_id.",
+        "readback": {
+          "en": "Apply to renew the Kenyan passport with a 34-page booklet, fee 7,550 shillings, delivered home.",
+          "sw": "Kuomba kurenew pasipoti ya Kenya yenye kurasa thelathini na nne, ada shilingi elfu saba mia tano na hamsini, utaletewa nyumbani.",
+          "items": [
+            {
+              "kind": "number",
+              "value": 34,
+              "spoken_en": "34",
+              "spoken_sw": "thelathini na nne"
+            },
+            {
+              "kind": "amount",
+              "value": 7550,
+              "spoken_en": "7,550 shillings",
+              "spoken_sw": "shilingi elfu saba mia tano na hamsini"
+            }
+          ]
+        }
+      },
+      "when": {
+        "fields_json": "home"
+      }
+    },
+    {
+      "result": {
+        "error": "bad_fields",
+        "message": "fields.pages is required; fields.receive is required"
+      }
+    }
+  ],
+  "payment_confirm": [
+    {
+      "result": {
+        "payment_id": "6b5f2027-0000-4000-8000-0000000000p1",
+        "status": "approved",
+        "txn_code": "KZP1A2B3C4",
+        "amount": 7550,
+        "currency": "KES",
+        "amount_kes": 7550,
+        "next": "Payment received. Say the amount and the transaction code, then continue with the next step on the service card."
+      }
+    }
+  ],
+  "appointment_book": [
+    {
+      "when": {
+        "confirmation_id": ".+"
+      },
+      "result": {
+        "id": "6b5f2027-0000-4000-8000-0000000000b1",
+        "kind": "biometrics",
+        "desk": "the Konza Passport Desk",
+        "on_date": "2026-10-07",
+        "window": "morning",
+        "bring": "your current passport and your resident number",
+        "ready_by": "2026-10-21",
+        "rule_ids": [
+          "PP-03",
+          "PP-04"
+        ],
+        "next": "Say the desk, the date, the window and what to bring. If ready_by is set, say the new document is usually ready about then, and that this is an estimate, not a promise."
+      }
+    },
+    {
+      "result": {
+        "needs_confirmation": true,
+        "confirmation_id": "6b5f2027-0000-4000-8000-0000000000c1",
+        "summary_en": "Biometrics on Wednesday 7 October 2026, in the morning, between 8 and 12, at the Konza Passport Desk. Come any time in that window. Bring your current passport and your resident number.",
+        "next": "Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, then ask for a clear yes. Then call again with the confirmation_id.",
+        "readback": {
+          "en": "Biometrics on Wednesday 7 October 2026, in the morning, between 8 and 12, at the Konza Passport Desk. Come any time in that window. Bring your current passport and your resident number.",
+          "sw": "Miadi ya biometriki Jumatano, tarehe saba Oktoba, mwaka elfu mbili na ishirini na sita, asubuhi, kati ya saa mbili na saa sita, kwenye Konza Passport Desk. Njoo wakati wowote katika muda huo. Leta pasipoti yako ya sasa na namba yako ya mkazi.",
+          "items": [
+            {
+              "kind": "date",
+              "value": "2026-10-07",
+              "spoken_en": "Wednesday 7 October 2026",
+              "spoken_sw": "Jumatano, tarehe saba Oktoba, mwaka elfu mbili na ishirini na sita"
+            },
+            {
+              "kind": "time",
+              "value": "08:00-12:00",
+              "spoken_en": "in the morning, between 8 and 12",
+              "spoken_sw": "asubuhi, kati ya saa mbili na saa sita"
+            },
+            {
+              "kind": "place",
+              "value": "Konza Passport Desk",
+              "spoken_en": "Konza Passport Desk",
+              "spoken_sw": "Konza Passport Desk"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "delivery_book": [
+    {
+      "when": {
+        "confirmation_id": ".+"
+      },
+      "result": {
+        "id": "6b5f2027-0000-4000-8000-0000000000v1",
+        "item_kind": "passport",
+        "deliver_on": "2026-10-22",
+        "window": "afternoon",
+        "method": "collect",
+        "desk": "the Konza Passport Desk",
+        "fee_kes": 0,
+        "status": "booked",
+        "handover": "Only the holder, in person, with ID and the one-time code sent on the delivery day."
+      }
+    },
+    {
+      "result": {
+        "needs_confirmation": true,
+        "confirmation_id": "6b5f2027-0000-4000-8000-0000000000c1",
+        "summary_en": "The passport will be ready to collect at the Konza Passport Desk from Thursday 22 October 2026, in the afternoon, between 2 and 5, free. Only the holder can receive it, showing ID and a one-time code.",
+        "next": "Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, then ask for a clear yes. Then call again with the confirmation_id.",
+        "readback": {
+          "en": "The passport will be ready to collect at the Konza Passport Desk from Thursday 22 October 2026, in the afternoon, between 2 and 5, free. Only the holder can receive it, showing ID and a one-time code.",
+          "sw": "Pasipoti itakuwa tayari kuchukuliwa Konza Passport Desk kuanzia Alhamisi, tarehe ishirini na mbili Oktoba, mwaka elfu mbili na ishirini na sita, mchana, kati ya saa nane na saa kumi na moja, bure. Mwenye nayo pekee ndiye anaweza kuipokea, akionyesha kitambulisho na namba ya siri ya mara moja.",
+          "items": [
+            {
+              "kind": "place",
+              "value": "Konza Passport Desk",
+              "spoken_en": "Konza Passport Desk",
+              "spoken_sw": "Konza Passport Desk"
+            },
+            {
+              "kind": "date",
+              "value": "2026-10-22",
+              "spoken_en": "Thursday 22 October 2026",
+              "spoken_sw": "Alhamisi, tarehe ishirini na mbili Oktoba, mwaka elfu mbili na ishirini na sita"
+            },
+            {
+              "kind": "time",
+              "value": "14:00-17:00",
+              "spoken_en": "in the afternoon, between 2 and 5",
+              "spoken_sw": "mchana, kati ya saa nane na saa kumi na moja"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "decision_explain": [
+    {
+      "result": {
+        "id": "6b5f2027-0000-4000-8000-0000000000d1",
+        "outcome": "granted",
+        "decided_by": "rule",
+        "rule_ids": [
+          "PP-02",
+          "PP-01"
+        ],
+        "reason_en": "The renewal is accepted: it expires within 12 months.",
+        "inputs": {
+          "expires": "2027-03-05",
+          "pages": 34,
+          "fee_kes": 7550
+        },
+        "review": {
+          "panel": "Aminia Review Panel",
+          "ask_by": "2026-11-14",
+          "free": true,
+          "answer_within_working_days": 10
+        }
+      }
+    }
+  ],
+  "review_request": [
+    {
+      "when": {
+        "confirmation_id": ".+"
+      },
+      "result": {
+        "id": "6b5f2027-0000-4000-8000-0000000000r1",
+        "decision_id": "6b5f2027-0000-4000-8000-0000000000d1",
+        "status": "received",
+        "answer_by": "2026-10-20"
+      }
+    },
+    {
+      "result": {
+        "needs_confirmation": true,
+        "confirmation_id": "6b5f2027-0000-4000-8000-0000000000c1",
+        "summary_en": "Ask the Aminia Review Panel to review this decision. It is free, and an officer who did not make the decision answers within 10 working days.",
+        "next": "Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, then ask for a clear yes. Then call again with the confirmation_id.",
+        "readback": {
+          "en": "Ask the Aminia Review Panel to review this decision. It is free, and an officer who did not make the decision answers within 10 working days.",
+          "sw": "Kuiomba Aminia Review Panel ipitie upya uamuzi huu. Ni bure, na afisa ambaye hakufanya uamuzi huo atajibu ndani ya siku kumi za kazi.",
+          "items": [
+            {
+              "kind": "number",
+              "value": 10,
+              "spoken_en": "10",
+              "spoken_sw": "kumi"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "consent_record": [
+    {
+      "when": {
+        "scopes": "health_cover",
+        "confirmation_id": ".+"
+      },
+      "result": {
+        "id": "6b5f2027-0000-4000-8000-0000000000k2",
+        "grantor": "QK-2041-0036",
+        "delegate": "sia",
+        "subject": "QK-2041-0009",
+        "scopes": [
+          "health_cover"
+        ],
+        "expires_at": "2027-10-05T20:59:59Z",
+        "withdrawn_at": null
+      }
+    },
+    {
+      "when": {
+        "scopes": "health_cover"
+      },
+      "result": {
+        "needs_confirmation": true,
+        "confirmation_id": "6b5f2027-0000-4000-8000-0000000000c3",
+        "summary_en": "Record consent for SIA to act for Imani in health cover, until Tuesday 5 October 2027. It can be withdrawn at any time.",
+        "next": "Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, then ask for a clear yes. Then call again with the confirmation_id.",
+        "readback": {
+          "en": "Record consent for SIA to act for Imani in health cover, until Tuesday 5 October 2027. It can be withdrawn at any time.",
+          "sw": "Kurekodi ridhaa ya SIA kumhudumia Imani katika bima ya afya, hadi Jumanne, tarehe tano Oktoba, mwaka elfu mbili na ishirini na saba. Unaweza kuiondoa wakati wowote.",
+          "items": [
+            {
+              "kind": "name",
+              "value": "SIA",
+              "spoken_en": "SIA",
+              "spoken_sw": "SIA"
+            },
+            {
+              "kind": "name",
+              "value": "Imani",
+              "spoken_en": "Imani",
+              "spoken_sw": "Imani"
+            },
+            {
+              "kind": "date",
+              "value": "2027-10-05",
+              "spoken_en": "Tuesday 5 October 2027",
+              "spoken_sw": "Jumanne, tarehe tano Oktoba, mwaka elfu mbili na ishirini na saba"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "when": {
+        "scopes": "registration",
+        "confirmation_id": ".+"
+      },
+      "result": {
+        "id": "6b5f2027-0000-4000-8000-0000000000k2",
+        "grantor": "QK-2041-0036",
+        "delegate": "sia",
+        "subject": "QK-2041-0003",
+        "scopes": [
+          "registration"
+        ],
+        "expires_at": "2027-10-05T20:59:59Z",
+        "withdrawn_at": null
+      }
+    },
+    {
+      "when": {
+        "scopes": "registration"
+      },
+      "result": {
+        "needs_confirmation": true,
+        "confirmation_id": "6b5f2027-0000-4000-8000-0000000000c3",
+        "summary_en": "Record consent for SIA to act for Tumaini in registration, until Tuesday 5 October 2027. It can be withdrawn at any time.",
+        "next": "Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, then ask for a clear yes. Then call again with the confirmation_id.",
+        "readback": {
+          "en": "Record consent for SIA to act for Tumaini in registration, until Tuesday 5 October 2027. It can be withdrawn at any time.",
+          "sw": "Kurekodi ridhaa ya SIA kumhudumia Tumaini katika usajili, hadi Jumanne, tarehe tano Oktoba, mwaka elfu mbili na ishirini na saba. Unaweza kuiondoa wakati wowote.",
+          "items": [
+            {
+              "kind": "name",
+              "value": "SIA",
+              "spoken_en": "SIA",
+              "spoken_sw": "SIA"
+            },
+            {
+              "kind": "name",
+              "value": "Tumaini",
+              "spoken_en": "Tumaini",
+              "spoken_sw": "Tumaini"
+            },
+            {
+              "kind": "date",
+              "value": "2027-10-05",
+              "spoken_en": "Tuesday 5 October 2027",
+              "spoken_sw": "Jumanne, tarehe tano Oktoba, mwaka elfu mbili na ishirini na saba"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "when": {
+        "confirmation_id": ".+"
+      },
+      "result": {
+        "id": "6b5f2027-0000-4000-8000-0000000000k1",
+        "grantor": "QK-2041-0036",
+        "delegate": "sia",
+        "subject": "QK-2041-0009",
+        "scopes": [
+          "school_application"
+        ],
+        "expires_at": "2027-10-05T20:59:59Z",
+        "withdrawn_at": null
+      }
+    },
+    {
+      "result": {
+        "needs_confirmation": true,
+        "confirmation_id": "6b5f2027-0000-4000-8000-0000000000c1",
+        "summary_en": "Record consent for SIA to act for Imani in school applications, until Tuesday 5 October 2027. It can be withdrawn at any time.",
+        "next": "Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, then ask for a clear yes. Then call again with the confirmation_id.",
+        "readback": {
+          "en": "Record consent for SIA to act for Imani in school applications, until Tuesday 5 October 2027. It can be withdrawn at any time.",
+          "sw": "Kurekodi ridhaa ya SIA kumhudumia Imani katika maombi ya shule, hadi Jumanne, tarehe tano Oktoba, mwaka elfu mbili na ishirini na saba. Unaweza kuiondoa wakati wowote.",
+          "items": [
+            {
+              "kind": "name",
+              "value": "SIA",
+              "spoken_en": "SIA",
+              "spoken_sw": "SIA"
+            },
+            {
+              "kind": "name",
+              "value": "Imani",
+              "spoken_en": "Imani",
+              "spoken_sw": "Imani"
+            },
+            {
+              "kind": "date",
+              "value": "2027-10-05",
+              "spoken_en": "Tuesday 5 October 2027",
+              "spoken_sw": "Jumanne, tarehe tano Oktoba, mwaka elfu mbili na ishirini na saba"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

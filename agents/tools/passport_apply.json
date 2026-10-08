@@ -1,0 +1,33 @@
+{
+  "name": "passport_apply",
+  "description": "Protected. Open a passport renewal application. First call returns a confirmation_id: read back booklet, desk and fee, hear a clear yes, then call again with the same arguments and the confirmation_id.",
+  "params": {
+    "pages": {
+      "type": "number",
+      "description": "34, 50 or 66"
+    },
+    "desk": {
+      "type": "string",
+      "enum": [
+        "nairobi",
+        "london",
+        "berlin"
+      ],
+      "description": "Where the caller will give biometrics"
+    },
+    "full_or_damaged": {
+      "type": "boolean",
+      "description": "True if the passport is full or damaged"
+    },
+    "confirmation_id": {
+      "type": "string",
+      "description": "Empty the first time; after the caller says yes, the confirmation_id you were given"
+    }
+  },
+  "required": [
+    "pages",
+    "desk"
+  ],
+  "no_interrupt": true,
+  "pre_speech": true
+}

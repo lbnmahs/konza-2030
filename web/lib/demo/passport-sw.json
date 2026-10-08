@@ -1,0 +1,264 @@
+{
+  "id": "passport-sw",
+  "title": "Tuesday: the same renewal in Swahili",
+  "language": "sw",
+  "source": "a real test call by the project's author",
+  "turns": [
+    {
+      "who": "agent",
+      "text": "Hello, I'm Savannah, an AI assistant from Savanah..."
+    },
+    {
+      "who": "caller",
+      "text": "Hello, sa-- sasa, Savannah, uh, nilikataa kurenew passport yangu. Uh, nilikataa kumsaidie."
+    },
+    {
+      "who": "agent",
+      "text": "Karibu. Samahani, naona unataka msaada na upyaji wa pasipoti. Je, ungependa nikueleze taratibu, au ulishaomba na unataka kujua hali yake?"
+    },
+    {
+      "who": "caller",
+      "text": "Aah, nilikuwa nataka ku-renew."
+    },
+    {
+      "who": "agent",
+      "text": "Sawa, tuanze na upyaji wa pasipoti. Kabla ya kuendelea, nitahitaji kuthibitisha utambulisho wako: tafadhali nipe namba yako ya ukaaji inayoanza na [ref], na tarehe yako ya kuzaliwa."
+    },
+    {
+      "who": "caller",
+      "text": "Ah, [ref] na date of birth ni [date of birth]."
+    },
+    {
+      "who": "agent",
+      "text": "Ngoja kidogo, ninathibitisha taarifa zako."
+    },
+    {
+      "who": "system",
+      "text": "Identity check: a one-time code goes by SMS to the phone on record."
+    },
+    {
+      "who": "agent",
+      "text": "[code read aloud, redacted]"
+    },
+    {
+      "who": "caller",
+      "text": "[code read aloud, redacted]"
+    },
+    {
+      "who": "system",
+      "text": "Code checked: identity verified."
+    },
+    {
+      "who": "agent",
+      "text": "Asante, Laban. Sasa naenda kufungua huduma ya upyaji wa pasipoti."
+    },
+    {
+      "who": "system",
+      "text": "Service card opened: Kenyan passport renewal."
+    },
+    {
+      "who": "agent",
+      "text": "Je, unataka kitabu cha pasipoti chenye kurasa thelathini na nne, hamsini, au sitini na sita?"
+    },
+    {
+      "who": "caller",
+      "text": "Aaah, 66."
+    },
+    {
+      "who": "agent",
+      "text": "Sawa, kurasa sitini na sita. Je, unataka ipelekwe nyumbani, au utakwenda kuichukua kwenye Konza Passport Desk?"
+    },
+    {
+      "who": "caller",
+      "text": "Na, kama inaweza leta nyumbani inaweza kuwa sawa."
+    },
+    {
+      "who": "agent",
+      "text": "Sawa, nyumbani. Je, pasipoti yako ya sasa iko kamili na bila uharibifu, au imeharibika au kuisha kurasa?"
+    },
+    {
+      "who": "caller",
+      "text": "Aa, ap-- hej, ish, aa, kurasa, bache najua experic ko karibu."
+    },
+    {
+      "who": "agent",
+      "text": "Samahani, sikupata vizuri. Je, pasipoti yako iko kamili na..."
+    },
+    {
+      "who": "caller",
+      "text": "Ha, inaikusahau ina-- eeh, iko, iko kamili like it has everything. Ni venye tu, eeh, expiry date inakaribia. It's 12 months tu."
+    },
+    {
+      "who": "system",
+      "text": "Rules looked up (renewal, PP-02)."
+    },
+    {
+      "who": "caller",
+      "text": "Don't you have that information?"
+    },
+    {
+      "who": "agent",
+      "text": "Ndiyo, naona hapa. Upyaji uko wazi sasa kwa sababu pasipoti yako inaisha tarehe nane, mwezi wa tatu, mwaka elfu mbili na ishirini na saba, yaani ndani ya miezi kumi na mbili ijayo. Kwa hivyo tunaweza kuendelea na maombi."
+    },
+    {
+      "who": "system",
+      "text": "Rules looked up (fees, PP-01)."
+    },
+    {
+      "who": "agent",
+      "text": "Ada ya kitabu cha kurasa sitini na sita ni shilingi elfu kumi na mbili na hamsini. Je, uko tayari niendelee kuwasilisha maombi yako kwa kurasa sitini na sita, kupelekwa nyumbani?"
+    },
+    {
+      "who": "caller",
+      "text": "Andio."
+    },
+    {
+      "who": "agent",
+      "text": "Ngoja kidogo, ninaandaa maombi yako."
+    },
+    {
+      "who": "system",
+      "text": "Asks first: the backend's read-back is said word for word; nothing happens before a clear yes."
+    },
+    {
+      "who": "agent",
+      "text": "Kuomba kurenew pasipoti ya Kenya yenye kurasa sitini na sita, ada shilingi elfu kumi na mbili na hamsini, utaletewa nyumbani. Niendelee?"
+    },
+    {
+      "who": "caller",
+      "text": "Eh, unazendelea."
+    },
+    {
+      "who": "agent",
+      "text": "Sawa, ninawasilisha sasa."
+    },
+    {
+      "who": "system",
+      "text": "Decision: granted, by a published rule. The receipt gives the reason and the review route."
+    },
+    {
+      "who": "agent",
+      "text": "Maombi yako yamekubaliwa kwa kanuni iliyochapishwa. Sababu ni kwamba pasipoti iliyo kamili au iliyoharibika inaweza kurenewa. Hatua inayofuata ni kulipa ada na kisha kuchukua biometriki katika Konza Passport Desk; nitakutumia marejeo kwa SMS. Pia, unaweza kuomba ukaguzi wa Aminia Review Panel ndani ya siku thelathini, bure, kama hukubaliani na uamuzi.\n\nJe, uko tayari kulipa ada ya shilingi elfu kumi na mbili na hamsini sasa?"
+    },
+    {
+      "who": "caller",
+      "text": "Eh, nazali pa, lakini nilikuwa, nilikuwa na swali hiyo Aminia ni nini?"
+    },
+    {
+      "who": "agent",
+      "text": "Aminia Review Panel ni kikundi kinachoangalia tena maamuzi ambayo mkaaji hakubaliani nayo. Unaweza kuomba ukaguzi ndani ya siku thelathini tangu uamuzi, bila malipo, na watajibu ndani ya siku kumi za kazi. Kwa sasa, maombi yako yamekubaliwa, kwa hivyo hupaswi huduma hiyo isipokuwa ukibadilisha mawazo baadaye.\n\nJe, uendelee na mal..."
+    },
+    {
+      "who": "caller",
+      "text": "Faka, eh, eh, sawa nitumie, nitumie code nilipe sa hivi."
+    },
+    {
+      "who": "agent",
+      "text": "Sawa, ninatuma msimbo wa malipo..."
+    },
+    {
+      "who": "system",
+      "text": "Asks first: the amount from the rules is read back; nothing is sent before a clear yes."
+    },
+    {
+      "who": "caller",
+      "text": "I'd love to book."
+    },
+    {
+      "who": "agent",
+      "text": "Kutuma ombi la malipo la DEMO la shilingi elfu kumi na mbili na hamsini kwa Savanahlands Passport Services. Utaidhinisha kwa kuniambia namba ya siri yenye tarakimu sita; usipofanya chochote, malipo yatakataliwa. Niendelee?"
+    },
+    {
+      "who": "caller",
+      "text": "Endelea nitume kodi."
+    },
+    {
+      "who": "agent",
+      "text": "Sawa, ninatuma msimbo sasa."
+    },
+    {
+      "who": "system",
+      "text": "DEMO payment prompt sent; the code is never read aloud."
+    },
+    {
+      "who": "agent",
+      "text": "Msimbo wa malipo umetumwa kwa simu yako. Tafadhali niambie..."
+    },
+    {
+      "who": "caller",
+      "text": "[code read aloud, redacted]"
+    },
+    {
+      "who": "system",
+      "text": "Payment approved; the receipt goes by SMS."
+    },
+    {
+      "who": "agent",
+      "text": "Malipo yamekamilika, shilingi elfu kumi na mbili na hamsini. Marejeo ya malipo yako yako kwenye SMS. Sasa tunahitaji kuratibu siku ya kuchukua biometriki katika Konza Passport Desk; je, unapendelea asubuhi au mchana?"
+    },
+    {
+      "who": "caller",
+      "text": "Aaah, mm, ngetaka asubuhi. Na nilikuwa nafikiria ka tunaweza endaaa Monday hivi."
+    },
+    {
+      "who": "agent",
+      "text": "Sawa, ninaangalia siku ya Jumatatu asubuhi."
+    },
+    {
+      "who": "system",
+      "text": "Asks first: the backend's read-back is said word for word; nothing happens before a clear yes."
+    },
+    {
+      "who": "agent",
+      "text": "Miadi ya biometriki Jumatatu, tarehe kumi na mbili Oktoba, mwaka elfu mbili na ishirini na sita, asubuhi, kati ya saa mbili na saa sita, kwenye Konza Passport Desk. Njoo wakati wowote katika muda huo. Leta pasipoti yako ya sasa na namba yako ya mkazi. Niendelee kuthibitisha?"
+    },
+    {
+      "who": "caller",
+      "text": "Eh, tofauti."
+    },
+    {
+      "who": "agent",
+      "text": "Samahani, j..."
+    },
+    {
+      "who": "caller",
+      "text": "Ndiyo, ndiyo, ndiyo."
+    },
+    {
+      "who": "agent",
+      "text": "Sawa, ninathibitisha miadi yako sasa."
+    },
+    {
+      "who": "agent",
+      "text": "Miadi yako imethibitishwa: Jumatatu tarehe kumi na mbili Oktoba, asubuhi kati ya saa mbili na saa sita, katika Konza Passport Desk. Leta pasipoti yako ya sasa na namba yako ya mkazi. Pasipoti mpya kwa kawaida itakuwa tayari karibu tarehe ishirini na saba Oktoba, ingawa hii ni makadirio tu.\n\nJe, baada ya biometriki, unataka pasipoti ipelekwe nyumbani kama ulivyosema mwanzo?"
+    },
+    {
+      "who": "caller",
+      "text": "Andio, eh."
+    },
+    {
+      "who": "agent",
+      "text": "Sawa, tutaratibu hilo baada ya biometriki kukamilika, kwa kuwa utoaji unahitaji biometriki kukamilika kwanza. Je, ungependa nikutumie muhtasari wa yote tuliyofanya leo kwa SMS?"
+    },
+    {
+      "who": "caller",
+      "text": "Yes, please."
+    },
+    {
+      "who": "system",
+      "text": "Summary sent by SMS."
+    },
+    {
+      "who": "agent",
+      "text": "Nimekutumia muhtasari kwa SMS kwenye simu yako inayoishia na [digits]. Je, kuna lingine ninaloweza kukusaidia nalo?"
+    },
+    {
+      "who": "caller",
+      "text": "Uh, but that will do. Thank you so much and have a great day."
+    },
+    {
+      "who": "agent",
+      "text": "Asante Laban, nimefurahi kukusaidia na upyaji wa pasipoti yako. Kila la kheri, na siku njema!"
+    }
+  ]
+}

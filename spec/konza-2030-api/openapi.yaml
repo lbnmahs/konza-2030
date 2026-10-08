@@ -1,0 +1,827 @@
+openapi: 3.1.0
+info:
+  title: konza-2030-api
+  version: 0.1.0
+  summary: A profile of Kenya's Government Interoperability Framework v3.0 for agencies that act for residents.
+  description: |
+    Independent open-source project · not affiliated with any government body.
+
+    This profile does not compete with GIF v3.0; it follows it (OpenAPI 3.x, OAuth2 and OIDC,
+    TLS 1.3, signed and logged exchange, a resident number in the role of the Maisha Number,
+    once-only data) and adds what an assistant acting for residents needs: decisions with a
+    plain reason and a review route, appeals, audit events, delegated consent (a parent acting
+    for a child), addresses and deliveries, and a charter level on every operation.
+
+    Every operation carries `x-konza-charter`:
+    `acts_alone` (an assistant may call it without asking the resident),
+    `asks_first` (two-step: the first call returns 202 with a confirmation; the same request
+    repeated with `confirmation_id`, at least 4 s later and within 3 minutes, commits),
+    `never_acts` (only an officer credential is accepted; no assistant path exists).
+
+    Agencies are data: a new agency adds a manifest entry and appears under the generic paths.
+  license:
+    name: Apache-2.0
+    identifier: Apache-2.0
+servers:
+  - url: https://api.konza.example/konza/v1
+    description: Target (TLS 1.3, X-Road-style security server in front)
+  - url: http://127.0.0.1:55321/functions/v1/tools/konza/v1
+    description: Local stack
+security:
+  - sharedClient: []
+tags:
+  - name: catalogue
+  - name: applications
+  - name: decisions
+  - name: consents
+  - name: addresses
+  - name: desk
+x-konza-gif-mapping:
+  openapi: GIF v3.0 p40, p68 (RESTful APIs to OpenAPI 3.x, 3.1)
+  oauth2_oidc: GIF v3.0 p40 (centralised or federated OAuth2/OIDC)
+  tls: GIF v3.0 p40, p116 (TLS 1.3)
+  exchange: GIF v3.0 p52 to 53 (X-Road style; requests signed and logged)
+  identity: GIF v3.0 p27 (Maisha Number; here the QK- resident number)
+  once_only: GIF v3.0 p14
+  appeals_and_delegation: GIF v3.0 p102 (appeals handler role) and p156 (delegation mechanisms); no schema there, added here
+
+paths:
+  /agencies:
+    get:
+      operationId: listAgencies
+      tags: [catalogue]
+      summary: Agencies and their services
+      x-konza-charter: acts_alone
+      parameters: [{ $ref: "#/components/parameters/RequestId" }]
+      responses:
+        "200":
+          description: Catalogue
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AgencyList" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+
+  /agencies/{agency}/services/{service}:
+    parameters:
+      - { $ref: "#/components/parameters/Agency" }
+      - { $ref: "#/components/parameters/Service" }
+    get:
+      operationId: getService
+      tags: [catalogue]
+      summary: One service, its card, its application schema and charter levels
+      x-konza-charter: acts_alone
+      parameters: [{ $ref: "#/components/parameters/RequestId" }]
+      responses:
+        "200":
+          description: Service
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Service" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /agencies/{agency}/services/{service}/rules:
+    parameters:
+      - { $ref: "#/components/parameters/Agency" }
+      - { $ref: "#/components/parameters/Service" }
+    post:
+      operationId: askRules
+      tags: [catalogue]
+      summary: Answer a rules question (fees, eligibility, places) from the rules module
+      description: General topics need no resident. Topics about the resident's own records need X-Konza-Resident.
+      x-konza-charter: acts_alone
+      parameters:
+        - { $ref: "#/components/parameters/RequestId" }
+        - { $ref: "#/components/parameters/Session" }
+        - { $ref: "#/components/parameters/Resident" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RuleQuestion" }
+      responses:
+        "200":
+          description: Answer
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RuleAnswer" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /agencies/{agency}/services/{service}/applications:
+    parameters:
+      - { $ref: "#/components/parameters/Agency" }
+      - { $ref: "#/components/parameters/Service" }
+    post:
+      operationId: submitApplication
+      tags: [applications]
+      summary: Submit an application (two-step); a decision follows by rule or by an officer
+      x-konza-charter: asks_first
+      parameters:
+        - { $ref: "#/components/parameters/RequestId" }
+        - { $ref: "#/components/parameters/Session" }
+        - { $ref: "#/components/parameters/Resident" }
+        - { $ref: "#/components/parameters/OnBehalfOf" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ApplicationRequest" }
+      responses:
+        "201":
+          description: Submitted, with its decision
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Application" }
+        "202": { $ref: "#/components/responses/NeedsConfirmation" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+
+  /applications/{id}:
+    get:
+      operationId: getApplication
+      tags: [applications]
+      x-konza-charter: acts_alone
+      parameters:
+        - { $ref: "#/components/parameters/Id" }
+        - { $ref: "#/components/parameters/RequestId" }
+        - { $ref: "#/components/parameters/Resident" }
+      responses:
+        "200":
+          description: Application and decision
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Application" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /applications/{id}/appointments:
+    post:
+      operationId: bookAppointment
+      tags: [applications]
+      summary: Book the in-person step a granted application needs (PP-03 biometrics), by the holder, after the fee is paid
+      x-konza-charter: asks_first
+      parameters:
+        - { $ref: "#/components/parameters/Id" }
+        - { $ref: "#/components/parameters/RequestId" }
+        - { $ref: "#/components/parameters/Session" }
+        - { $ref: "#/components/parameters/Resident" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AppointmentRequest" }
+      responses:
+        "201":
+          description: Booked
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Appointment" }
+        "202": { $ref: "#/components/responses/NeedsConfirmation" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+
+  /decisions/{id}:
+    get:
+      operationId: getDecision
+      tags: [decisions]
+      summary: A decision with its reason and review route (the explain-why receipt)
+      x-konza-charter: acts_alone
+      parameters:
+        - { $ref: "#/components/parameters/Id" }
+        - { $ref: "#/components/parameters/RequestId" }
+        - { $ref: "#/components/parameters/Resident" }
+      responses:
+        "200":
+          description: Decision
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Decision" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /decisions/{id}/officer-decision:
+    post:
+      operationId: decideAsOfficer
+      tags: [decisions]
+      summary: An officer decides a pending decision. No assistant path.
+      x-konza-charter: never_acts
+      security:
+        - sharedOfficer: []
+        - agencyOAuth: [officer]
+      parameters:
+        - { $ref: "#/components/parameters/Id" }
+        - { $ref: "#/components/parameters/RequestId" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/OfficerDecision" }
+      responses:
+        "200":
+          description: Decided
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Decision" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+
+  /desk/payments:
+    post:
+      operationId: recordDeskPayment
+      tags: [desk]
+      summary: An officer records a fee paid at a desk (PY-02). The amount must equal the open charge. No assistant path.
+      x-konza-charter: never_acts
+      security:
+        - sharedOfficer: []
+        - agencyOAuth: [officer]
+      parameters:
+        - { $ref: "#/components/parameters/RequestId" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DeskPaymentRequest" }
+      responses:
+        "201":
+          description: Recorded
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DeskPayment" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+
+  /desk/documents:
+    post:
+      operationId: recordDeskDocument
+      tags: [desk]
+      summary: An officer records a paper document handed in at a desk (DK-01). Nothing is scanned; the record is the evidence. No assistant path.
+      x-konza-charter: never_acts
+      security:
+        - sharedOfficer: []
+        - agencyOAuth: [officer]
+      parameters:
+        - { $ref: "#/components/parameters/RequestId" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DeskDocumentRequest" }
+      responses:
+        "201":
+          description: Recorded
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DeskDocument" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /decisions/{id}/appeals:
+    post:
+      operationId: appealDecision
+      tags: [decisions]
+      summary: Ask the Aminia Review Panel to review a decision (RV-01 to RV-03)
+      x-konza-charter: asks_first
+      parameters:
+        - { $ref: "#/components/parameters/Id" }
+        - { $ref: "#/components/parameters/RequestId" }
+        - { $ref: "#/components/parameters/Session" }
+        - { $ref: "#/components/parameters/Resident" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AppealRequest" }
+      responses:
+        "201":
+          description: Appeal received
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Appeal" }
+        "202": { $ref: "#/components/responses/NeedsConfirmation" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+
+  /consents:
+    post:
+      operationId: recordConsent
+      tags: [consents]
+      summary: A resident lets a delegate act for a person in their care, for some scopes, until a date
+      x-konza-charter: asks_first
+      parameters:
+        - { $ref: "#/components/parameters/RequestId" }
+        - { $ref: "#/components/parameters/Session" }
+        - { $ref: "#/components/parameters/Resident" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ConsentRequest" }
+      responses:
+        "201":
+          description: Consent recorded
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DelegationConsent" }
+        "202": { $ref: "#/components/responses/NeedsConfirmation" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+
+  /consents/{id}:
+    delete:
+      operationId: withdrawConsent
+      tags: [consents]
+      summary: Withdraw a consent; it stops at once
+      x-konza-charter: acts_alone
+      parameters:
+        - { $ref: "#/components/parameters/Id" }
+        - { $ref: "#/components/parameters/RequestId" }
+        - { $ref: "#/components/parameters/Resident" }
+      responses:
+        "200":
+          description: Withdrawn
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DelegationConsent" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /residents/me/address:
+    get:
+      operationId: getAddress
+      tags: [addresses]
+      summary: The resident's registered address (once-only; agencies read, never ask again)
+      x-konza-charter: acts_alone
+      parameters:
+        - { $ref: "#/components/parameters/RequestId" }
+        - { $ref: "#/components/parameters/Resident" }
+      responses:
+        "200":
+          description: Address
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Address" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /deliveries:
+    post:
+      operationId: bookDelivery
+      tags: [addresses]
+      summary: Book delivery of a document to the registered address (AD-02 to AD-06)
+      x-konza-charter: asks_first
+      parameters:
+        - { $ref: "#/components/parameters/RequestId" }
+        - { $ref: "#/components/parameters/Session" }
+        - { $ref: "#/components/parameters/Resident" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DeliveryRequest" }
+      responses:
+        "201":
+          description: Booked
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Delivery" }
+        "202": { $ref: "#/components/responses/NeedsConfirmation" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+
+components:
+  securitySchemes:
+    sharedClient:
+      type: apiKey
+      in: header
+      name: x-tool-secret
+      description: Reference implementation. A member system's shared secret; the target is agencyOAuth over mutual TLS.
+    sharedOfficer:
+      type: apiKey
+      in: header
+      name: x-officer-secret
+      description: Reference implementation. An officer's credential; never given to an assistant.
+    agencyOAuth:
+      type: oauth2
+      description: Target per GIF v3.0 (client credentials between member systems).
+      flows:
+        clientCredentials:
+          tokenUrl: https://id.konza.example/oauth2/token
+          scopes:
+            officer: Decide pending decisions
+            assistant: Act for residents within the charter
+    residentOidc:
+      type: openIdConnect
+      description: Target per GIF v3.0 (the resident signs in; replaces X-Konza-Resident).
+      openIdConnectUrl: https://id.konza.example/.well-known/openid-configuration
+
+  parameters:
+    Agency:
+      name: agency
+      in: path
+      required: true
+      schema: { type: string, pattern: "^[a-z][a-z0-9_]{1,31}$" }
+    Service:
+      name: service
+      in: path
+      required: true
+      schema: { type: string, pattern: "^[a-z][a-z0-9_]{1,47}$" }
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    RequestId:
+      name: X-Konza-Request-Id
+      in: header
+      required: true
+      description: Unique per request; logged in the audit event (GIF signed and logged exchange).
+      schema: { type: string, format: uuid }
+    Session:
+      name: X-Konza-Session
+      in: header
+      required: false
+      description: Groups the two steps of an asks_first call (the assistant's conversation id).
+      schema: { type: string, maxLength: 128 }
+    Resident:
+      name: X-Konza-Resident
+      in: header
+      required: false
+      description: Reference implementation. The resident number the calling member system has verified (target, residentOidc).
+      schema: { $ref: "#/components/schemas/ResidentNumber" }
+    OnBehalfOf:
+      name: X-Konza-On-Behalf-Of
+      in: header
+      required: false
+      description: The resident number of the person the request is for, when it is not the resident. Needs a valid DelegationConsent for the operation's scope.
+      schema: { $ref: "#/components/schemas/ResidentNumber" }
+
+  responses:
+    NeedsConfirmation:
+      description: Nothing has happened yet. Read back the summary, get a clear yes, then repeat the request with confirmation_id.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Confirmation" }
+    BadRequest:
+      description: Invalid input
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    Unauthorised:
+      description: Missing or wrong credential
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    Forbidden:
+      description: Refused by the charter (identity, consent, never_acts) or not the resident's record
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    NotFound:
+      description: Not found
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    Conflict:
+      description: Confirmation invalid (unknown, reused, expired, same turn, details changed) or state conflict
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+
+  schemas:
+    ResidentNumber:
+      type: string
+      pattern: "^QK-[0-9]{4}-[0-9]{4}$"
+      description: Konza resident number (plays the Maisha Number role).
+    CharterLevel:
+      type: string
+      enum: [acts_alone, asks_first, never_acts]
+    Problem:
+      type: object
+      description: RFC 9457 problem details
+      required: [type, title, status, code]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        code: { type: string }
+        detail: { type: string }
+    AgencyList:
+      type: object
+      required: [agencies]
+      properties:
+        agencies:
+          type: array
+          items:
+            type: object
+            required: [id, name, services]
+            properties:
+              id: { type: string }
+              name: { type: string }
+              services:
+                type: array
+                items: { type: string }
+    Service:
+      type: object
+      required: [agency, service, title, card, rule_topics, application_schema, operations]
+      properties:
+        agency: { type: string }
+        service: { type: string }
+        title: { type: string }
+        card: { type: string, description: Steps for an assistant, in plain words }
+        rule_topics:
+          type: array
+          items: { type: string }
+        application_schema: { type: object, description: JSON Schema of ApplicationRequest.fields }
+        consent_scope: { type: [string, "null"], description: Scope a delegate needs to apply for someone else }
+        operations:
+          type: object
+          additionalProperties: { $ref: "#/components/schemas/CharterLevel" }
+    RuleQuestion:
+      type: object
+      required: [topic]
+      properties:
+        topic: { type: string }
+        inputs: { type: object }
+    RuleAnswer:
+      type: object
+      required: [topic, values, rule_ids, reason_en]
+      properties:
+        topic: { type: string }
+        values: { type: object }
+        rule_ids:
+          type: array
+          items: { type: string }
+        reason_en: { type: string }
+        reason_sw: { type: string }
+        say: { type: string, description: How an assistant must say it }
+    ApplicationRequest:
+      type: object
+      required: [fields]
+      properties:
+        fields: { type: object }
+        confirmation_id: { type: string, format: uuid }
+    Confirmation:
+      type: object
+      required: [needs_confirmation, confirmation_id, summary_en, expires_at]
+      properties:
+        needs_confirmation: { const: true }
+        confirmation_id: { type: string, format: uuid }
+        summary_en: { type: string }
+        readback: { $ref: "#/components/schemas/ReadBack" }
+        expires_at: { type: string, format: date-time }
+    ReadBack:
+      type: object
+      description: >-
+        What an assistant reads back before the resident says yes, in English and Swahili, built
+        from rule outputs. Amounts, dates and numbers are already in words in each language
+        (K5); an assistant says the text in the resident's language as written.
+      required: [en, sw, items]
+      properties:
+        en: { type: string }
+        sw: { type: string }
+        items:
+          type: array
+          items:
+            type: object
+            required: [kind, value, spoken_en, spoken_sw]
+            properties:
+              kind: { type: string, enum: [amount, date, time, number, name, place] }
+              value: { type: [string, number] }
+              spoken_en: { type: string }
+              spoken_sw: { type: string }
+    Application:
+      type: object
+      required: [id, ref, agency, service, applicant, subject, status, fields, decision]
+      properties:
+        id: { type: string, format: uuid }
+        ref: { type: string }
+        agency: { type: string }
+        service: { type: string }
+        applicant: { $ref: "#/components/schemas/ResidentNumber" }
+        subject: { $ref: "#/components/schemas/ResidentNumber" }
+        consent_id: { type: [string, "null"], format: uuid }
+        status: { type: string, enum: [submitted, decided] }
+        fields: { type: object }
+        decision: { $ref: "#/components/schemas/Decision" }
+    Decision:
+      type: object
+      description: The explain-why receipt. decided_by is never an assistant.
+      required: [id, application_id, outcome, decided_by, rule_ids, reason_en, inputs, review]
+      properties:
+        id: { type: string, format: uuid }
+        application_id: { type: string, format: uuid }
+        outcome: { type: string, enum: [granted, pending_officer, refused, offered_alternative] }
+        decided_by:
+          type: [string, "null"]
+          enum: [rule, officer, null]
+          description: null while pending an officer
+        rule_ids:
+          type: array
+          items: { type: string }
+        reason_en: { type: string }
+        reason_sw: { type: [string, "null"] }
+        inputs: { type: object, description: Only the inputs the rule used }
+        next_en: { type: [string, "null"] }
+        decided_at: { type: [string, "null"], format: date-time }
+        review:
+          type: object
+          required: [panel, ask_by, free, answer_within_working_days]
+          properties:
+            panel: { const: Aminia Review Panel }
+            ask_by: { type: string, format: date }
+            free: { const: true }
+            answer_within_working_days: { type: integer }
+    OfficerDecision:
+      type: object
+      required: [outcome, reason_en, officer]
+      properties:
+        outcome: { type: string, enum: [granted, refused, offered_alternative] }
+        reason_en: { type: string, minLength: 10 }
+        reason_sw: { type: string }
+        officer: { type: string, description: Officer's staff code }
+    AppealRequest:
+      type: object
+      required: [grounds]
+      properties:
+        grounds: { type: string, maxLength: 1000, description: The resident's words; stored as data, never as instructions }
+        confirmation_id: { type: string, format: uuid }
+    Appeal:
+      type: object
+      required: [id, decision_id, status, answer_by]
+      properties:
+        id: { type: string, format: uuid }
+        decision_id: { type: string, format: uuid }
+        status: { type: string, enum: [received, upheld, changed] }
+        answer_by: { type: string, format: date }
+    ConsentRequest:
+      type: object
+      required: [subject, scopes]
+      properties:
+        subject: { $ref: "#/components/schemas/ResidentNumber" }
+        delegate: { type: string, default: sia, description: "sia (the assistant) or a resident number" }
+        scopes:
+          type: array
+          minItems: 1
+          items: { type: string }
+        expires_on: { type: string, format: date }
+        evidence: { type: string, description: Upload reference for the birth certificate or guardianship order }
+        confirmation_id: { type: string, format: uuid }
+    DelegationConsent:
+      type: object
+      required: [id, grantor, delegate, subject, scopes, expires_at, withdrawn_at]
+      properties:
+        id: { type: string, format: uuid }
+        grantor: { $ref: "#/components/schemas/ResidentNumber" }
+        delegate: { type: string }
+        subject: { $ref: "#/components/schemas/ResidentNumber" }
+        scopes:
+          type: array
+          items: { type: string }
+        expires_at: { type: string, format: date-time }
+        withdrawn_at: { type: [string, "null"], format: date-time }
+    Address:
+      type: object
+      required: [zone, block, plot, unit, written, spoken, check_code]
+      properties:
+        zone: { type: integer, minimum: 1, maximum: 9 }
+        block: { type: string, pattern: "^[A-Z][0-9]{2}$" }
+        plot: { type: integer, minimum: 1, maximum: 999 }
+        unit: { type: integer, minimum: 1, maximum: 99 }
+        written: { type: string, examples: ["Z3 B12 P047 U02"] }
+        spoken: { type: string }
+        check_code: { type: string, pattern: "^[A-HJ-NP-Z2-9]{6}$" }
+    DeliveryRequest:
+      type: object
+      required: [item_kind, item_ref, window]
+      properties:
+        item_kind: { type: string, enum: [passport, resident_card, certificate] }
+        item_ref: { type: string, description: The application id the item comes from }
+        window: { type: string, enum: [morning, afternoon] }
+        method:
+          type: string
+          enum: [home, collect]
+          default: home
+          description: collect needs no address (DK-02); passports are collected only at the Konza Passport Desk (AD-06)
+        confirmation_id: { type: string, format: uuid }
+    Delivery:
+      type: object
+      required: [id, item_kind, item_ref, deliver_on, window, fee_kes, status, handover]
+      properties:
+        id: { type: string, format: uuid }
+        item_kind: { type: string }
+        item_ref: { type: string }
+        deliver_on: { type: string, format: date }
+        window: { type: string }
+        method: { type: string, enum: [home, collect] }
+        desk: { type: [string, "null"], description: Where to collect it, for method collect }
+        fee_kes: { type: integer }
+        status: { type: string, enum: [booked, delivered, cancelled] }
+        handover: { type: string, description: Who may receive it and what they show }
+    AppointmentRequest:
+      type: object
+      required: [window]
+      properties:
+        window: { type: string, enum: [morning, afternoon] }
+        on_date:
+          type: string
+          format: date
+          description: A working day within the next 10 working days (PP-03); the next one when left out. Booking again with another day or window moves the appointment, until the day before it.
+        confirmation_id: { type: string, format: uuid }
+    Appointment:
+      type: object
+      required: [id, kind, desk, on_date, window, bring, rule_ids]
+      properties:
+        id: { type: string, format: uuid }
+        kind: { type: string, enum: [biometrics] }
+        desk: { type: string }
+        on_date: { type: string, format: date }
+        window: { type: string }
+        hours: { type: string, description: The window's hours, e.g. 8 to 12 }
+        moved: { type: boolean }
+        bring: { type: string }
+        ready_by: { type: [string, "null"], format: date, description: An estimate from the rules (PP-04) }
+        rule_ids: { type: array, items: { type: string } }
+    DeskPaymentRequest:
+      type: object
+      required: [application_id, amount_kes, desk]
+      properties:
+        application_id: { type: string, format: uuid }
+        amount_kes: { type: integer, description: Must equal the open charge }
+        desk: { type: string, enum: [lango_square, konza_passport_desk] }
+        officer: { type: string, maxLength: 40 }
+    DeskPayment:
+      type: object
+      required: [id, case_ref, amount_kes, status, txn_code, desk, rule_ids]
+      properties:
+        id: { type: string, format: uuid }
+        case_ref: { type: string }
+        amount_kes: { type: number }
+        status: { type: string, const: approved }
+        txn_code: { type: string }
+        desk: { type: string }
+        rule_ids: { type: array, items: { type: string } }
+    DeskDocumentRequest:
+      type: object
+      required: [resident, doc_type, result, desk]
+      properties:
+        resident: { $ref: "#/components/schemas/ResidentNumber" }
+        presented_by: { $ref: "#/components/schemas/ResidentNumber" }
+        doc_type: { type: string, enum: [tenancy, employer_letter, birth_certificate, immunisation_card] }
+        result: { type: string, enum: [accepted, rejected] }
+        desk: { type: string, enum: [lango_square, konza_passport_desk] }
+        officer: { type: string, maxLength: 40 }
+    DeskDocument:
+      type: object
+      required: [evidence_id, doc_type, result, desk, created_at, rule_ids]
+      properties:
+        evidence_id: { type: string, pattern: "^desk:[0-9a-f-]{36}$", description: Accepted wherever an upload id is }
+        doc_type: { type: string }
+        result: { type: string }
+        desk: { type: string }
+        created_at: { type: string, format: date-time }
+        rule_ids: { type: array, items: { type: string } }
+    AuditEvent:
+      type: object
+      description: Append-only. Read by the Audit Office; never shown on public pages.
+      required: [id, at, request_id, client, operation, charter, outcome]
+      properties:
+        id: { type: integer }
+        at: { type: string, format: date-time }
+        request_id: { type: string }
+        client: { type: string }
+        session: { type: [string, "null"] }
+        resident: { type: [string, "null"] }
+        on_behalf_of: { type: [string, "null"] }
+        agency: { type: [string, "null"] }
+        operation: { type: string }
+        charter: { $ref: "#/components/schemas/CharterLevel" }
+        outcome: { type: string }
+        reason: { type: [string, "null"] }
+        request_hash: { type: [string, "null"] }

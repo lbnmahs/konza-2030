@@ -1,0 +1,6 @@
+{
+  "name": "passport_status",
+  "description": "Protected. The caller's current passport: expiry and whether renewal is open. Only when they want to renew.",
+  "params": {},
+  "required": []
+}

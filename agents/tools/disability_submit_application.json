@@ -1,0 +1,12 @@
+{
+  "name": "disability_submit_application",
+  "description": "Protected. Submit the tax exemption application once both documents are received (DS-03). It then waits for an in-person vetting (DS-04). Only after a clear yes.",
+  "params": {
+    "confirmation_id": {
+      "type": "string",
+      "description": "Only on country agents: leave empty the first time; after the caller says yes to the read-back, call again with the same arguments and the confirmation_id you were given."
+    }
+  },
+  "required": [],
+  "no_interrupt": true
+}

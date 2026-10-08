@@ -1,0 +1,28 @@
+{
+  "name": "identity_start_otp",
+  "description": "Start identity verification before revealing or changing any personal information. Matches the caller's ID number and date of birth and sends a 6 digit code to the phone on file: by SMS, or by a voice call that reads it twice when channel is voice or the caller noted codes by voice call. Returns verification_id and the last 3 digits of that phone. If it returns no_match, ask the caller to check both details, without saying which one was wrong.",
+  "params": {
+    "id_number": {
+      "type": "string",
+      "description": "The ID number exactly as the caller confirmed it"
+    },
+    "date_of_birth": {
+      "type": "string",
+      "description": "The caller's date of birth in YYYY-MM-DD format"
+    },
+    "channel": {
+      "type": "string",
+      "enum": [
+        "sms",
+        "voice"
+      ],
+      "description": "voice if the caller cannot read texts or asked for the code by phone call; otherwise leave out"
+    }
+  },
+  "required": [
+    "id_number",
+    "date_of_birth"
+  ],
+  "no_interrupt": true,
+  "pre_speech": true
+}

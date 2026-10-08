@@ -1,0 +1,48 @@
+{
+  "key": "KONZA",
+  "hub": "KONZA",
+  "name": "KONZA SIA resident assistant (Savannah; English, Swahili, Sheng)",
+  "authority": "sia",
+  "authority_name": "SIA",
+  "language": "sw",
+  "additional_languages": [
+    "en"
+  ],
+  "first_message": "Habari, mimi ni Savannah, msaidizi wa AI wa Savanah Information and Access, SIA. Nikusaidie vipi?",
+  "language_presets": {
+    "en": {
+      "first_message": "Hello, I'm Savannah, an AI assistant from Savanah Information and Access, SIA. I can help with Konza services. How can I help?"
+    }
+  },
+  "tts_model": "eleven_v4_turbo",
+  "voice_id": "i5oE89JoUCpIgvSOemWx",
+  "voice_note": "Halima (Voice Library, generated voice, not a clone of a real person; live moderation off; already in the account). Chosen by Mahs on 6 Oct 2026 (docs/konza/voice.md). Model eleven_v4_turbo from K5 (Mahs, 6 Oct); kept after the Swahili check on 7 Oct, no bake-off.",
+  "llm": "claude-sonnet-5",
+  "end_call": true,
+  "call_webhooks": true,
+  "language_detection": {
+    "only_at_conversation_start": false
+  },
+  "asr_keywords": [
+    "SIA",
+    "Savannah",
+    "Savanahlands",
+    "Konza",
+    "Lango Square",
+    "Aminia",
+    "pasipoti",
+    "passport",
+    "biometrics",
+    "QK"
+  ],
+  "call_limits": {
+    "daily_limit": 3,
+    "agent_concurrency_limit": 1,
+    "bursting_enabled": false
+  },
+  "privacy": {
+    "record_voice": false,
+    "retention_days": 30
+  },
+  "concierge_note": "One concierge node and service cards instead of a node per service (plan-k3 section 1): most P13 and P14 defects were routing between nodes."
+}

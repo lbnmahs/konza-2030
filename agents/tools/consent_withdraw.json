@@ -1,0 +1,14 @@
+{
+  "name": "consent_withdraw",
+  "description": "Protected. Withdraw a consent the caller gave; it stops at once.",
+  "params": {
+    "consent_id": {
+      "type": "string",
+      "description": "The consent id"
+    }
+  },
+  "required": [
+    "consent_id"
+  ],
+  "no_interrupt": true
+}

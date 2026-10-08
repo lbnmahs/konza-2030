@@ -1,0 +1,22 @@
+{
+  "name": "review_request",
+  "description": "Protected, two-step. Ask the Aminia Review Panel to review a decision the caller disagrees with (free, within 30 days, answered within 10 working days). Their reasons are stored as their words.",
+  "params": {
+    "decision_id": {
+      "type": "string",
+      "description": "decision_id from this call. Leave it out on a later call: the caller's newest decided decision in the open service is used."
+    },
+    "grounds": {
+      "type": "string",
+      "description": "Why the caller disagrees, in their words"
+    },
+    "confirmation_id": {
+      "type": "string",
+      "description": "Empty the first time; after the caller says yes, the confirmation_id you were given"
+    }
+  },
+  "required": [
+    "grounds"
+  ],
+  "no_interrupt": true
+}

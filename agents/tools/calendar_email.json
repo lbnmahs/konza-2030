@@ -1,0 +1,12 @@
+{
+  "name": "calendar_email",
+  "description": "Protected. With the caller's consent, email this call's bookings as a calendar file to the email address on file. Ask first; never read an address or link aloud. Two-step: the first call changes nothing; after a clear yes, call again with the same arguments and the confirmation_id.",
+  "params": {
+    "confirmation_id": {
+      "type": "string",
+      "description": "Empty the first time; after the caller says yes, the confirmation_id you were given"
+    }
+  },
+  "required": [],
+  "pre_speech": true
+}

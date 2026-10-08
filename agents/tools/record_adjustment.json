@@ -1,0 +1,29 @@
+{
+  "name": "record_adjustment",
+  "description": "Note an adjustment the caller asked for or agreed to, so the service can meet it on this call and later. Record the need, never a diagnosis or condition. Only with the caller's agreement.",
+  "params": {
+    "adjustment": {
+      "type": "string",
+      "enum": [
+        "sms_preferred",
+        "voice_otp",
+        "slower_speech",
+        "extra_time",
+        "helper_present",
+        "easy_read",
+        "accessible_letters_audio",
+        "accessible_letters_large_print",
+        "accessible_letters_braille"
+      ],
+      "description": "The adjustment"
+    },
+    "caller_consented": {
+      "type": "boolean",
+      "description": "true only if the caller agreed to this being noted"
+    }
+  },
+  "required": [
+    "adjustment",
+    "caller_consented"
+  ]
+}

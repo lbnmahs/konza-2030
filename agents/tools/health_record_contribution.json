@@ -1,0 +1,7 @@
+{
+  "name": "health_record_contribution",
+  "description": "Protected. After the payment is approved, record this month's contribution so cover becomes active.",
+  "params": {},
+  "required": [],
+  "no_interrupt": true
+}
