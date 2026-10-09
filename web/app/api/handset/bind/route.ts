@@ -8,7 +8,7 @@ import { getServiceSupabase } from "@/lib/supabase-server";
 
 export async function POST(request: Request) {
   if (!(await panelUser())) return unauthorized();
-  const { token, conversationId } = await request.json().catch(() => ({}));
+  const { token, conversationId } = (await request.json().catch(() => null)) ?? {};
   if (!/^[0-9a-f]{64}$/.test(String(token)) || !/^conv_[0-9a-z]+$/.test(String(conversationId))) {
     return Response.json({ error: "bad_request" }, { status: 400 });
   }

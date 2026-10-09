@@ -7,7 +7,7 @@ import { getServiceSupabase } from "@/lib/supabase-server";
 // "panel" in app_metadata lets the user read the panel tables (RLS).
 
 export async function POST(request: Request) {
-  const { email } = await request.json().catch(() => ({ email: "" }));
+  const { email } = (await request.json().catch(() => null)) ?? {};
   const address = String(email ?? "").trim().toLowerCase();
   const admin = getServiceSupabase();
   const panel = panelEmails().includes(address);

@@ -342,7 +342,7 @@ Deno.serve(async (req) => {
   if (!sameSecret(req.headers.get("x-tool-secret"), expected)) {
     return json({ error: "forbidden" }, 403);
   }
-  const body = await req.json().catch(() => ({}));
+  const body = (await req.json().catch(() => null)) ?? {};
 
   try {
     if (name === "call_started") return await callStarted(body);

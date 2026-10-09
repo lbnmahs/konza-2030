@@ -18,6 +18,7 @@ import {
   type DeskId,
   DESKS,
   DOC_TYPES,
+  nairobiDay,
   REVIEW_ANSWER_WORKING_DAYS,
   reviewAnswerBy,
   reviewAskBy,
@@ -282,7 +283,7 @@ async function consentFor(grantor: Resident, subject: Resident, scope: string, c
 }
 
 const decisionOut = (d: any) => {
-  const decidedOn = (d.decided_at ?? d.created_at ?? new Date().toISOString()).slice(0, 10);
+  const decidedOn = nairobiDay(d.decided_at ?? d.created_at ?? new Date().toISOString());
   return {
     id: d.id,
     application_id: d.application_id,
@@ -706,7 +707,7 @@ export function appealDecision(
       );
     }
     const t = today();
-    if (t > reviewAskBy(d.decided_at.slice(0, 10))) {
+    if (t > reviewAskBy(nairobiDay(d.decided_at))) {
       throw new KonzaError(
         409,
         "review_window_closed",

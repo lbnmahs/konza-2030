@@ -235,7 +235,7 @@ async function konzaReceipt(
   agencyId: string,
   citizenId: string,
 ): Promise<string | null> {
-  const { reviewAskBy } = await import("./rules/konza/rules.ts");
+  const { nairobiDay, reviewAskBy } = await import("./rules/konza/rules.ts");
   const { AGENCIES } = await import("./konza/manifest.ts");
   // This call's newest application with the agency; on a later call (MED-299) the verified
   // resident's newest one, as applicant or subject.
@@ -287,7 +287,7 @@ async function konzaReceipt(
   if (d.decided_at) {
     parts.push(
       `Review: ask the Aminia Review Panel by ${
-        spokenDate(reviewAskBy(String(d.decided_at).slice(0, 10)), true)
+        spokenDate(reviewAskBy(nairobiDay(String(d.decided_at))), true)
       }, free.`,
     );
   }

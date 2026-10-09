@@ -7,7 +7,7 @@ import { getServiceSupabase } from "@/lib/supabase-server";
 
 export async function POST(request: Request) {
   if (!(await panelUser())) return unauthorized();
-  const { agentKey } = await request.json().catch(() => ({ agentKey: "" }));
+  const { agentKey } = (await request.json().catch(() => null)) ?? {};
   const db = getServiceSupabase();
   // Rate limit (P15 L2/L3): at most 20 browser sessions a day across the panel.
   const { count } = await db.from("handset_tokens").select("token_hash", {

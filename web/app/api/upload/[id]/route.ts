@@ -10,7 +10,9 @@ import {
 // Mock document upload for any scenario. The file's type and size are checked,
 // and its first 12 bytes must be a real JPEG, PNG, WebP, HEIC or PDF; nothing
 // else of the file is read, and nothing is stored, logged or echoed. The checks
-// stored on the row are simulated from that metadata.
+// stored on the row are simulated from that metadata. The page sends only the
+// file's first bytes and its size (field "size"): Vercel refuses bodies over
+// 4.5 MB, below the 10 MB the page allows.
 
 export const dynamic = "force-dynamic";
 
@@ -68,7 +70,13 @@ export async function POST(
     const form = await request.formData();
     const file = form.get("file");
     if (file && typeof file !== "string") {
-      meta = { type: file.type, size: file.size };
+      const declaredSize = Number(form.get("size") ?? file.size);
+      meta = {
+        type: file.type,
+        size: Number.isSafeInteger(declaredSize) && declaredSize >= file.size
+          ? declaredSize
+          : file.size,
+      };
       // P14 security: the declared type can be spoofed, so the first 12 bytes must match it.
       realType = sniff(new Uint8Array(await file.slice(0, 12).arrayBuffer()));
     }

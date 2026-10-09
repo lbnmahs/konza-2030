@@ -10,6 +10,8 @@ import {
 } from "@/lib/upload";
 import styles from "./upload.module.css";
 
+const HEAD_BYTES = 4096;
+
 type Props = {
   id: string;
   caseRef: string;
@@ -23,8 +25,9 @@ type Props = {
   initialChecks: UploadCheck[];
 };
 
-// The chosen file goes straight into the request body. Nothing here reads
-// its contents; only the name, type and size are used.
+// Only the first bytes of the chosen file are sent, with its real size: the
+// server checks the file's signature and never needs the rest, and Vercel
+// refuses request bodies over 4.5 MB (a phone photo can be larger).
 export default function UploadForm({
   id,
   caseRef,
@@ -66,7 +69,8 @@ export default function UploadForm({
     setError(null);
     try {
       const body = new FormData();
-      body.append("file", file);
+      body.append("file", file.slice(0, HEAD_BYTES, file.type), file.name);
+      body.append("size", String(file.size));
       const res = await fetch(`/api/upload/${id}`, { method: "POST", body });
       const data = (await res.json().catch(() => ({}))) as {
         status?: string;

@@ -9,7 +9,7 @@
 // RV-01 a decision can be reviewed if asked within 30 days; RV-02 by an officer who did not
 //       make it, free; RV-03 answered within 10 working days.
 
-import { addDays, type ISODate } from "../common/dates.ts";
+import { addDays, type ISODate, todayIn } from "../common/dates.ts";
 import { keCalendar } from "../ke/calendar.ts";
 
 export const DELIVERY_FEE_KES = 200;
@@ -19,6 +19,9 @@ export const REVIEW_ANSWER_WORKING_DAYS = 10;
 export const deliveryDate = (today: ISODate) => keCalendar.addWorkingDays(today, 1);
 
 export const reviewAskBy = (decidedOn: ISODate) => addDays(decidedOn, REVIEW_WINDOW_DAYS);
+/** The Nairobi day of a stored timestamp (decided_at is UTC: 00:00 to 03:00 in Nairobi is the
+ * day before in UTC, which would shorten the review window by a day). */
+export const nairobiDay = (ts: string): ISODate => todayIn("Africa/Nairobi", new Date(ts));
 export const reviewAnswerBy = (askedOn: ISODate) =>
   keCalendar.addWorkingDays(askedOn, REVIEW_ANSWER_WORKING_DAYS);
 

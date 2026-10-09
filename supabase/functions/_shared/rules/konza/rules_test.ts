@@ -9,6 +9,7 @@ import {
   collectionDesk,
   deliveryDate,
   DESKS,
+  nairobiDay,
   normalName,
   PHONE_CODE_TRIES,
   PHONE_CODE_TTL_MS,
@@ -64,6 +65,12 @@ Deno.test("RV-01 and RV-03: review window and answer date", () => {
   assertEquals(reviewAskBy("2026-10-05"), "2026-11-04");
   assertEquals(reviewAnswerBy("2026-10-05"), "2026-10-19");
   assertEquals(reviewAnswerBy("2026-10-06"), "2026-10-21"); // Mashujaa Day skipped
+});
+
+Deno.test("RV-01: the window counts from the Nairobi day of the decision, not the UTC day", () => {
+  assertEquals(nairobiDay("2026-10-09T22:30:00+00:00"), "2026-10-10");
+  assertEquals(nairobiDay("2026-10-09T20:59:59Z"), "2026-10-09");
+  assertEquals(reviewAskBy(nairobiDay("2026-10-04T21:00:00.000Z")), "2026-11-04");
 });
 
 Deno.test("AD-01: address written and spoken forms; check code alphabet", () => {

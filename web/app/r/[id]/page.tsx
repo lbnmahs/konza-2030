@@ -25,7 +25,9 @@ export default async function ReceiptPage(props: { params: Promise<{ id: string 
     : r.decided_by === "officer"
     ? "An officer"
     : "Waiting for an officer";
-  const decided = (r.decided_at ?? r.created_at).slice(0, 10);
+  // The Nairobi day (the stamp is UTC), as the review window counts it.
+  const decided = new Date(r.decided_at ?? r.created_at)
+    .toLocaleDateString("en-CA", { timeZone: "Africa/Nairobi" });
   // K6 (MED-311): a link with no sign-in expires, and shows only allowlisted inputs.
   if (expired(r.decided_at ?? r.created_at)) {
     return (
