@@ -1,0 +1,13 @@
+{
+  "name": "decision_explain",
+  "description": "Protected. The reason, rule, inputs and review route of a decision, to explain it to the caller.",
+  "params": {
+    "decision_id": {
+      "type": "string",
+      "description": "decision_id from application_submit"
+    }
+  },
+  "required": [
+    "decision_id"
+  ]
+}

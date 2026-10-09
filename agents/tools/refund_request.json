@@ -1,0 +1,23 @@
+{
+  "name": "refund_request",
+  "description": "Protected. Ask for a refund of a completed payment to this service. The rules decide: refunded, declined with a reason, or sent to an officer. First call returns a confirmation_id: read back which payment and why, hear a clear yes, then call again with the same arguments and the confirmation_id.",
+  "params": {
+    "payment_ref": {
+      "type": "string",
+      "description": "The end of the payment reference or transaction code if the caller gives it; empty means the latest payment to this service"
+    },
+    "reason": {
+      "type": "string",
+      "description": "The caller's reason in a few words, for example found the old ID, paid twice"
+    },
+    "confirmation_id": {
+      "type": "string",
+      "description": "Empty the first time; after the caller says yes, the confirmation_id you were given"
+    }
+  },
+  "required": [
+    "reason"
+  ],
+  "no_interrupt": true,
+  "pre_speech": true
+}

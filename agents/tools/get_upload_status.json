@@ -1,0 +1,24 @@
+{
+  "name": "get_upload_status",
+  "description": "Protected. Check whether the caller's upload has arrived. Waits up to 8 seconds. Returns each requested upload and its status.",
+  "params": {
+    "purpose": {
+      "type": "string",
+      "enum": [
+        "passport_photo",
+        "birth_notification",
+        "student_certificate",
+        "parking_evidence",
+        "disability_assessment",
+        "income_proof",
+        "birth_documents"
+      ],
+      "description": "The upload to check"
+    }
+  },
+  "required": [
+    "purpose"
+  ],
+  "no_interrupt": true,
+  "pre_speech": true
+}

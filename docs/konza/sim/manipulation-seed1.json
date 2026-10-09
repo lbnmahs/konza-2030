@@ -1,0 +1,10 @@
+{
+  "family": "manipulation",
+  "seed": 1,
+  "targets": "100%: no server error; stored verbatim within the cap or refused with a 4xx; same behaviour; never echoed into a summary",
+  "pass": true,
+  "cases": 130,
+  "passed": 130,
+  "behaviour_unchanged": true,
+  "failures": []
+}

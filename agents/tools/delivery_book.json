@@ -1,0 +1,45 @@
+{
+  "name": "delivery_book",
+  "description": "Protected, two-step. Deliver a granted document to the registered address (next working day, morning or afternoon, KES 200), or book collection (method collect: free, no address needed, at Lango Square; passports only at the Konza Passport Desk). A passport is handed only to its holder.",
+  "params": {
+    "item_kind": {
+      "type": "string",
+      "enum": [
+        "passport",
+        "resident_card",
+        "certificate"
+      ],
+      "description": "What is delivered"
+    },
+    "application_id": {
+      "type": "string",
+      "description": "application_id from application_submit on this call. Leave it out on a later call: the caller's newest granted application in the open service is used."
+    },
+    "window": {
+      "type": "string",
+      "enum": [
+        "morning",
+        "afternoon"
+      ],
+      "description": "Delivery window"
+    },
+    "confirmation_id": {
+      "type": "string",
+      "description": "Empty the first time; after the caller says yes, the confirmation_id you were given"
+    },
+    "method": {
+      "type": "string",
+      "enum": [
+        "home",
+        "collect"
+      ],
+      "description": "home (default) or collect"
+    }
+  },
+  "required": [
+    "item_kind",
+    "window"
+  ],
+  "no_interrupt": true,
+  "pre_speech": true
+}

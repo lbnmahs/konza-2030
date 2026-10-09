@@ -1,0 +1,6 @@
+{
+  "name": "health_get_member_status",
+  "description": "Protected. The caller's health cover membership and whether cover is active now (SH-01).",
+  "params": {},
+  "required": []
+}

@@ -1,0 +1,6 @@
+{
+  "name": "rules_contribution_due",
+  "description": "Protected. What must be paid to make cover active, with the amount and dates ready to say (SH-01, SH-02).",
+  "params": {},
+  "required": []
+}

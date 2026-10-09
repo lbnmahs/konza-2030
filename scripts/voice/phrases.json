@@ -1,0 +1,79 @@
+{
+  "note": "K5 script-call phrases (MED-304): the 10 Swahili phrases Mahs reads on one call to SIA, in order, for the word error rate (deno task wer). Swahili checked by Mahs on 7 Oct. Amounts and dates are exactly as _shared/sw.ts says them.",
+  "phrases": [
+    {
+      "id": "amt-1",
+      "category": "amount",
+      "en": "The 34-page passport costs KES 7,550.",
+      "sw": "Pasipoti ya kurasa thelathini na nne inagharimu shilingi elfu saba mia tano na hamsini.",
+      "check": "PP-01. Amount heard exactly (7,550)."
+    },
+    {
+      "id": "amt-2",
+      "category": "amount",
+      "en": "Registering a business name costs KES 950, and it usually takes one to two days.",
+      "sw": "Kusajili jina la biashara ni shilingi mia tisa na hamsini, na kwa kawaida huchukua siku moja hadi mbili.",
+      "check": "BZ-01. Amount heard exactly (950)."
+    },
+    {
+      "id": "amt-3",
+      "category": "amount",
+      "en": "The 66-page passport costs KES 12,050.",
+      "sw": "Pasipoti ya kurasa sitini na sita inagharimu shilingi elfu kumi na mbili na hamsini.",
+      "check": "PP-01. Amount heard exactly (12,050).",
+      "review": "sw: sw.ts says 'elfu kumi na mbili na hamsini'; is that how you would say 12,050?"
+    },
+    {
+      "id": "date-1",
+      "category": "date",
+      "en": "Your biometrics appointment is on Thursday, 15 October 2026, in the morning, between 8 and 12.",
+      "sw": "Miadi yako ya biometriki ni Alhamisi, tarehe kumi na tano Oktoba, mwaka elfu mbili na ishirini na sita, asubuhi, kati ya saa mbili na saa sita.",
+      "check": "PP-03. Date and Swahili hours (8 am is saa mbili)."
+    },
+    {
+      "id": "date-3",
+      "category": "date",
+      "en": "You can ask for a review until Wednesday, 31 March 2027.",
+      "sw": "Unaweza kuomba mapitio hadi Jumatano, tarehe thelathini na moja Machi, mwaka elfu mbili na ishirini na saba.",
+      "check": "RV-01 deadline."
+    },
+    {
+      "id": "id-1",
+      "category": "resident_number",
+      "en": "Your resident number is Q K, twenty, forty-one, thirty-three, seventy-six.",
+      "sw": "Namba yako ya mkazi ni Q K, ishirini, arobaini na moja, thelathini na tatu, sabini na sita.",
+      "check": "QK-2041-3376 read in pairs, a short pause between pairs.",
+      "review": "sw: Q K as English letters (kyu, kei) or Swahili letter names?"
+    },
+    {
+      "id": "addr-1",
+      "category": "address",
+      "en": "I'll send it to zone three, block B twelve, plot forty-seven, unit two. Is that right?",
+      "sw": "Nitaituma eneo la tatu, bloku B kumi na mbili, kiwanja arobaini na saba, nyumba namba mbili. Ni sawa?",
+      "check": "Z3 B12 P047 U02, spoken as in world.md section 3.",
+      "review": "sw: 'eneo', 'bloku', 'kiwanja', 'nyumba namba' for zone, block, plot, unit? This becomes the Swahili address format in the read-back."
+    },
+    {
+      "id": "consent-1",
+      "category": "consent",
+      "en": "To act for your daughter Imani, I need your consent first. It lasts 12 months or until she turns 18, whichever comes first.",
+      "sw": "Ili nimsaidie binti yako Imani, nahitaji ridhaa yako kwanza. Inadumu miezi kumi na miwili au hadi atakapotimiza miaka kumi na minane, kipi kitakachotangulia.",
+      "check": "Charter 3.1. Child by first name only.",
+      "review": "sw: 'miezi kumi na miwili' and 'miaka kumi na minane' agree with the noun class; sw.ts would say 'kumi na mbili' and 'kumi na nane'. If agreement is right, MED-301 adds noun-class numbers to sw.ts."
+    },
+    {
+      "id": "rb-1",
+      "category": "readback",
+      "en": "Here is what will happen: you pay KES 7,550 for a 34-page passport renewal. Shall I go ahead?",
+      "sw": "Hivi ndivyo itakavyokuwa: utalipa shilingi elfu saba mia tano na hamsini kwa kurenew pasipoti ya kurasa thelathini na nne. Niendelee?",
+      "check": "Read-back before payment: amount and item exact, then a question."
+    },
+    {
+      "id": "officer-1",
+      "category": "refusal_to_officer",
+      "en": "I can't approve that, and I won't guess. An officer will decide, usually within 2 working days, and you'll get the reason in writing.",
+      "sw": "Siwezi kuidhinisha hilo, na sitakisia. Afisa ataamua, kwa kawaida ndani ya siku mbili za kazi, na utapata sababu kwa maandishi.",
+      "check": "Charter never acts; SH-04 timing."
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "name": "address_get",
+  "description": "Protected. The caller's registered Konza address, written and spoken, with its check code. Read the spoken form; never ask for the address again.",
+  "params": {},
+  "required": []
+}

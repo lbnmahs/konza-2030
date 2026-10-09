@@ -1,0 +1,136 @@
+{
+  "id": "health",
+  "title": "Thursday: adding a child to health cover",
+  "language": "en",
+  "source": "simulated caller (T1 test)",
+  "turns": [
+    {
+      "who": "agent",
+      "text": "Habari, mimi ni Savannah, msaidizi wa AI wa Savanah Information and Access, SIA. Nikusaidie vipi?"
+    },
+    {
+      "who": "caller",
+      "text": "Hi, yeah, I need to add my daughter to my health cover."
+    },
+    {
+      "who": "agent",
+      "text": "Nina furaha kukusaidia na hilo. Kabla ya kuendelea, je, ungependa tuzungumze kwa Kiingereza?"
+    },
+    {
+      "who": "caller",
+      "text": "Yeah, English please."
+    },
+    {
+      "who": "agent",
+      "text": "Great, we'll continue in English. To add your daughter as a dependant on your cover, I'll first need to verify your identity. Could you give me your resident number and date of birth?"
+    },
+    {
+      "who": "caller",
+      "text": "Sure, it's [ref] and I was born [date of birth]."
+    },
+    {
+      "who": "agent",
+      "text": "Just a moment while I verify that."
+    },
+    {
+      "who": "system",
+      "text": "Identity check: a one-time code goes by SMS to the phone on record."
+    },
+    {
+      "who": "agent",
+      "text": "[code read aloud, redacted]"
+    },
+    {
+      "who": "caller",
+      "text": "[code read aloud, redacted]"
+    },
+    {
+      "who": "system",
+      "text": "Code checked: identity verified."
+    },
+    {
+      "who": "agent",
+      "text": "Thanks, you're verified. Let me pull up the dependant cover service for you."
+    },
+    {
+      "who": "system",
+      "text": "Service card opened: Adding a child to health cover."
+    },
+    {
+      "who": "agent",
+      "text": "To add your daughter, I first need your consent on record as her parent to act for her in this. Can you confirm you give consent for me to apply for health cover on her behalf?"
+    },
+    {
+      "who": "caller",
+      "text": "Yeah, I consent."
+    },
+    {
+      "who": "system",
+      "text": "Asks first: the backend's read-back is said word for word; nothing happens before a clear yes."
+    },
+    {
+      "who": "agent",
+      "text": "Just to confirm: I'll record your consent for me to act for Imani regarding health cover, valid until the fifth of October twenty twenty-seven, and you can withdraw it any time. Shall I go ahead?"
+    },
+    {
+      "who": "caller",
+      "text": "Yeah, go ahead."
+    },
+    {
+      "who": "agent",
+      "text": "Consent is recorded. Now I'll prepare the application to add Imani to your health cover, with evidence noted as handed in at the desk. Shall I go ahead and submit this?"
+    },
+    {
+      "who": "caller",
+      "text": "Yeah, go ahead and submit it."
+    },
+    {
+      "who": "agent",
+      "text": "Preparing the application now."
+    },
+    {
+      "who": "system",
+      "text": "Asks first: the backend's read-back is said word for word; nothing happens before a clear yes."
+    },
+    {
+      "who": "agent",
+      "text": "To confirm, I'll submit the application to register Imani for health cover using the birth certificate you provided at the desk. Shall I go ahead?"
+    },
+    {
+      "who": "caller",
+      "text": "Yeah, go ahead."
+    },
+    {
+      "who": "agent",
+      "text": "Submitting the application now."
+    },
+    {
+      "who": "system",
+      "text": "Decision: granted, by a published rule. The receipt gives the reason and the review route."
+    },
+    {
+      "who": "agent",
+      "text": "Good news, Imani's health cover has been granted. A rule decided this, since you're her registered parent and the birth certificate on file checks out. You'll get confirmation by SMS, and if you ever disagree with this decision, you can ask the Aminia Review Panel for a free review within thirty days. Would you like me to text you a summary of this now?"
+    },
+    {
+      "who": "caller",
+      "text": "Oh great, so she's covered now? Yeah, send me that summary."
+    },
+    {
+      "who": "system",
+      "text": "Summary sent by SMS."
+    },
+    {
+      "who": "agent",
+      "text": "Yes, Imani is now covered, and I've sent the summary by SMS to your phone ending in [digits]. Is there anything else I can help you with?"
+    },
+    {
+      "who": "caller",
+      "text": "Alright, that's all sorted then. Thanks, bye."
+    },
+    {
+      "who": "agent",
+      "text": "Glad I could help get Imani covered. Take care and goodbye!"
+    }
+  ]
+}

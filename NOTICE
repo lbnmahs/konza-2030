@@ -1,0 +1,11 @@
+konza-2030
+Copyright 2026 Laban Mahihu
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+The agencies, residents and records in this repository are synthetic.
+Third-party packages are used under their own licences, listed in deno.lock and
+web/package-lock.json; none are copied into this repository.
+
+Independent open-source project. Not affiliated with the Konza Technopolis Development Authority
+or any government body.

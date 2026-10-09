@@ -1,0 +1,11 @@
+{
+  "name": "passport_quote",
+  "description": "Kenyan passport renewal fees by booklet and the steps. General information: no verification needed.",
+  "params": {
+    "pages": {
+      "type": "number",
+      "description": "34, 50 or 66 if the caller chose a booklet; otherwise leave empty"
+    }
+  },
+  "required": []
+}

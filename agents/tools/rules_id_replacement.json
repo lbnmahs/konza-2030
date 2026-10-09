@@ -1,0 +1,6 @@
+{
+  "name": "rules_id_replacement",
+  "description": "The replacement steps and fee from the rules (ID-01 to ID-04). Before the old card is blocked on this call it only tells you to block it first.",
+  "params": {},
+  "required": []
+}

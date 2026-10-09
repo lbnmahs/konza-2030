@@ -1,0 +1,6 @@
+{
+  "name": "disability_get_status",
+  "description": "Protected. The caller's registration with the council and their current tax exemption status (DS-02).",
+  "params": {},
+  "required": []
+}

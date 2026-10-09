@@ -1,0 +1,15 @@
+{
+  "name": "permit_issue",
+  "description": "Protected. Renew the permit after the payment on this call is approved. Refuses if it is not approved. Returns the new expiry (Swahili spoken date), verification code and transaction code.",
+  "params": {
+    "permit_id": {
+      "type": "string",
+      "description": "permit_id from permit_lookup"
+    }
+  },
+  "required": [
+    "permit_id"
+  ],
+  "no_interrupt": true,
+  "pre_speech": true
+}

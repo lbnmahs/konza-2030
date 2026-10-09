@@ -1,0 +1,112 @@
+{
+  "id": "business",
+  "title": "Friday: registering a small business",
+  "language": "en",
+  "source": "simulated caller (T1 test)",
+  "turns": [
+    {
+      "who": "agent",
+      "text": "Habari, mimi ni Savannah, msaidizi wa AI wa Savanah Information and Access, SIA. Nikusaidie vipi?"
+    },
+    {
+      "who": "caller",
+      "text": "Hey, uh, I need to register a business name. Can you help with that?"
+    },
+    {
+      "who": "agent",
+      "text": "Nitafurahi kukusaidia na usajili wa jina la biashara."
+    },
+    {
+      "who": "system",
+      "text": "Service card opened: Business registration with a tax number."
+    },
+    {
+      "who": "agent",
+      "text": "Kabla hatujaanza, je, unataka kujua ada au masharti kwanza, au unataka tuendelee moja kwa moja na usajili?"
+    },
+    {
+      "who": "caller",
+      "text": "Let's just go ahead and register, yeah."
+    },
+    {
+      "who": "agent",
+      "text": "Sawa. Kwanza tunahitaji kuthibitisha utambulisho wako. Je, unaweza kunipa namba yako ya mkazi na tarehe yako ya kuzaliwa?"
+    },
+    {
+      "who": "caller",
+      "text": "My resident number is [ref], and I was born [date of birth]."
+    },
+    {
+      "who": "agent",
+      "text": "Nakagua utambulisho wako sasa."
+    },
+    {
+      "who": "system",
+      "text": "Identity check: a one-time code goes by SMS to the phone on record."
+    },
+    {
+      "who": "agent",
+      "text": "[code read aloud, redacted]"
+    },
+    {
+      "who": "caller",
+      "text": "[code read aloud, redacted]"
+    },
+    {
+      "who": "system",
+      "text": "Code checked: identity verified."
+    },
+    {
+      "who": "agent",
+      "text": "Asante, umethibitishwa. Sasa, jina gani unataka kusajili kwa biashara yako?"
+    },
+    {
+      "who": "caller",
+      "text": "Njoroge Solar Repairs."
+    },
+    {
+      "who": "agent",
+      "text": "Ningependa kuthibitisha kabla sijaendelea."
+    },
+    {
+      "who": "system",
+      "text": "Asks first: the backend's read-back is said word for word; nothing happens before a clear yes."
+    },
+    {
+      "who": "agent",
+      "text": "Kwa hivyo, tutasajili jina la biashara Njoroge Solar Repairs, na utapata namba ya kodi pamoja na usajili huo. Ada ni shilingi mia tisa hamsini. Je, uthibitishe tuendelee?"
+    },
+    {
+      "who": "caller",
+      "text": "Yeah, that's right. Go ahead."
+    },
+    {
+      "who": "agent",
+      "text": "Ninawasilisha maombi yako sasa."
+    },
+    {
+      "who": "system",
+      "text": "Decision: granted, by a published rule. The receipt gives the reason and the review route."
+    },
+    {
+      "who": "agent",
+      "text": "Habari njema! Jina lako la biashara, Njoroge Solar Repairs, limeidhinishwa na kanuni kwa sababu jina hilo lipo huru na halifanani na jina la serikali. Namba yako ya kodi imetolewa pamoja na usajili. Hatua inayofuata ni kulipa ada ya shilingi mia tisa hamsini, na unaweza kuomba mapitio kutoka kwa Aminia Review Panel ndani ya siku thelathini bila malipo ikiwa hukubaliani na uamuzi huu.\n\nJe, ungependa kulipa sasa?"
+    },
+    {
+      "who": "caller",
+      "text": "So the tax number - do I need a separate form for that, or is it included in this registration?"
+    },
+    {
+      "who": "agent",
+      "text": "Hapana, hakuna fomu tofauti. Namba ya kodi, [ref]... samahani, nitaisoma vizuri: imetolewa moja kwa moja pamoja na usajili huu wa jina la biashara, hivyo tayari uko nayo. Je, ungependa kuendelea na malipo ya ada sasa?"
+    },
+    {
+      "who": "caller",
+      "text": "Ok great, so the tax number is already included. That's all I needed, thanks."
+    },
+    {
+      "who": "agent",
+      "text": "Karibu sana! Nimefurahi kukusaidia na usajili wa biashara yako. Kila la heri na Njoroge Solar Repairs. Kwaheri!"
+    }
+  ]
+}

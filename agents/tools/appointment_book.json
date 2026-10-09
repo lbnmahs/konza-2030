@@ -1,0 +1,31 @@
+{
+  "name": "appointment_book",
+  "description": "Protected, two-step. Book, or move, the in-person step a granted application needs (passport biometrics at the Konza Passport Desk), after the fee is paid: any working day within the next 10 working days, morning (8 to 12) or afternoon (2 to 5). The first call only prepares and tells you the date: use it to answer 'which day'. Booking again with another day or window moves an existing appointment, until the day before it. Only the holder attends.",
+  "params": {
+    "application_id": {
+      "type": "string",
+      "description": "application_id from application_submit on this call. Leave it out on a later call: the caller's newest granted application in the open service is used."
+    },
+    "window": {
+      "type": "string",
+      "enum": [
+        "morning",
+        "afternoon"
+      ],
+      "description": "Morning or afternoon"
+    },
+    "confirmation_id": {
+      "type": "string",
+      "description": "Empty the first time; after the caller says yes, the confirmation_id you were given"
+    },
+    "on_date": {
+      "type": "string",
+      "description": "YYYY-MM-DD, a working day the caller asked for. Leave out for the next working day."
+    }
+  },
+  "required": [
+    "window"
+  ],
+  "no_interrupt": true,
+  "pre_speech": true
+}

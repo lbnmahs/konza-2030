@@ -1,0 +1,14 @@
+{
+  "name": "payment_confirm",
+  "description": "Protected. Approve the waiting DEMO payment prompt with the 6-digit code the caller reads or texts you. Three wrong codes or 5 minutes decline it.",
+  "params": {
+    "code": {
+      "type": "string",
+      "description": "The 6 digits the caller gave you"
+    }
+  },
+  "required": [
+    "code"
+  ],
+  "no_interrupt": true
+}

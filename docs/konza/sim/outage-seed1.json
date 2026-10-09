@@ -1,0 +1,274 @@
+{
+  "family": "outage",
+  "seed": 1,
+  "targets": "100% answered or routed; 0 partial writes; 0 false done",
+  "pass": true,
+  "scenarios": {
+    "sps": {
+      "operations": 58,
+      "with_answer_or_route": 58,
+      "no_route": 0,
+      "wrong_refusal": 0,
+      "partial_writes": 0,
+      "false_done": 0,
+      "by_operation": {
+        "askRules:sps/fees": {
+          "route": 1
+        },
+        "askRules:siln/eligibility": {
+          "answered": 1
+        },
+        "askRules:sps/renewal": {
+          "route": 8
+        },
+        "askRules:siln/schools": {
+          "answered": 8
+        },
+        "getApplication": {
+          "answered": 8
+        },
+        "getAddress": {
+          "answered": 8
+        },
+        "submitApplication:sps": {
+          "route": 8
+        },
+        "submitApplication:siln": {
+          "done": 8
+        },
+        "bookDelivery": {
+          "done": 8
+        }
+      },
+      "checker": {}
+    },
+    "siln": {
+      "operations": 58,
+      "with_answer_or_route": 58,
+      "no_route": 0,
+      "wrong_refusal": 0,
+      "partial_writes": 0,
+      "false_done": 0,
+      "by_operation": {
+        "askRules:sps/fees": {
+          "answered": 1
+        },
+        "askRules:siln/eligibility": {
+          "route": 1
+        },
+        "askRules:sps/renewal": {
+          "answered": 8
+        },
+        "askRules:siln/schools": {
+          "route": 8
+        },
+        "getApplication": {
+          "answered": 8
+        },
+        "getAddress": {
+          "answered": 8
+        },
+        "submitApplication:sps": {
+          "done": 8
+        },
+        "submitApplication:siln": {
+          "route": 8
+        },
+        "bookDelivery": {
+          "done": 8
+        }
+      },
+      "checker": {}
+    },
+    "address_registry": {
+      "operations": 58,
+      "with_answer_or_route": 58,
+      "no_route": 0,
+      "wrong_refusal": 0,
+      "partial_writes": 0,
+      "false_done": 0,
+      "by_operation": {
+        "askRules:sps/fees": {
+          "answered": 1
+        },
+        "askRules:siln/eligibility": {
+          "answered": 1
+        },
+        "askRules:sps/renewal": {
+          "answered": 8
+        },
+        "askRules:siln/schools": {
+          "route": 8
+        },
+        "getApplication": {
+          "answered": 8
+        },
+        "getAddress": {
+          "route": 8
+        },
+        "submitApplication:sps": {
+          "done": 8
+        },
+        "submitApplication:siln": {
+          "route": 8
+        },
+        "bookDelivery": {
+          "route": 8
+        }
+      },
+      "checker": {}
+    },
+    "audit_log": {
+      "operations": 58,
+      "with_answer_or_route": 58,
+      "no_route": 0,
+      "wrong_refusal": 0,
+      "partial_writes": 0,
+      "false_done": 0,
+      "by_operation": {
+        "askRules:sps/fees": {
+          "answered": 1
+        },
+        "askRules:siln/eligibility": {
+          "answered": 1
+        },
+        "askRules:sps/renewal": {
+          "route": 8
+        },
+        "askRules:siln/schools": {
+          "route": 8
+        },
+        "getApplication": {
+          "route": 8
+        },
+        "getAddress": {
+          "route": 8
+        },
+        "submitApplication:sps": {
+          "route": 8
+        },
+        "submitApplication:siln": {
+          "route": 8
+        },
+        "bookDelivery": {
+          "route": 8
+        }
+      },
+      "checker": {}
+    },
+    "decisions_table": {
+      "operations": 58,
+      "with_answer_or_route": 58,
+      "no_route": 0,
+      "wrong_refusal": 0,
+      "partial_writes": 0,
+      "false_done": 0,
+      "by_operation": {
+        "askRules:sps/fees": {
+          "answered": 1
+        },
+        "askRules:siln/eligibility": {
+          "answered": 1
+        },
+        "askRules:sps/renewal": {
+          "answered": 8
+        },
+        "askRules:siln/schools": {
+          "answered": 8
+        },
+        "getApplication": {
+          "route": 8
+        },
+        "getAddress": {
+          "answered": 8
+        },
+        "submitApplication:sps": {
+          "done": 8
+        },
+        "submitApplication:siln": {
+          "done": 8
+        },
+        "bookDelivery": {
+          "route": 8
+        }
+      },
+      "checker": {}
+    },
+    "audit_function": {
+      "operations": 58,
+      "with_answer_or_route": 58,
+      "no_route": 0,
+      "wrong_refusal": 0,
+      "partial_writes": 0,
+      "false_done": 0,
+      "by_operation": {
+        "askRules:sps/fees": {
+          "answered": 1
+        },
+        "askRules:siln/eligibility": {
+          "answered": 1
+        },
+        "askRules:sps/renewal": {
+          "answered": 8
+        },
+        "askRules:siln/schools": {
+          "answered": 8
+        },
+        "getApplication": {
+          "answered": 8
+        },
+        "getAddress": {
+          "answered": 8
+        },
+        "submitApplication:sps": {
+          "done": 8
+        },
+        "submitApplication:siln": {
+          "done": 8
+        },
+        "bookDelivery": {
+          "done": 8
+        }
+      },
+      "checker": {}
+    },
+    "siln_ongranted_midwrite": {
+      "operations": 58,
+      "with_answer_or_route": 58,
+      "no_route": 0,
+      "wrong_refusal": 0,
+      "partial_writes": 0,
+      "false_done": 0,
+      "by_operation": {
+        "askRules:sps/fees": {
+          "answered": 1
+        },
+        "askRules:siln/eligibility": {
+          "answered": 1
+        },
+        "askRules:sps/renewal": {
+          "answered": 8
+        },
+        "askRules:siln/schools": {
+          "answered": 8
+        },
+        "getApplication": {
+          "answered": 8
+        },
+        "getAddress": {
+          "answered": 8
+        },
+        "submitApplication:sps": {
+          "done": 8
+        },
+        "submitApplication:siln": {
+          "done": 8
+        },
+        "bookDelivery": {
+          "done": 8
+        }
+      },
+      "checker": {}
+    }
+  }
+}

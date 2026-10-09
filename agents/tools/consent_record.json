@@ -1,0 +1,23 @@
+{
+  "name": "consent_record",
+  "description": "Protected, two-step. A parent or guardian lets SIA act for their child in some services. Only a recorded parent or guardian can consent.",
+  "params": {
+    "subject": {
+      "type": "string",
+      "description": "The child: resident number, or just the child's first name (matched only among the caller's own recorded children)."
+    },
+    "scopes": {
+      "type": "string",
+      "description": "Comma separated scopes, for example school_application"
+    },
+    "confirmation_id": {
+      "type": "string",
+      "description": "Empty the first time; after the caller says yes, the confirmation_id you were given"
+    }
+  },
+  "required": [
+    "subject",
+    "scopes"
+  ],
+  "no_interrupt": true
+}

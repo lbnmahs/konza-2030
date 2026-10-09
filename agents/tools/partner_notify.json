@@ -1,0 +1,27 @@
+{
+  "name": "partner_notify",
+  "description": "Protected. Refer the verified caller to ONE partner. Call once per partner, only after asking about that partner on its own. If the caller said no or not yet, still call it with caller_consented_to_this_partner false so it is recorded. The system fills in the details from the records and never shares anything the partner is not allowed.",
+  "params": {
+    "partner_id": {
+      "type": "string",
+      "description": "partner_id from partner_list_options"
+    },
+    "caller_consented_to_this_partner": {
+      "type": "boolean",
+      "description": "true only if the caller clearly agreed to this specific partner"
+    },
+    "fields": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "A field name from that partner's fields_shared"
+      },
+      "description": "Names of the details to share, from that partner's fields_shared"
+    }
+  },
+  "required": [
+    "partner_id",
+    "caller_consented_to_this_partner"
+  ],
+  "no_interrupt": true
+}

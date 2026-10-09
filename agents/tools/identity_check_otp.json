@@ -1,0 +1,18 @@
+{
+  "name": "identity_check_otp",
+  "description": "Check the code the caller reads back from their SMS. On success the caller is verified for 15 minutes and you get their first name.",
+  "params": {
+    "verification_id": {
+      "type": "string",
+      "description": "The verification_id returned by identity_start_otp"
+    },
+    "code": {
+      "type": "string",
+      "description": "The code the caller read out, digits only"
+    }
+  },
+  "required": [
+    "verification_id",
+    "code"
+  ]
+}

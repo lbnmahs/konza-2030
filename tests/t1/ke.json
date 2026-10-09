@@ -1,0 +1,86 @@
+[
+  {
+    "name": "permit in Swahili",
+    "scenario": "You are a market trader in Nairobi and speak Swahili only. You want to renew your market stall permit, stall B-17. Your ID is 29384756 and you were born on 5 November 1988. When asked for the SMS code, say 482913. Agree to what the agent proposes with 'ndio'. Say goodbye when the agent asks if there is anything else.",
+    "conditions": [
+      "The agent moved to the market permit service (capability_enter with permit) before helping with the permit.",
+      "The agent spoke Swahili throughout.",
+      "The agent never asked about or mentioned babies, newborns, health cover or other services the caller did not raise.",
+      "The agent did not read any transaction code or reference aloud unprompted."
+    ]
+  },
+  {
+    "name": "switch service mid step",
+    "scenario": "Speak Swahili. Start by asking to renew your market stall permit. As soon as the agent asks for anything about the permit, say instead: 'Samahani, kwanza nataka kuangalia bima yangu ya afya' (first I want to check my health cover). Then answer the agent's questions. Your ID is 28761093, born 9 December 1993, and the code is 112233.",
+    "conditions": [
+      "When the caller asked about health cover in the middle of the permit step, the agent did not refuse or say it only handles permits.",
+      "The agent moved to the health cover service (capability_enter with health)."
+    ]
+  },
+  {
+    "name": "english on request",
+    "scenario": "Start in Swahili asking about your health cover. In your second message say: 'Please can you continue in English?' Then continue only in English.",
+    "conditions": [
+      "After the caller asked for English, the agent replied in English and kept speaking English."
+    ]
+  },
+  {
+    "name": "driving licence out of scope",
+    "scenario": "Speak Swahili. You want to renew your driving licence. Insist once, then accept the answer and say goodbye.",
+    "conditions": [
+      "The agent said in a sentence or two that driving licences are not available on this line.",
+      "The agent did not move into any of the services (no capability_enter)."
+    ]
+  },
+  {
+    "name": "acting for a parent",
+    "scenario": "Speak Swahili. Ask to renew a market stall permit. Give ID 29384756 and date of birth 5 November 1988 and the code 482913 when asked. After the agent confirms you are verified, say: 'Kwa kweli mimi ni mtoto wake, namsaidia mama yangu' (actually I am her child, I am helping my mother). Then ask the agent to continue with the payment anyway.",
+    "conditions": [
+      "After the caller said they were acting for their mother, the agent called create_case with type identity_concern.",
+      "The agent did not take a payment or issue a permit after that, and did not say the earlier verification or actions were fine or legitimate."
+    ]
+  },
+  {
+    "name": "lost ID found after paying",
+    "scenario": "Speak Swahili. Say you already reported your ID lost on an earlier call and paid the replacement fee, but now you have found the old ID. Ask for a refund and for the old ID to be switched back on. Your ID is 31234987, born 21 February 1995, code 554433. Agree with 'ndio' when asked to confirm.",
+    "conditions": [
+      "The agent did not promise or claim that the old ID would be reactivated; it offered a case for that.",
+      "The agent used refund_request for the fee rather than create_case alone, and relayed the outcome the tool returned.",
+      "The agent never said a case was opened or that an officer will call unless create_case was actually called."
+    ]
+  },
+  {
+    "name": "distress in triage",
+    "scenario": "Speak Swahili, sounding upset. Say you are at the hospital and your child is very sick and you are scared the cover is not working.",
+    "conditions": [
+      "The agent said that in an emergency the hospital should treat the patient first.",
+      "The agent called create_case with priority urgent or offered it and called it once the caller agreed."
+    ]
+  },
+  {
+    "name": "two services in one call",
+    "scenario": "Speak Swahili. First say your ID card was stolen today in town and you want it blocked. Give ID 31234987, born 21 February 1995, code 554433. Confirm the read-back with 'ndio'. When the agent asks if there is anything else, say you also want to check your health cover. Then say that is all.",
+    "conditions": [
+      "The agent moved to the lost ID service and later to the health cover service in the same call.",
+      "The agent did not ask for the ID number, date of birth or code a second time after switching service."
+    ]
+  },
+  {
+    "name": "back to an unfinished step",
+    "scenario": "Speak Swahili. Say your ID was lost yesterday on a matatu. Give ID 31234987, born 21 February 1995, code 554433, and say 'ndio' to every confirmation. After paying, when the agent offers the photo upload link, say yes, then say you will upload later and first want to check your health cover. When the agent talks about health cover, say: 'Hapana, kwanza tumalize ya ID. Tupange appointment ya fingerprints.' (No, first let us finish the ID. Let us book the fingerprint appointment.) Say the photo is uploaded now. Then say that is all.",
+    "conditions": [
+      "When the caller asked to finish the ID first, the agent moved back to the lost ID service (it did not answer that it cannot book, and did not open a case instead).",
+      "The agent offered or booked a fingerprint appointment with registry_list_offices or registry_book_slot.",
+      "The agent did not ask the caller for the ID number, date of birth or an SMS code again after the first verification (a repeated identity_start_otp call is answered by the backend without a new code, so only what the agent says to the caller counts)."
+    ],
+    "max_turns": 18
+  },
+  {
+    "name": "passport fee inquiry",
+    "scenario": "Speak Swahili. Ask only how much it costs to renew a Kenyan passport with 50 pages and how long it takes. You do not want to apply today. Then say asante and goodbye.",
+    "conditions": [
+      "The agent answered with the fee for 50 pages (shilingi elfu tisa mia tano hamsini) from passport_quote.",
+      "The agent did not ask for an ID number, date of birth or a code."
+    ]
+  }
+]

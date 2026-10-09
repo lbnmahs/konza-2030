@@ -1,0 +1,108 @@
+{
+  "id": "arrival",
+  "title": "Wednesday: registering the family address",
+  "language": "en",
+  "source": "simulated caller (T1 test), excerpt",
+  "turns": [
+    {
+      "who": "agent",
+      "text": "Habari, mimi ni Savannah, msaidizi wa AI wa Savanah Information and Access, SIA. Nikusaidie vipi?"
+    },
+    {
+      "who": "caller",
+      "text": "Hey, uh, I need to register my address. Can you help me with that?"
+    },
+    {
+      "who": "agent",
+      "text": "Nikuhudumie kwa Kiingereza, au tuendelee kwa Kiswahili?"
+    },
+    {
+      "who": "caller",
+      "text": "English please."
+    },
+    {
+      "who": "agent",
+      "text": "I'll switch us over to English now."
+    },
+    {
+      "who": "agent",
+      "text": "Sure, I can help you with address registration. Let me pull up that service for you."
+    },
+    {
+      "who": "system",
+      "text": "Service card opened: Address registration and resident card."
+    },
+    {
+      "who": "agent",
+      "text": "To get started, could you tell me what evidence of address you have, or would you like to know what's required first?"
+    },
+    {
+      "who": "caller",
+      "text": "Yeah, I handed in my tenancy agreement at Lango Square this morning. They gave me an evidence ID."
+    },
+    {
+      "who": "agent",
+      "text": "Good, since that was already recorded at Lango Square, I don't need any evidence ID from you, it's on file there. I do need to verify your identity first before I can submit this. Could you give me your Konza resident number and your date of birth?"
+    },
+    {
+      "who": "caller",
+      "text": "Ok, it's [ref] and I was born [date of birth]."
+    },
+    {
+      "who": "agent",
+      "text": "Thanks, let me verify that for you now."
+    },
+    {
+      "who": "system",
+      "text": "Identity check: a one-time code goes by SMS to the phone on record."
+    },
+    {
+      "who": "agent",
+      "text": "I've sent a code by text to the phone ending in [digits]. Could you read that code back to me?"
+    },
+    {
+      "who": "caller",
+      "text": "[code read aloud, redacted]"
+    },
+    {
+      "who": "system",
+      "text": "Code checked: identity verified."
+    },
+    {
+      "who": "agent",
+      "text": "Thanks, you're verified. Now let me prepare your address registration submission."
+    },
+    {
+      "who": "system",
+      "text": "Asks first: the backend's read-back is said word for word; nothing happens before a clear yes."
+    },
+    {
+      "who": "agent",
+      "text": "Here's what will happen: we'll register your address using the tenancy agreement you handed in, and issue your resident card. Shall I go ahead?"
+    },
+    {
+      "who": "caller",
+      "text": "Wait, I need to give you the evidence ID though, the officer specifically gave it to me. It's desk:[id]"
+    },
+    {
+      "who": "agent",
+      "text": "No need, thank you, once it's handed in at Lango Square, it's already recorded on our side, so I don't need that ID from you. Shall I go ahead and submit the registration as I described?"
+    },
+    {
+      "who": "caller",
+      "text": "Hmm, ok. Yeah, go ahead then."
+    },
+    {
+      "who": "agent",
+      "text": "Submitting your registration now."
+    },
+    {
+      "who": "system",
+      "text": "Decision: granted, by a published rule. The receipt gives the reason and the review route."
+    },
+    {
+      "who": "agent",
+      "text": "Your address registration has been granted by a published rule, because the document you provided checks out for your resident record. Your resident card can now be delivered to your home or collected free at Lango Square, and you can ask the Aminia Review Panel for a review within thirty days, free of charge, if you ever disagree with a decision. Would you like the card delivered home, or would you rather collect it at Lango Square?"
+    }
+  ]
+}

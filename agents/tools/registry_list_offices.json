@@ -1,0 +1,19 @@
+{
+  "name": "registry_list_offices",
+  "description": "Offices for an in-person appointment, each with its earliest free slots and the times ready to say.",
+  "params": {
+    "area": {
+      "type": "string",
+      "description": "Area the caller prefers, if they said one"
+    },
+    "prefer": {
+      "type": "string",
+      "enum": [
+        "morning",
+        "afternoon"
+      ],
+      "description": "Only if the caller said they prefer mornings or afternoons"
+    }
+  },
+  "required": []
+}
