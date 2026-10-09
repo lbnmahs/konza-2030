@@ -1,13 +1,23 @@
-// deno task release <out dir> [--version v0.1.0]
+// deno task release <out dir> --version vX.Y.Z [--notes <file>] [--repo <git url>]
 // K7 (MED-319): builds the public release from the committed tree (git archive HEAD, so untracked
-// local files such as .env never enter it), removes what stays private, checks it, and commits it
-// as one commit with no history in <out dir>, ready to push to the release repository. Refuses on
-// any failed check. Pushing is a separate, approved step.
+// local files such as .env never enter it), removes what stays private and checks it. Since
+// v0.1.3 (Mahs, 9 Oct) a release is a normal commit and tag on top of the release repository's
+// history, never a force-pushed orphan: <out dir> is a fresh clone of the release repository
+// with its tree replaced by the export, committed and tagged. Refuses on any failed check, an
+// existing tag or an unchanged tree. Pushing (without --force) is a separate, approved step.
 
 const [out, ...rest] = Deno.args;
-const version = rest[rest.indexOf("--version") + 1] ?? "v0.1.0";
-if (!out) {
-  console.error("usage: deno task release <out dir> [--version v0.1.0]");
+const flag = (name: string) => {
+  const i = rest.indexOf(name);
+  return i === -1 ? undefined : rest[i + 1];
+};
+const version = flag("--version");
+const notesFile = flag("--notes");
+const repo = flag("--repo") ?? "https://github.com/lbnmahs/konza-2030.git";
+if (!out || !version || !/^v\d+\.\d+\.\d+$/.test(version)) {
+  console.error(
+    "usage: deno task release <out dir> --version vX.Y.Z [--notes <file>] [--repo <git url>]",
+  );
   Deno.exit(2);
 }
 
@@ -39,8 +49,15 @@ try {
   if ([...Deno.readDirSync(out)].length) throw new Error(`${out} is not empty`);
 } catch (e) {
   if (!(e instanceof Deno.errors.NotFound)) throw e;
-  Deno.mkdirSync(out, { recursive: true });
 }
+const notes = notesFile ? (await Deno.readTextFile(notesFile)).trim() : "";
+
+// 0. The release repository's history, its tree emptied (.git stays) for the new export.
+await run("git", ["clone", "-q", repo, out]);
+if ((await run("git", ["tag", "-l", version], out)).trim()) {
+  throw new Error(`${version} already exists in ${repo}`);
+}
+await run("git", ["rm", "-rq", "--ignore-unmatch", "."], out);
 
 // 1. The committed tree, minus the private paths.
 const files = (await run("git", ["ls-files"])).split("\n").filter(Boolean);
@@ -98,6 +115,8 @@ for (const f of shipped) {
   if (IDS.test(text)) problems.push(`${f}: a conversation, test run or batch id`);
   if (f !== SELF && LINK_PRIVATE.test(text)) problems.push(`${f}: refers to a private path`);
 }
+if (DASH.test(notes)) problems.push(`${notesFile}: en or em dash`);
+if (IDS.test(notes)) problems.push(`${notesFile}: a conversation, test run or batch id`);
 for (const f of shipped) {
   if (/(^|\/)\.env(\.|$)/.test(f) && !/\.env\.example$/.test(f)) problems.push(`${f}: env file`);
 }
@@ -129,26 +148,31 @@ if (problems.length) {
   Deno.exit(1);
 }
 
-// 4. One commit, no history.
+// 4. One commit on top of the release history, tagged.
 const author = (await run("git", ["config", "user.name"])).trim();
 const email = (await run("git", ["config", "user.email"])).trim();
-await run("git", ["init", "-q", "-b", "main"], out);
+const as = ["-c", `user.name=${author}`, "-c", `user.email=${email}`];
 await run("git", ["add", "-A"], out);
+const stat = (await run("git", ["diff", "--cached", "--stat"], out)).trim();
+if (!stat) {
+  console.error(`release refused: nothing changed since the last release in ${repo}`);
+  Deno.exit(1);
+}
 await run("git", [
-  "-c",
-  `user.name=${author}`,
-  "-c",
-  `user.email=${email}`,
+  ...as,
   "commit",
   "-q",
   "-m",
-  `konza-2030 ${version}: first open-source release
+  `konza-2030 ${version}${notes ? `\n\n${notes}` : ""}
 
 Independent open-source project. Not affiliated with the Konza Technopolis Development Authority or any government body.`,
 ], out);
-await run("git", ["tag", "-a", version, "-m", `konza-2030 ${version}`], out);
+await run("git", [...as, "tag", "-a", version, "-m", `konza-2030 ${version}`], out);
+console.log(`${stat}\n`);
 console.log(
   `${shipped.length} files, ${
     files.length - shipped.length
-  } kept private; checks passed; committed and tagged ${version} in ${out}`,
+  } kept private; checks passed; committed and tagged ${version} on top of ${repo} in ${out}.
+Review: git -C ${out} show --stat HEAD
+Push (after approval, never --force): git -C ${out} push origin main ${version}`,
 );
