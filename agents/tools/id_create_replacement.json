@@ -1,0 +1,7 @@
+{
+  "name": "id_create_replacement",
+  "description": "Protected. Open the replacement application linked to this call's loss declaration. Returns application_ref and fee_kes.",
+  "params": {},
+  "required": [],
+  "no_interrupt": true
+}

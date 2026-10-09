@@ -1,0 +1,33 @@
+{
+  "requests": {
+    "KE": "72ce657baf77ea16eddfdedc5b5683c8adf49e30723d1ef14eeb6a446a79322e"
+  },
+  "people": {
+    "KE": [
+      {
+        "full_name": "Peter Kamau Gitau",
+        "dob": "1978-04-12",
+        "id_number": "23847561",
+        "situation": "He wants to check the status of his application for a replacement national identity card."
+      },
+      {
+        "full_name": "Esther Nyambura Mwangi",
+        "dob": "1991-09-03",
+        "id_number": "29384716",
+        "situation": "She needs guidance on registering her newborn daughter's birth."
+      },
+      {
+        "full_name": "Samuel Ochieng Odhiambo",
+        "dob": "1965-01-27",
+        "id_number": "21093847",
+        "situation": "He is asking how to apply for an elderly persons' cash transfer for his mother."
+      },
+      {
+        "full_name": "Mercy Chebet Langat",
+        "dob": "2003-06-18",
+        "id_number": "38472910",
+        "situation": "She wants to know which documents are required to renew her business permit for a small kiosk."
+      }
+    ]
+  }
+}

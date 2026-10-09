@@ -1,0 +1,28 @@
+{
+  "name": "create_case",
+  "description": "Create a case so an officer calls the caller back. Use when the caller asks for a person, sounds distressed, mentions a risk to health or safety, or when a tool keeps failing. Then tell the caller an officer will call back. Use type identity_concern as soon as the caller says they are not the person who was verified, or are acting for someone else: this holds the call so nothing more can be changed.",
+  "params": {
+    "type": {
+      "type": "string",
+      "description": "Short topic, for example bins, council_tax, permit, residency, refund, identity_concern, general"
+    },
+    "priority": {
+      "type": "string",
+      "description": "urgent for risk to health or safety, otherwise routine",
+      "enum": [
+        "routine",
+        "urgent"
+      ]
+    },
+    "summary": {
+      "type": "string",
+      "description": "Two or three sentences so the officer does not need to ask again"
+    }
+  },
+  "required": [
+    "type",
+    "priority",
+    "summary"
+  ],
+  "no_interrupt": true
+}

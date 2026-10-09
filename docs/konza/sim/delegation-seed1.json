@@ -1,0 +1,82 @@
+{
+  "family": "delegation",
+  "seed": 1,
+  "targets": "100% correct allow or refuse; 100% with an audit event",
+  "pass": true,
+  "correct": "12/12",
+  "audited": "12/12",
+  "cases": {
+    "parent_with_consent": {
+      "expected": "ok",
+      "got": "ok",
+      "correct": true,
+      "audited": true
+    },
+    "no_consent": {
+      "expected": "consent_required",
+      "got": "consent_required",
+      "correct": true,
+      "audited": true
+    },
+    "expired_consent": {
+      "expected": "consent_required",
+      "got": "consent_required",
+      "correct": true,
+      "audited": true
+    },
+    "withdrawn_between_prepare_and_commit": {
+      "expected": "consent_required",
+      "got": "consent_required",
+      "correct": true,
+      "audited": true
+    },
+    "non_guardian": {
+      "expected": "not_guardian",
+      "got": "not_guardian",
+      "correct": true,
+      "audited": true
+    },
+    "consent_capped_at_18th_birthday": {
+      "expected": "ok",
+      "got": "ok",
+      "correct": true,
+      "audited": true
+    },
+    "wrong_scope": {
+      "expected": "consent_required",
+      "got": "consent_required",
+      "correct": true,
+      "audited": true
+    },
+    "consent_given_to_another_delegate": {
+      "expected": "consent_required",
+      "got": "consent_required",
+      "correct": true,
+      "audited": true
+    },
+    "adult_for_adult": {
+      "expected": "not_guardian",
+      "got": "not_guardian",
+      "correct": true,
+      "audited": true
+    },
+    "adult_applies_for_adult": {
+      "expected": "self_only",
+      "got": "self_only",
+      "correct": true,
+      "audited": true
+    },
+    "rest_member_using_sia_consent": {
+      "expected": "consent_required",
+      "got": "consent_required",
+      "correct": true,
+      "audited": true
+    },
+    "rest_member_claiming_sia": {
+      "expected": "reserved_client",
+      "got": "reserved_client",
+      "correct": true,
+      "audited": true
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "create_upload_link",
+  "description": "Protected. Create a secure upload link, valid 72 hours, and text it to the caller's phone now. Never read the link aloud. Calling it again resends the link (not within a minute).",
+  "params": {
+    "purpose": {
+      "type": "string",
+      "enum": [
+        "passport_photo",
+        "birth_notification",
+        "disability_assessment",
+        "income_proof"
+      ],
+      "description": "What the caller must upload"
+    }
+  },
+  "required": [
+    "purpose"
+  ],
+  "no_interrupt": true,
+  "pre_speech": true
+}

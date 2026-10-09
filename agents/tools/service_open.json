@@ -1,0 +1,18 @@
+{
+  "name": "service_open",
+  "description": "Open the service the caller needs, by agency and service id (for example sps and passport_renewal, or siln and primary_place). Returns the steps to follow, the rules topics and the fields. Call it again to move to another service.",
+  "params": {
+    "agency": {
+      "type": "string",
+      "description": "Agency id"
+    },
+    "service": {
+      "type": "string",
+      "description": "Service id"
+    }
+  },
+  "required": [
+    "agency",
+    "service"
+  ]
+}

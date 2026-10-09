@@ -1,0 +1,136 @@
+{
+  "id": "school",
+  "title": "Saturday: a school place for a child",
+  "language": "en",
+  "source": "simulated caller (T1 test)",
+  "turns": [
+    {
+      "who": "agent",
+      "text": "Habari, mimi ni Savannah, msaidizi wa AI wa Savanah Information and Access, SIA. Nikusaidie vipi?"
+    },
+    {
+      "who": "caller",
+      "text": "Hi, yeah, I need to apply for a primary school place for my daughter."
+    },
+    {
+      "who": "system",
+      "text": "Service card opened: Primary school place."
+    },
+    {
+      "who": "agent",
+      "text": "I can help with that. First, could you give me your Konza resident number and date of birth so I can verify you as the parent?"
+    },
+    {
+      "who": "caller",
+      "text": "Sure, it's [ref], and I was born [date of birth]."
+    },
+    {
+      "who": "agent",
+      "text": "Let me verify that for you now."
+    },
+    {
+      "who": "system",
+      "text": "Identity check: a one-time code goes by SMS to the phone on record."
+    },
+    {
+      "who": "agent",
+      "text": "A code has been sent by text to the phone number ending in [digits]. Could you read it out to me?"
+    },
+    {
+      "who": "caller",
+      "text": "[code read aloud, redacted]"
+    },
+    {
+      "who": "system",
+      "text": "Code checked: identity verified."
+    },
+    {
+      "who": "agent",
+      "text": "Thank you, you're verified. Now, what is your daughter's first name, and do you consent to me acting on her behalf for this school application?"
+    },
+    {
+      "who": "caller",
+      "text": "Her name's Imani, and yeah, I consent."
+    },
+    {
+      "who": "system",
+      "text": "Asks first: the backend's read-back is said word for word; nothing happens before a clear yes."
+    },
+    {
+      "who": "agent",
+      "text": "To confirm: I'll record your consent for SIA to act for Imani in school applications, valid until Tuesday the fifth of October twenty twenty-seven, and you can withdraw it any time. Shall I go ahead?"
+    },
+    {
+      "who": "caller",
+      "text": "Yeah, go ahead."
+    },
+    {
+      "who": "agent",
+      "text": "Thank you, that's recorded. Now, do you know which school Imani would like a place at, or would you like me to go over the zone and eligibility rules first?"
+    },
+    {
+      "who": "caller",
+      "text": "Zone 3 Primary School, that's the one I want."
+    },
+    {
+      "who": "system",
+      "text": "Rules looked up (schools, ED-03)."
+    },
+    {
+      "who": "agent",
+      "text": "I should let you know, Zone 3 Primary School currently shows zero places left, so if we apply there an officer would need to confirm any offer rather than it being automatic. Would you like to go ahead and apply there anyway, or consider Zone 3 North Primary School, which has eighteen places left?"
+    },
+    {
+      "who": "caller",
+      "text": "Zone 3 Primary School is the one I want, yeah, go ahead and apply there."
+    },
+    {
+      "who": "agent",
+      "text": "Let me prepare that application for you."
+    },
+    {
+      "who": "system",
+      "text": "Asks first: the backend's read-back is said word for word; nothing happens before a clear yes."
+    },
+    {
+      "who": "agent",
+      "text": "To confirm, I'll submit an application for a primary school place for Imani at Zone 3 Primary School. Shall I go ahead?"
+    },
+    {
+      "who": "caller",
+      "text": "Yeah, go ahead."
+    },
+    {
+      "who": "agent",
+      "text": "Submitting the application now."
+    },
+    {
+      "who": "system",
+      "text": "Decision: waiting for an officer, who decides; the receipt gives the reason and when."
+    },
+    {
+      "who": "agent",
+      "text": "Your application has been submitted, but since Zone 3 Primary School is full, this needs an officer to confirm an offer rather than being decided automatically. An officer will review it within five working days, and they're proposing Zone 3 North Primary School as an alternative if no space opens up. I'll let you know this isn't a refusal, just a pending decision, and once it's been decided, you'll have the right to ask the Aminia Review Panel to review it if you disagree. Would you like a text summary of this sent to your phone?"
+    },
+    {
+      "who": "caller",
+      "text": "Ok so it's submitted but just waiting on an officer. Yeah, send me the text summary."
+    },
+    {
+      "who": "system",
+      "text": "Summary sent by SMS."
+    },
+    {
+      "who": "agent",
+      "text": "That's been sent to the number ending in [digits]. Is there anything else I can help you with?"
+    },
+    {
+      "who": "caller",
+      "text": "Alright, got it. Thanks, bye."
+    },
+    {
+      "who": "agent",
+      "text": "Glad I could help with Imani's school application! Have a wonderful day!"
+    }
+  ]
+}

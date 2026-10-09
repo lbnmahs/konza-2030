@@ -1,0 +1,17 @@
+{
+  "name": "rules_lookup",
+  "description": "Answer a rules question for the open service (fees, eligibility, places, delivery) from the rules module. General topics need no identity. Say only what the result says.",
+  "params": {
+    "topic": {
+      "type": "string",
+      "description": "One of the rule_topics from service_open"
+    },
+    "inputs_json": {
+      "type": "string",
+      "description": "Optional JSON object of inputs, for example {\"zone\": 3}"
+    }
+  },
+  "required": [
+    "topic"
+  ]
+}

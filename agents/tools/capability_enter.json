@@ -1,0 +1,13 @@
+{
+  "name": "capability_enter",
+  "description": "Records which service the caller is now being helped with. Called by the workflow when a service starts.",
+  "params": {
+    "capability": {
+      "type": "string",
+      "description": "The service key"
+    }
+  },
+  "required": [
+    "capability"
+  ]
+}

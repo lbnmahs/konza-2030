@@ -1,0 +1,64 @@
+{
+  "family": "exclusion",
+  "seed": 1,
+  "targets": "0 dead ends (a desk or an officer path counts as a route); shares of steps done alone are a baseline",
+  "pass": true,
+  "dead_ends": 0,
+  "dead_ends_in_built_steps": 0,
+  "profiles": {
+    "smartphone": {
+      "adults_in_population": 205,
+      "steps": 21,
+      "alone": 17,
+      "with_help": 4,
+      "dead_ends": 0,
+      "alone_share_built": "17/21",
+      "dead_end_steps": []
+    },
+    "feature_phone": {
+      "adults_in_population": 115,
+      "steps": 21,
+      "alone": 17,
+      "with_help": 4,
+      "dead_ends": 0,
+      "alone_share_built": "17/21",
+      "dead_end_steps": []
+    },
+    "sms_only": {
+      "adults_in_population": 29,
+      "steps": 21,
+      "alone": 17,
+      "with_help": 4,
+      "dead_ends": 0,
+      "alone_share_built": "17/21",
+      "dead_end_steps": []
+    },
+    "low_literacy": {
+      "adults_in_population": 48,
+      "steps": 21,
+      "alone": 17,
+      "with_help": 4,
+      "dead_ends": 0,
+      "alone_share_built": "17/21",
+      "dead_end_steps": []
+    },
+    "poor_signal": {
+      "adults_in_population": 66,
+      "steps": 21,
+      "alone": 17,
+      "with_help": 4,
+      "dead_ends": 0,
+      "alone_share_built": "17/21",
+      "dead_end_steps": []
+    },
+    "no_address": {
+      "adults_in_population": 18,
+      "steps": 21,
+      "alone": 14,
+      "with_help": 7,
+      "dead_ends": 0,
+      "alone_share_built": "14/21",
+      "dead_end_steps": []
+    }
+  }
+}

@@ -1,0 +1,236 @@
+{
+  "id": "passport-en",
+  "title": "Monday: Laban renews his passport (English)",
+  "language": "en",
+  "source": "a real test call by the project's author",
+  "turns": [
+    {
+      "who": "agent",
+      "text": "Hello, I'm Savannah, an AI assistant from Savanah Information and Access, SIA. I can help with Konza services. How can I help?"
+    },
+    {
+      "who": "caller",
+      "text": "Hi, I wanted to ask, uh, how much is the 50 page, um, passport?"
+    },
+    {
+      "who": "system",
+      "text": "Service card opened: Kenyan passport renewal."
+    },
+    {
+      "who": "caller",
+      "text": "Hello?"
+    },
+    {
+      "who": "agent",
+      "text": "Hi, still here! Let me just check that fee for you."
+    },
+    {
+      "who": "system",
+      "text": "Rules looked up (fees, PP-01)."
+    },
+    {
+      "who": "agent",
+      "text": "The fifty page passport costs nine thousand, five hundred and fifty shillings. Would you like help renewing one?"
+    },
+    {
+      "who": "caller",
+      "text": "No, I just, uh, wanted to ask about my passport. Yeah, I actually want to renew."
+    },
+    {
+      "who": "agent",
+      "text": "Sure, I can help with that. First I'll need to verify your identity, could you give me your resident number and date of birth?"
+    },
+    {
+      "who": "caller",
+      "text": "[ref]. Uh, date of birth is [date of birth]."
+    },
+    {
+      "who": "agent",
+      "text": "Let me verify those details for you."
+    },
+    {
+      "who": "system",
+      "text": "Identity check: a one-time code goes by SMS to the phone on record."
+    },
+    {
+      "who": "agent",
+      "text": "[code read aloud, redacted]"
+    },
+    {
+      "who": "caller",
+      "text": "[code read aloud, redacted]"
+    },
+    {
+      "who": "system",
+      "text": "Code checked: identity verified."
+    },
+    {
+      "who": "agent",
+      "text": "Thanks, Laban, you're verified. Now, for the renewal, which booklet would you like, thirty four, fifty, or sixty six pages, and would you like it delivered home or will you collect it at the Konza Passport Desk?"
+    },
+    {
+      "who": "caller",
+      "text": "Mm, I'll, I'll collect it at the Konza desk. No, actually, I'll collect, uh, let it be delivered to mine."
+    },
+    {
+      "who": "agent",
+      "text": "Just..."
+    },
+    {
+      "who": "caller",
+      "text": "And I'd like the 50-page one."
+    },
+    {
+      "who": "agent",
+      "text": "To confirm: a fifty page passport renewal, delivered to your home address, is that right?"
+    },
+    {
+      "who": "caller",
+      "text": "Yes."
+    },
+    {
+      "who": "system",
+      "text": "Rules looked up (renewal, PP-02)."
+    },
+    {
+      "who": "agent",
+      "text": "Good news, renewal is open now for your passport, since it expires within the next twelve months, on the sixth of March twenty twenty seven. Let me prepare your application."
+    },
+    {
+      "who": "system",
+      "text": "Asks first: the backend's read-back is said word for word; nothing happens before a clear yes."
+    },
+    {
+      "who": "agent",
+      "text": "So to confirm: you're applying to renew your Kenyan passport with a fifty page booklet, fee nine thousand, five hundred and fifty shillings, delivered to your home. Shall I go ahead?"
+    },
+    {
+      "who": "caller",
+      "text": "Yes, please."
+    },
+    {
+      "who": "agent",
+      "text": "Submitting your renewal now."
+    },
+    {
+      "who": "system",
+      "text": "Decision: granted, by a published rule. The receipt gives the reason and the review route."
+    },
+    {
+      "who": "agent",
+      "text": "Your renewal has been granted by a published rule, since your passport expires within twelve months. Next, you'll need to pay nine thousand, five hundred and fifty shillings, then attend the Konza Passport Desk for biometrics, your old passport stays valid until the new one arrives. This can also be reviewed by the Aminia Review Panel within thirty days, free, if you ever disagree. Would you like me to send the payment request now?"
+    },
+    {
+      "who": "caller",
+      "text": "Yes, please."
+    },
+    {
+      "who": "agent",
+      "text": "Sending your payment request now."
+    },
+    {
+      "who": "system",
+      "text": "Asks first: the amount from the rules is read back; nothing is sent before a clear yes."
+    },
+    {
+      "who": "agent",
+      "text": "I'll send a payment prompt by text for nine thousand, five hundred and fifty shillings. Shall I go ahead?"
+    },
+    {
+      "who": "caller",
+      "text": "Yes."
+    },
+    {
+      "who": "agent",
+      "text": "Sending the payment prompt now."
+    },
+    {
+      "who": "system",
+      "text": "DEMO payment prompt sent; the code is never read aloud."
+    },
+    {
+      "who": "agent",
+      "text": "A payment prompt has been sent to your phone with a six digit code. Could you read that code to me so I can confirm the payment?"
+    },
+    {
+      "who": "caller",
+      "text": "[code read aloud, redacted]"
+    },
+    {
+      "who": "system",
+      "text": "Payment approved; the receipt goes by SMS."
+    },
+    {
+      "who": "agent",
+      "text": "Your payment of nine thousand, five hundred and fifty shillings has gone through, the transaction code is in your SMS. Now let's book your biometrics appointment at the Konza Passport Desk. Would you prefer a morning or afternoon slot, and any particular day?"
+    },
+    {
+      "who": "caller",
+      "text": "Um, I'd like a morning, like, at around 11:00 a.m."
+    },
+    {
+      "who": "agent",
+      "text": "Checking the next available morning slot."
+    },
+    {
+      "who": "system",
+      "text": "Asks first: the backend's read-back is said word for word; nothing happens before a clear yes."
+    },
+    {
+      "who": "agent",
+      "text": "I can book you for the morning of October seventh, between eight and twelve, at the Konza Passport Desk. Please bring your current passport and resident number, the result is..."
+    },
+    {
+      "who": "caller",
+      "text": "Okay. Um, uh, can we go, like, uh, Friday this week?"
+    },
+    {
+      "who": "caller",
+      "text": "At around 11:00 AM."
+    },
+    {
+      "who": "agent",
+      "text": "Let me check Friday morning for you."
+    },
+    {
+      "who": "system",
+      "text": "Asks first: the backend's read-back is said word for word; nothing happens before a clear yes."
+    },
+    {
+      "who": "agent",
+      "text": "I can book you for Friday, October ninth, in the morning window between eight and twelve, at the Konza Passport Desk. Please bring your current passport and resident number, your result would usually be ready around October twenty sixth. Shall I confirm this?"
+    },
+    {
+      "who": "caller",
+      "text": "Yes. Yes, please."
+    },
+    {
+      "who": "agent",
+      "text": "Booking your appointment now."
+    },
+    {
+      "who": "agent",
+      "text": "Your biometrics appointment is booked for Friday, October ninth, in the morning, between eight and twelve, at the Konza Passport Desk. Please bring your current passport and resident number. Your new passport is usually ready by about October twenty sixth, that's just an estimate, not a promise. Would you like me to text you a summary of everything we did today?"
+    },
+    {
+      "who": "caller",
+      "text": "Yes, please."
+    },
+    {
+      "who": "system",
+      "text": "Summary sent by SMS."
+    },
+    {
+      "who": "agent",
+      "text": "I've sent a summary text to your phone ending in [digits]. Is there anything else I can help you with?"
+    },
+    {
+      "who": "caller",
+      "text": "Uh, no, thank you. That will be all."
+    },
+    {
+      "who": "agent",
+      "text": "Glad I could help with your passport renewal, Laban. Have a great day!"
+    }
+  ]
+}

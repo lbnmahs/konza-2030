@@ -1,0 +1,11 @@
+{
+  "name": "permit_lookup",
+  "description": "Protected. Find the verified caller's business permit: permit_id, number, category, market, stall, expiry (with a Swahili spoken date) and status.",
+  "params": {
+    "permit_no": {
+      "type": "string",
+      "description": "Permit number or stall number, only if the caller says one"
+    }
+  },
+  "required": []
+}

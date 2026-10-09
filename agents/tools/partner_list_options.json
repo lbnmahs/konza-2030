@@ -1,0 +1,6 @@
+{
+  "name": "partner_list_options",
+  "description": "Partners this service can refer the caller to, each with its offer, exactly which details it would receive, and when.",
+  "params": {},
+  "required": []
+}

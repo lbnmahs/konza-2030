@@ -1,0 +1,105 @@
+/* Neutral paper look: a partner's inbox, deliberately unlike any real organisation. */
+.main {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 32px 16px 80px;
+  background: #f5f3ee;
+  color: #2a2a2a;
+  color-scheme: light;
+}
+.card {
+  width: 100%;
+  max-width: 560px;
+  background: #fff;
+  border: 1px solid #e3ded3;
+  border-radius: 14px;
+  padding: 20px;
+}
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.name {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+.demo {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #8a5a00;
+  background: #fff4dc;
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+.muted {
+  color: #5c5c5c;
+  margin: 6px 0;
+}
+.small {
+  font-size: 0.8rem;
+  color: #707070;
+  margin: 4px 0;
+}
+.empty {
+  margin: 24px 0;
+  color: #707070;
+}
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+  display: grid;
+  gap: 12px;
+}
+.item {
+  border: 1px solid #ece7dc;
+  border-radius: 10px;
+  padding: 12px;
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ref {
+  font-family: ui-monospace, monospace;
+  font-weight: 600;
+}
+.sent {
+  font-size: 0.8rem;
+  color: #1f7a4d;
+}
+.scheduled {
+  font-size: 0.8rem;
+  color: #8a5a00;
+}
+.fields {
+  margin: 10px 0 0;
+  display: grid;
+  gap: 6px;
+}
+.field {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.9rem;
+}
+.field dt {
+  color: #707070;
+}
+.field dd {
+  margin: 0;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.foot {
+  margin-top: 20px;
+  font-size: 0.75rem;
+  color: #8a8a8a;
+}

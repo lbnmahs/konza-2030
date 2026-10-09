@@ -1,0 +1,11 @@
+{
+  "name": "get_history",
+  "description": "Protected, read only. The caller's records with this country's services: current status and what changed and when (payments, ID cards, permits, applications, refunds). Use when the caller asks what happened, what the status is, or whether something changed.",
+  "params": {
+    "as_of": {
+      "type": "string",
+      "description": "Optional date YYYY-MM-DD to show the status as it was on that day"
+    }
+  },
+  "required": []
+}

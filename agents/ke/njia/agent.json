@@ -1,0 +1,69 @@
+{
+  "key": "KE",
+  "hub": "KE",
+  "name": "KE NJIA country agent (Swahili, English)",
+  "authority": "njia",
+  "authority_name": "NJIA",
+  "language": "sw",
+  "additional_languages": [
+    "en"
+  ],
+  "first_message": "Habari! Karibu NJIA. Mimi ni Baraka, msaidizi wa AI. Simu hii inaweza kurekodiwa kwa ajili ya demo. Nikusaidie vipi leo?",
+  "tts_model": "eleven_v3_conversational",
+  "voice_id": "h65Hy3wCmpuo1Fce3en3",
+  "voice_note": "Same voice as Juma (KE_ID). Baraka replaces Neema, Juma, Amani and Zawadi.",
+  "llm": "claude-sonnet-5",
+  "triage_llm": "claude-sonnet-5",
+  "end_call": true,
+  "call_webhooks": true,
+  "language_detection": {
+    "only_at_conversation_start": false
+  },
+  "asr_keywords": [
+    "NJIA",
+    "Pwani Njema",
+    "Usajili Njema",
+    "Tiba Njema",
+    "Wezesha Njema",
+    "permit",
+    "bima",
+    "kibanda",
+    "Mjini",
+    "pasipoti",
+    "passport",
+    "London",
+    "Berlin"
+  ],
+  "call_limits": {
+    "daily_limit": 3,
+    "agent_concurrency_limit": 1,
+    "bursting_enabled": false
+  },
+  "privacy": {
+    "record_voice": false,
+    "retention_days": 30
+  },
+  "nodes": {
+    "permit": {
+      "label": "Market permit",
+      "when": "The caller wants to renew or check a market stall or business permit (not an ID card)."
+    },
+    "lost_id": {
+      "label": "Lost ID",
+      "when": "The caller's national ID is lost, stolen or damaged, or they want a new or 'renewed' ID because of that, or ask about an ID they reported lost (including a refund of its fee or the fingerprint appointment)."
+    },
+    "passport": {
+      "label": "Passport",
+      "when": "The caller asks about renewing a Kenyan passport, its fees or the biometrics appointment, in Kenya or abroad (London, Berlin)."
+    },
+    "health": {
+      "label": "Health cover",
+      "when": "The caller asks about health cover, contributions, a hospital cover confirmation or adding a newborn, or someone is very unwell or it is an emergency."
+    },
+    "disability": {
+      "label": "Disability tax exemption",
+      "when": "The caller asks about the disability tax exemption or their disability registration."
+    }
+  },
+  "triage_note": "Was claude-haiku-4-5 (S0). On the first Kenya call it asked for ID again on a service change and started the service itself; T1 caught it promising a call-back after a failed create_case. Haiku saved about $0.07 a call."
+}

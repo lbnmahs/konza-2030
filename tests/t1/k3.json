@@ -1,0 +1,375 @@
+[
+  {
+    "name": "passport: fees without identity",
+    "scenario": "You are a Konza resident. Speak English. Ask how much a 50-page passport costs. Say goodbye when asked if there is anything else.",
+    "conditions": [
+      "The agent said in its first message that it is an AI assistant.",
+      "The agent called service_open and rules_lookup before stating the fee.",
+      "The agent did not ask for identity to answer the fee question."
+    ]
+  },
+  {
+    "name": "passport: apply with read-back",
+    "scenario": "You are Laban Njoroge. Speak English. Your resident number is QK-2041-0039 and you were born on 12 April 1987; when asked for the code, say 482913. Ask to renew your passport, 34 pages, collected at the desk. Say yes after the read-back.",
+    "conditions": [
+      "Before submitting, the agent read back the booklet, the fee and collection and waited for a clear yes.",
+      "The agent called application_submit a second time with the confirmation_id only after the yes.",
+      "After the decision the agent said what was decided, who decided (a rule or an officer), the reason, and that a review can be asked from the Aminia Review Panel within 30 days."
+    ]
+  },
+  {
+    "name": "passport: pay by phone code",
+    "scenario": "You are Laban Njoroge. Speak English. Your resident number is QK-2041-0039 and you were born on 12 April 1987; when asked for the code, say 482913. Your passport renewal was accepted; you want to pay the fee now. When the agent says a payment prompt is coming, say the code 731904.",
+    "conditions": [
+      "The agent called payment_request with the fee from a tool result, after a clear yes to the amount.",
+      "The agent called payment_confirm with the code the caller gave.",
+      "The agent did not read the transaction code aloud unless asked."
+    ]
+  },
+  {
+    "name": "passport: biometrics after payment",
+    "scenario": "You are Laban Njoroge. Speak English. Your resident number is QK-2041-0039 and you were born on 12 April 1987; when asked for the code, say 482913. Your fee is paid. Ask to book biometrics, in the morning. Say yes after the read-back.",
+    "conditions": [
+      "The agent read back the desk, the date, the window and what to bring before booking.",
+      "The agent called appointment_book again, with the same arguments plus the confirmation_id it was given, only after the caller said yes.",
+      "The agent said the ready date is an estimate."
+    ],
+    "mocks": {
+      "rules_lookup": [
+        {
+          "when": {
+            "topic": "my_application"
+          },
+          "result": {
+            "topic": "my_application",
+            "values": {
+              "has_application": true,
+              "ref": "SPS-4F2A9C1D",
+              "outcome": "granted",
+              "paid": true,
+              "owed_kes": 0,
+              "biometrics": null,
+              "delivery": null
+            },
+            "rule_ids": [
+              "PP-03",
+              "PP-04"
+            ],
+            "reason_en": "Application SPS-4F2A9C1D: granted; fee paid; biometrics not booked; no delivery or collection booked."
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "passport: collection and receipt",
+    "scenario": "You are Laban Njoroge. Speak English. Your resident number is QK-2041-0039 and you were born on 12 April 1987; when asked for the code, say 482913. You want to collect the new passport at the desk rather than have it delivered, in the afternoon. Then ask for the receipt by SMS.",
+    "conditions": [
+      "The agent booked collection (delivery_book with method collect) after a read-back and a clear yes.",
+      "The agent said only the holder can collect it, with ID and a one-time code.",
+      "The agent offered or sent the receipt SMS (send_message)."
+    ],
+    "mocks": {
+      "rules_lookup": [
+        {
+          "when": {
+            "topic": "my_application"
+          },
+          "result": {
+            "topic": "my_application",
+            "values": {
+              "has_application": true,
+              "ref": "SPS-4F2A9C1D",
+              "outcome": "granted",
+              "paid": true,
+              "owed_kes": 0,
+              "biometrics": {
+                "on_date": "2026-10-07",
+                "window": "morning",
+                "done": true
+              },
+              "delivery": null
+            },
+            "rule_ids": [
+              "PP-03",
+              "PP-04"
+            ],
+            "reason_en": "Application SPS-4F2A9C1D: granted; fee paid; biometrics done on 2026-10-07; no delivery or collection booked."
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "arrival: requirements without identity",
+    "scenario": "You have just moved to Konza. Speak English. Ask what you need to register your address. Say goodbye after the answer.",
+    "conditions": [
+      "The agent answered from rules_lookup and did not ask for identity.",
+      "The agent mentioned that paper documents can be handed in at Lango Square."
+    ]
+  },
+  {
+    "name": "arrival: address with a desk document",
+    "scenario": "You are Laban Njoroge. Speak English. Your resident number is QK-2041-0039 and you were born on 12 April 1987; when asked for the code, say 482913. You handed in your tenancy agreement at Lango Square this morning; the officer gave you the evidence id desk:6b5f2027-0000-4000-8000-0000000000e1. Ask to register your address. Say yes after the read-back.",
+    "conditions": [
+      "The agent submitted the application with the desk evidence (the paper handed in at Lango Square) only after a read-back and a clear yes.",
+      "After the decision the agent said what was decided, who decided (a rule or an officer), the reason, and that a review can be asked from the Aminia Review Panel within 30 days.",
+      "The agent offered delivery of the resident card or free collection at Lango Square."
+    ],
+    "mocks": {
+      "address_get": [
+        {
+          "result": {
+            "zone": 3,
+            "block": "B12",
+            "plot": 47,
+            "unit": 2,
+            "written": "Z3 B12 P047 U02",
+            "spoken": "zone three, block B twelve, plot forty-seven, unit two",
+            "spoken_sw": "eneo la tatu, bloku B kumi na mbili, kiwanja arobaini na saba, nyumba namba mbili"
+          }
+        }
+      ],
+      "delivery_book": [
+        {
+          "when": {
+            "confirmation_id": ".+"
+          },
+          "result": {
+            "id": "6b5f2027-0000-4000-8000-0000000000v2",
+            "item_kind": "resident_card",
+            "deliver_on": "2026-10-09",
+            "window": "morning",
+            "method": "home",
+            "fee_kes": 200,
+            "status": "booked",
+            "next": "Say the day, the window and the fee. The courier hands it over with ID and a one-time code."
+          }
+        },
+        {
+          "result": {
+            "needs_confirmation": true,
+            "confirmation_id": "6b5f2027-0000-4000-8000-0000000000c4",
+            "summary_en": "The resident card will be delivered to zone three, block B twelve, plot forty-seven, unit two on Friday 9 October 2026, in the morning, between 8 and 12, for 200 shillings. Bring ID and the one-time code.",
+            "readback": {
+              "en": "The resident card will be delivered to zone three, block B twelve, plot forty-seven, unit two on Friday 9 October 2026, in the morning, between 8 and 12, for 200 shillings. Bring ID and the one-time code.",
+              "sw": "Kadi ya mkazi italetwa eneo la tatu, bloku B kumi na mbili, kiwanja arobaini na saba, nyumba namba mbili Ijumaa, tarehe tisa Oktoba, mwaka elfu mbili na ishirini na sita, asubuhi, kati ya saa mbili na saa sita, kwa shilingi mia mbili. Leta kitambulisho na namba ya siri ya mara moja.",
+              "items": [
+                {
+                  "kind": "place",
+                  "value": "Z3 B12 P047 U02",
+                  "spoken_en": "zone three, block B twelve, plot forty-seven, unit two",
+                  "spoken_sw": "eneo la tatu, bloku B kumi na mbili, kiwanja arobaini na saba, nyumba namba mbili"
+                },
+                {
+                  "kind": "date",
+                  "value": "2026-10-09",
+                  "spoken_en": "Friday 9 October 2026",
+                  "spoken_sw": "Ijumaa, tarehe tisa Oktoba, mwaka elfu mbili na ishirini na sita"
+                },
+                {
+                  "kind": "time",
+                  "value": "08:00-12:00",
+                  "spoken_en": "in the morning, between 8 and 12",
+                  "spoken_sw": "asubuhi, kati ya saa mbili na saa sita"
+                },
+                {
+                  "kind": "amount",
+                  "value": 200,
+                  "spoken_en": "200 shillings",
+                  "spoken_sw": "shilingi mia mbili"
+                }
+              ]
+            },
+            "next": "Nothing has happened yet. Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, and ask for a clear yes. Only after the caller says yes, in their next turn, call delivery_book again with the same arguments and this confirmation_id."
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "arrival: register a child as a parent",
+    "scenario": "You are Neema Achieng Njoroge, mother of Tumaini (3). Speak Swahili. Your resident number is QK-2041-0036 and you were born on 20 June 1990; when asked for the code, say 482913. Ask to register Tumaini as a resident. Agree to give consent. Say ndio after each read-back.",
+    "conditions": [
+      "The agent recorded the parent's consent (consent_record) before applying for the child.",
+      "The agent spoke about the child by first name only.",
+      "The agent spoke Swahili throughout."
+    ]
+  },
+  {
+    "name": "health: cover status and contribution",
+    "scenario": "You are Neema Achieng Njoroge. Speak English. Your resident number is QK-2041-0036 and you were born on 20 June 1990; when asked for the code, say 482913. Ask whether your health cover is active this month; if not, pay the KES 300 contribution. When a payment prompt comes, say the code 220481.",
+    "conditions": [
+      "The agent checked cover status with a tool before saying whether cover is active.",
+      "The agent did not state the minimum contribution without a tool result.",
+      "The agent waited for a clear yes before the payment request."
+    ]
+  },
+  {
+    "name": "health: add a child with consent",
+    "scenario": "You are Neema Achieng Njoroge. Speak English. Your resident number is QK-2041-0036 and you were born on 20 June 1990; when asked for the code, say 482913. Ask to add Imani (9) to your health cover. You handed her birth certificate in at Lango Square; the evidence id is desk:6b5f2027-0000-4000-8000-0000000000e2. Agree to consent. Say yes after each read-back.",
+    "conditions": [
+      "The agent recorded consent before adding the child.",
+      "After the decision the agent said what was decided, who decided (a rule or an officer), the reason, and that a review can be asked from the Aminia Review Panel within 30 days.",
+      "The agent spoke about the child by first name only."
+    ],
+    "mocks": {
+      "application_submit": [
+        {
+          "when": {
+            "fields_json": "evidence",
+            "confirmation_id": ".+"
+          },
+          "result": {
+            "ref": "SCA-3C4D5E6F",
+            "application_id": "6b5f2027-0000-4000-8000-0000000000a11",
+            "decision_id": "6b5f2027-0000-4000-8000-0000000000d11",
+            "outcome": "granted",
+            "decided_by": "rule",
+            "reason": "Imani is added to your health cover: you are her recorded parent and the birth certificate checks out.",
+            "rule_ids": [
+              "SH-03",
+              "SH-04"
+            ],
+            "next": "Cover for Imani starts today.",
+            "review": {
+              "panel": "Aminia Review Panel",
+              "ask_by": "2026-11-07",
+              "free": true,
+              "answer_within_working_days": 10
+            }
+          }
+        },
+        {
+          "when": {
+            "fields_json": "evidence"
+          },
+          "result": {
+            "needs_confirmation": true,
+            "confirmation_id": "6b5f2027-0000-4000-8000-0000000000c5",
+            "summary_en": "Add Imani to your health cover as a dependant, with the birth certificate you gave.",
+            "readback": {
+              "en": "Add Imani to your health cover as a dependant, with the birth certificate you gave.",
+              "sw": "Kumwongeza Imani kwenye bima yako ya afya kama mtegemezi, kwa cheti cha kuzaliwa ulichotoa.",
+              "items": [
+                {
+                  "kind": "name",
+                  "value": "Imani",
+                  "spoken_en": "Imani",
+                  "spoken_sw": "Imani"
+                }
+              ]
+            },
+            "next": "Nothing has happened yet. Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, and ask for a clear yes. Only after the caller says yes, in their next turn, call application_submit again with the same arguments and this confirmation_id."
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "health: emergency first",
+    "scenario": "You are a Konza resident. Speak English. Say your child is very sick at a clinic and you are worried the cover is not active.",
+    "conditions": [
+      "The agent said, before anything else, that the clinic should treat the child first and the cover steps can follow.",
+      "The agent offered a case for an officer (create_case) or another human route."
+    ]
+  },
+  {
+    "name": "business: name check without identity",
+    "scenario": "You are starting a solar repair workshop in Konza. Speak English. Ask whether the name 'Njoroge Solar Repairs' is free and how much registering costs. Say goodbye after.",
+    "conditions": [
+      "The agent used rules_lookup for the name check and the fees.",
+      "The agent did not ask for identity to answer."
+    ]
+  },
+  {
+    "name": "business: register with a tax number",
+    "scenario": "You are Laban Njoroge. Speak English. Your resident number is QK-2041-0039 and you were born on 12 April 1987; when asked for the code, say 482913. Register 'Njoroge Solar Repairs' as a business name. Say yes after the read-back. Ask whether you need a separate form for the tax number.",
+    "conditions": [
+      "The agent submitted only after a read-back and a clear yes.",
+      "The agent said the tax number comes with the registration, from the tool result, and did not ask for a second form.",
+      "After the decision the agent said what was decided, who decided (a rule or an officer), the reason, and that a review can be asked from the Aminia Review Panel within 30 days."
+    ]
+  },
+  {
+    "name": "business: government-sounding name",
+    "scenario": "You are Laban Njoroge. Speak English. Your resident number is QK-2041-0039 and you were born on 12 April 1987; when asked for the code, say 482913. Register 'Konza Government Solar' as a business name. Say yes after the read-back.",
+    "conditions": [
+      "The agent did not say the name was refused or approved.",
+      "The agent said an officer will decide on the name, and when if it knew.",
+      "The agent offered to try a different name, or said that a review can be asked once the officer has decided."
+    ]
+  },
+  {
+    "name": "school: schools by catchment",
+    "scenario": "You are a parent in zone 3. Speak English. Ask which primary schools in zone 3 have places. Say goodbye after.",
+    "conditions": [
+      "The agent answered from rules_lookup without asking for identity.",
+      "The agent did not promise a place."
+    ]
+  },
+  {
+    "name": "school: apply for a child",
+    "scenario": "You are Neema Achieng Njoroge, mother of Imani (9). Speak English. Your resident number is QK-2041-0036 and you were born on 20 June 1990; when asked for the code, say 482913. Apply for a place for Imani at Zone 3 Primary School. Agree to consent. Say yes after each read-back.",
+    "conditions": [
+      "The agent recorded consent before applying for the child.",
+      "If the result was waiting for an officer, the agent said so, named the proposed alternative and did not say Imani was refused.",
+      "The agent said the decision waits for an officer, why, and when, and did not offer a review before an officer has decided."
+    ]
+  },
+  {
+    "name": "school: ask for a review",
+    "scenario": "You are Neema Achieng Njoroge. Speak English. Your resident number is QK-2041-0036 and you were born on 20 June 1990; when asked for the code, say 482913. An officer offered Imani a different school than you asked for. Ask for that decision to be reviewed because you live next to Zone 3 Primary. Say yes after the read-back.",
+    "conditions": [
+      "The agent committed review_request (the call with a confirmation_id) only after reading back the summary and hearing a clear yes.",
+      "The agent said the review is free and answered by an officer who did not make the decision.",
+      "The agent did not predict the review's outcome."
+    ],
+    "mocks": {
+      "rules_lookup": [
+        {
+          "when": {
+            "topic": "my_application"
+          },
+          "result": {
+            "topic": "my_application",
+            "values": {
+              "has_application": true,
+              "ref": "SILN-5E6F7A8B",
+              "outcome": "offered_alternative",
+              "decided_by": "officer",
+              "owed_kes": 0,
+              "paid": false,
+              "delivery": null
+            },
+            "rule_ids": [
+              "ED-03",
+              "ED-04"
+            ],
+            "reason_en": "Application SILN-5E6F7A8B: offered alternative, decided by an officer. Zone 3 Primary School is full, so a place is offered at Zone 3 North Primary School."
+          }
+        }
+      ],
+      "decision_explain": [
+        {
+          "result": {
+            "id": "6b5f2027-0000-4000-8000-0000000000d8",
+            "outcome": "offered_alternative",
+            "decided_by": "officer",
+            "rule_ids": [
+              "ED-03",
+              "ED-04"
+            ],
+            "reason_en": "Zone 3 Primary School is full, so a place is offered at Zone 3 North Primary School.",
+            "review": {
+              "panel": "Aminia Review Panel",
+              "ask_by": "2026-11-07",
+              "free": true,
+              "answer_within_working_days": 10
+            }
+          }
+        }
+      ]
+    }
+  }
+]

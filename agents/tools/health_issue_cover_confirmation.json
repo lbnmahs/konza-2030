@@ -1,0 +1,7 @@
+{
+  "name": "health_issue_cover_confirmation",
+  "description": "Protected. Send the caller a cover confirmation code by SMS for the hospital. Only works while cover is active.",
+  "params": {},
+  "required": [],
+  "no_interrupt": true
+}

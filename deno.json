@@ -1,0 +1,31 @@
+{
+  "tasks": {
+    "demo": "deno run --env-file=.env --allow-net --allow-env --allow-read scripts/demo.ts",
+    "push-agents": "deno run --env-file=.env --allow-net --allow-env --allow-read --allow-write=.env scripts/push-agents.ts",
+    "test": "deno test --allow-read --allow-run=deno --allow-env supabase/functions/_shared scripts/sim scripts/voice audit tests/receipt_test.ts tests/demo_test.ts",
+    "calls": "deno run --env-file=.env --allow-net --allow-env --allow-read scripts/calls.ts",
+    "approve": "deno run --env-file=.env --allow-net --allow-env --allow-read scripts/approve.ts",
+    "test:local": "deno test --allow-net --allow-env --allow-read --allow-run=supabase tests/hub_test.ts",
+    "cost": "deno run --env-file=.env --allow-net --allow-env --allow-read scripts/cost.ts",
+    "t1": "deno run --env-file=.env --allow-net --allow-env --allow-read scripts/t1.ts",
+    "seed:gen": "deno run --env-file=.env --allow-net --allow-env --allow-read --allow-write=scripts/seed/fixtures scripts/seed-gen.ts",
+    "retire-agents": "deno run --env-file=.env --allow-net --allow-env --allow-read --allow-write=.env scripts/retire-agents.ts",
+    "sim": "deno run --allow-net=127.0.0.1,localhost --allow-env --allow-read --deny-read=.env --allow-run=supabase --allow-write=docs/konza/sim scripts/sim/sim.ts",
+    "wer": "deno run --env-file=.env --allow-net --allow-env --allow-read scripts/wer.ts",
+    "audit": "deno run --env-file=.env --allow-net --allow-env --allow-read --allow-write=docs/konza/audit audit/sample.ts",
+    "demo:curate": "deno run --env-file=.env --allow-net --allow-env --allow-read --allow-write=web/lib/demo scripts/demo-curate.ts",
+    "release": "deno run --allow-run=git,tar,gitleaks --allow-read --allow-write scripts/release.ts",
+    "contract": "deno test --allow-net --allow-env --allow-read --allow-run=supabase tests/contract_test.ts"
+  },
+  "fmt": {
+    "lineWidth": 100
+  },
+  "lint": {
+    "rules": {
+      "exclude": [
+        "no-explicit-any",
+        "no-import-prefix"
+      ]
+    }
+  }
+}

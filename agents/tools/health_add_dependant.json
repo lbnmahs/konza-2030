@@ -1,0 +1,34 @@
+{
+  "name": "health_add_dependant",
+  "description": "Protected. Request to add a newborn as a dependant (SH-03, SH-04). Needs the birth notification upload first. Only after reading back the name and date of birth and hearing a clear yes. Two-step: the first call changes nothing; after a clear yes, call again with the same arguments and the confirmation_id.",
+  "params": {
+    "dependant_name": {
+      "type": "string",
+      "description": "The baby's name as the caller confirmed it"
+    },
+    "born_days_ago": {
+      "type": "integer",
+      "description": "How many days ago the baby was born, when the caller gives a relative day (0 today, 1 yesterday)"
+    },
+    "dependant_dob": {
+      "type": "string",
+      "description": "Only if the caller gave a calendar date: YYYY-MM-DD"
+    },
+    "relationship": {
+      "type": "string",
+      "enum": [
+        "child"
+      ],
+      "description": "Relationship to the member"
+    },
+    "confirmation_id": {
+      "type": "string",
+      "description": "Empty the first time; after the caller says yes, the confirmation_id you were given"
+    }
+  },
+  "required": [
+    "dependant_name",
+    "relationship"
+  ],
+  "no_interrupt": true
+}

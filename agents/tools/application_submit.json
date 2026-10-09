@@ -1,0 +1,23 @@
+{
+  "name": "application_submit",
+  "description": "Protected, two-step. Submit an application for the open service. The first call changes nothing and returns a summary to read back; after a clear yes, call again with the same arguments and the confirmation_id. The result has the decision, its reason and the review route.",
+  "params": {
+    "fields_json": {
+      "type": "string",
+      "description": "JSON object with the service's fields from service_open"
+    },
+    "on_behalf_of": {
+      "type": "string",
+      "description": "Acting for a child: the child's resident number, or just the child's first name (it is matched only among the caller's own recorded children)."
+    },
+    "confirmation_id": {
+      "type": "string",
+      "description": "Empty the first time; after the caller says yes, the confirmation_id you were given"
+    }
+  },
+  "required": [
+    "fields_json"
+  ],
+  "no_interrupt": true,
+  "pre_speech": true
+}

@@ -1,0 +1,38 @@
+{
+  "name": "payment_request",
+  "description": "Protected. Request payment of the total the rules gave on this call. On SIA (Konza): sends a DEMO payment prompt with a 6-digit code by SMS, or by a code call (deliver: call); the caller approves by telling you the code (payment_confirm). In Kenya: a mobile money PIN prompt. Only after the caller clearly said yes to that exact total. The amount must equal the rules total or it is refused. Returns payment_id.",
+  "params": {
+    "permit_id": {
+      "type": "string",
+      "description": "Permit renewals only: permit_id from permit_lookup. Leave out for anything else."
+    },
+    "amount_kes": {
+      "type": "integer",
+      "description": "Kenyan services: the total in shillings from the rules tool on this call"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Other services: the total from the rules tool on this call, in the service's currency"
+    },
+    "confirmation_id": {
+      "type": "string",
+      "description": "Only on country agents: leave empty the first time; after the caller says yes to the read-back, call again with the same arguments and the confirmation_id you were given."
+    },
+    "deliver": {
+      "type": "string",
+      "enum": [
+        "sms",
+        "call",
+        "pesa"
+      ],
+      "description": "SIA only: how the payment prompt reaches the phone on file. sms (default) or call send a 6-digit code; pesa is the mobile money PIN screen for smartphone users. Then call payment_confirm."
+    },
+    "reference": {
+      "type": "string",
+      "description": "SIA only, optional: the reference of the application to pay (for example SPS-4F2A9C1D) when the resident has more than one unpaid. Leave out to pay the newest."
+    }
+  },
+  "required": [],
+  "no_interrupt": true,
+  "pre_speech": true
+}
