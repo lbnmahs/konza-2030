@@ -101,7 +101,6 @@ export default async function UploadPage(props: PageProps<"/upload/[id]">) {
             {header ? authorityMark(header.name) : "?"}
           </span>
           <span className={styles.authority}>{name}</span>
-          <span className={styles.demo}>DEMO</span>
         </header>
 
         <div className={styles.body}>

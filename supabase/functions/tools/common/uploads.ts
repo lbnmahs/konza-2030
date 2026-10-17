@@ -20,8 +20,8 @@ const RESEND_AFTER_MS = 60_000;
 function linkMessage(authorityId: string, label: string, url: string): string {
   const a = authority(authorityId);
   return a.default_language === "sw"
-    ? `${a.name} (DEMO): pakia hapa (${label}), halali saa 72: ${url} Huduma ya kubuni.`
-    : `${a.name} (DEMO): upload the ${label[0].toLowerCase()}${
+    ? `${a.name}: pakia hapa (${label}), halali saa 72: ${url} Huduma ya kubuni.`
+    : `${a.name}: upload the ${label[0].toLowerCase()}${
       label.slice(1)
     } here, valid 72 hours: ${url} Fictional demo service.`;
 }

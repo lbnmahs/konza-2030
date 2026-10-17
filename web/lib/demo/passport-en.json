@@ -146,7 +146,7 @@
     },
     {
       "who": "system",
-      "text": "DEMO payment prompt sent; the code is never read aloud."
+      "text": "Payment prompt sent; the code is never read aloud."
     },
     {
       "who": "agent",

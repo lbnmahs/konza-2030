@@ -62,16 +62,39 @@ sequenceDiagram
 
 ## Run
 
-Needs Deno 2, Node 20, Docker and the Supabase CLI; accounts on Supabase, ElevenLabs, Twilio and Vercel.
+You need Deno 2, Node 20, Docker and the Supabase CLI. The voice agent also needs an ElevenLabs account, a Twilio number imported into ElevenLabs, and a hosted Supabase project, because ElevenLabs calls the `tools` function over the internet. Every key is described in `.env.example` and `web/.env.example`; use placeholders and fictional numbers only, and never commit the filled-in files.
 
-```sh
-cp .env.example .env              # fill it in
-supabase start                    # local stack
-deno task push-agents konza       # create the voice agent
-deno task demo konza              # reset and seed
-```
+1. Keys.
 
-Deploy: `supabase functions deploy tools --no-verify-jwt --use-api` and the same for `audit`; the web app with `npx vercel deploy --prod`.
+   ```sh
+   cp .env.example .env                     # backend, scripts and agent
+   cp web/.env.example web/.env.local       # the web app
+   ```
+
+2. Local stack, for development and the tests below.
+
+   ```sh
+   supabase start
+   supabase functions serve --env-file tests/local.env --no-verify-jwt
+   ```
+
+3. The live demo, against your Supabase project (`SUPABASE_URL` in `.env`): apply `supabase/migrations/`, set the function secrets named in `.env.example`, then
+
+   ```sh
+   supabase functions deploy tools --no-verify-jwt --use-api
+   supabase functions deploy audit --no-verify-jwt --use-api
+   deno task push-agents konza              # creates the voice agent; add AGENT_ID_KONZA to .env
+   deno task demo konza                     # resets the demo data to today and points the number at SIA
+   ```
+
+4. The web app.
+
+   ```sh
+   npm --prefix web install
+   npm --prefix web run dev                 # http://localhost:3000
+   ```
+
+   The resident app is `/sia` and needs no sign-in. The panel (`/`, `/handset`) is for the emails in `PANEL_EMAILS`, which sign in with a code sent by Supabase Auth. To deploy, `npx vercel deploy --prod` from the repo root, with the variables of `web/.env.example` set on the Vercel project.
 
 ## Test
 

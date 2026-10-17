@@ -1,4 +1,4 @@
-// The circuit breaker (K4, MED-272; Mahs chose option B on 5 Oct). A finding of severity "hold"
+// The circuit breaker (K4, MED-272, option B). A finding of severity "hold"
 // opens a hold on (agency, service, rule id). While it is open, the core turns grants under that
 // rule into pending_officer; grants already made are listed for an officer, never reversed.
 // Only the checker opens holds, as its own role mirror_vale (K6, MED-306: the service role cannot),

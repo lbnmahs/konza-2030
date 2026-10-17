@@ -55,6 +55,14 @@ export type JsonSchema = {
   items?: JsonSchema;
   additionalProperties?: boolean | JsonSchema;
   description?: string;
+  /** K8 (MED-327): field labels for the screen, in English and Swahili; enum labels in enum order. */
+  title?: string;
+  "x-konza-title-sw"?: string;
+  "x-konza-enum-en"?: string[];
+  "x-konza-enum-sw"?: string[];
+  /** K8 S4 (MED-333, plan-k8 2.4): an id field whose choices the backend fills on the form card,
+   * never typed: the schools, or the verified resident's own registered businesses. */
+  "x-konza-options"?: "schools" | "businesses";
   $ref?: string;
   default?: unknown;
   examples?: unknown[];
@@ -110,6 +118,16 @@ export type ServiceDef = {
   /** The asks-first read-back in English and Swahili, from rule outputs (K5, MED-301). */
   summarize: (fields: Record<string, unknown>, subject: Resident) => ReadBack;
   decide: (ctx: DecideCtx) => Promise<DecisionDraft>;
+  /** One at a time (MED-331): this person's application for the service that is still in progress,
+   * if any. Checked before anything is prepared, so a second one is never created; it is not a
+   * decision (nothing is refused by rule). Services a person may repeat leave it out. */
+  openApplication?: (subject: Resident) => Promise<{ ref: string } | null>;
+  /** The screen only (MED-332): true when the form would start what is already done for now (this
+   * month's contribution, granted and paid), so service_open shows no form. Nothing is refused. */
+  formDone?: (subject: Resident) => Promise<boolean>;
+  /** AD-04: this service puts the home delivery fee in its own read-back, decision and charge
+   * (the passport); otherwise the core adds it for a deliverable (delivery.ts). */
+  deliveryPriced?: boolean;
   /** Runs once when an officer or a rule grants (e.g. take a school place), before the decision
    * is stored. Returns false when it could not take effect; the grant then waits for an officer. */
   onGranted?: (

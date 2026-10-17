@@ -5,6 +5,7 @@
 // applications the resident made (a parent for a child) or that are about them.
 
 import { db, must } from "../db.ts";
+import { inputsInForce, receiveOf } from "./delivery.ts";
 import type { ServiceDef } from "./types.ts";
 
 type Topic = ServiceDef["topics"][string];
@@ -16,7 +17,7 @@ export function myApplication(agency: string, service: string, what: string): To
     answer: async (r) => {
       const a = r
         ? must(
-          await db.from("konza_applications").select("id, ref").eq("agency", agency)
+          await db.from("konza_applications").select("id, ref, fields").eq("agency", agency)
             .eq("service", service)
             .or(`applicant_citizen_id.eq.${r.id},subject_citizen_id.eq.${r.id}`)
             .order("created_at", { ascending: false }).limit(1),
@@ -40,9 +41,12 @@ export function myApplication(agency: string, service: string, what: string): To
         db.from("deliveries").select("method, deliver_on, window").eq("item_ref", a.id)
           .neq("status", "cancelled").maybeSingle().then(must),
       ]);
-      // A fee or contribution the rules set on the decision, less what has cleared.
+      // A fee or contribution the rules set on the decision, with the delivery choice in force
+      // (AD-07), less what has cleared.
+      const inputs = await inputsInForce(a, d.inputs);
       const due = d.outcome === "granted"
-        ? Number(d.inputs?.fee_kes ?? d.inputs?.contribution_kes ?? 0) || 0
+        ? (Number(inputs.fee_kes ?? inputs.contribution_kes ?? 0) || 0) +
+          (Number(inputs.delivery_kes ?? 0) || 0)
         : 0;
       const owed = Math.max(
         0,
@@ -63,6 +67,7 @@ export function myApplication(agency: string, service: string, what: string): To
           owed_kes: owed,
           paid: paid.length > 0,
           delivery: del ?? null,
+          receive: await receiveOf(a),
         },
         rule_ids: d.rule_ids ?? [],
         reason_en: `Application ${a.ref}: ${d.outcome.replace("_", " ")}, ${who}. ${d.reason_en}${

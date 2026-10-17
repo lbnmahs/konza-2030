@@ -22,13 +22,14 @@ const TABLES: Record<keyof Snapshot, [string, string]> = {
   appointments: ["konza_appointments", "id, application_id, created_at"],
   appeals: ["konza_appeals", "id, decision_id, session, created_at"],
   confirmations: ["confirmations", "id, conversation_id, tool, created_at, committed_at"],
-  events: ["konza_audit_events", "session, operation, outcome, agency, at"],
+  events: ["konza_audit_events", "session, operation, outcome, agency, at, request_id, request_hash"],
   citizens: ["citizens", "id, dob"],
   passports: ["passports", "citizen_id, expires"],
   addresses: ["addresses", "citizen_id, zone"],
   guardianships: ["guardianships", "guardian_citizen_id, child_citizen_id"],
   schools: ["schools", "id, zone, capacity"],
   holds: ["konza_holds", "id, agency, service, rule_id, opened_at, cleared_at"],
+  receiveChanges: ["konza_receive_changes", "id, application_id, session, created_at"],
 };
 
 /** One table as JSON rows, so dates and numbers read as they did through the REST API. Table and

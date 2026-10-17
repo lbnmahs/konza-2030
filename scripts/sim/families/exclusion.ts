@@ -2,7 +2,7 @@
 // profile and each step of the first week (docs/konza/world.md section 6), can the step be done
 // alone, with help (a named desk, or an officer path that exists in code), or not at all?
 // What a step needs comes from the routes and tools as built (or, for scenes not built yet, from
-// world.md). How well the agent serves each profile is the conversational half (after 14 Oct).
+// world.md). How well the agent serves each profile is the conversational half (T1).
 
 import { generate } from "../residents.ts";
 import { nairobiToday, type Sim } from "../harness.ts";

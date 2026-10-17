@@ -2,6 +2,8 @@
 // AD-03 delivery is the next working day, morning or afternoon.
 // AD-04 delivery costs KES 200 per item; collection at a desk is free.
 // AD-06 a passport is handed only to its holder in person (ID and one-time code).
+// AD-07 home or collect can be changed while nothing is paid on the application; after a payment
+//       an officer decides (core.changeDelivery).
 // ED-03 places by catchment (the child's zone) first, then distance, then capacity.
 // ED-04 if the preferred school is full, the nearest school with space is offered, and an
 //       officer confirms the offer (adverse outcomes are never automatic).
@@ -117,10 +119,14 @@ export const normalName = (n: string) => n.trim().toLowerCase().replace(/\s+/g, 
 /** BZ-05: true when the name suggests a government body (never refused by rule: an officer). */
 export const reservedName = (n: string) => RESERVED_NAME.test(n);
 
-// PP-03 (amended K3, MED-299, after Mahs's calls): biometrics on any working day within the next
+// PP-03 (amended K3, MED-299): biometrics on any working day within the next
 // 10 working days, morning (8 to 12) or afternoon (2 to 5); it can be moved until the day before.
 export const APPOINTMENT_WITHIN_WORKING_DAYS = 10;
 export const WINDOW_HOURS: Record<string, string> = { morning: "8 to 12", afternoon: "2 to 5" };
 export const appointmentDayOk = (today: ISODate, day: ISODate) =>
   /^\d{4}-\d{2}-\d{2}$/.test(day) && day > today && keCalendar.isWorkingDay(day) &&
   day <= keCalendar.addWorkingDays(today, APPOINTMENT_WITHIN_WORKING_DAYS);
+/** The days a resident may pick (MED-332 slots card): every working day appointmentDayOk accepts,
+ * in order, the first one being the default. */
+export const appointmentDays = (today: ISODate): ISODate[] =>
+  Array.from({ length: APPOINTMENT_WITHIN_WORKING_DAYS }, (_, i) => keCalendar.addWorkingDays(today, i + 1));

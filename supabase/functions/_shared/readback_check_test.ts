@@ -83,7 +83,7 @@ Deno.test("K6 close: spoken English numbers, ordinal days and the window count a
     "the 12 of october 2026",
   );
   assertEquals(enNumbersToDigits("nine thousand, five hundred and fifty"), "9550");
-  // conv_1701 (8 Oct): the read-back spoken by a speech model, words for every number.
+  // A read-back as a speech model speaks it, words for every number.
   assertEquals(
     readBackResults(call(
       "To confirm: the fee is seven thousand five hundred fifty shillings, biometrics on Thursday, the fifteenth of October twenty twenty-six. Shall I go ahead?",
@@ -104,4 +104,18 @@ Deno.test("K6 close: spoken English numbers, ordinal days and the window count a
       .missing,
     ["date"],
   );
+});
+
+Deno.test("K8 (MED-331): a tapped confirmation counts as read-back and yes, once, even with no words", () => {
+  const tapped = new Map([[ID, "application_submit"]]);
+  // The agent said nothing of the read-back and the resident said nothing: the card showed it and
+  // the tap was the yes.
+  assertEquals(readBackResults(call("", ""), tapped), [
+    { tool: "application_submit", ok: true, missing: [], yes: true, screen: true },
+  ]);
+  // A tap the agent never followed with a call still counts once.
+  const noCall = call("", "").slice(0, 2);
+  assertEquals(readBackResults(noCall, tapped).length, 1);
+  // Without a tap the same call is still a missed read-back.
+  assertEquals(readBackResults(call("", ""))[0].ok, false);
 });

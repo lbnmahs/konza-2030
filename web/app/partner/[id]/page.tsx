@@ -61,7 +61,7 @@ export default async function PartnerInbox(props: PageProps<"/partner/[id]">) {
       <section className={styles.card}>
         <header className={styles.head}>
           <span className={styles.name}>{partner?.name ?? "Unknown partner"}</span>
-          <span className={styles.demo}>DEMO INBOX</span>
+          <span className={styles.badge}>Partner inbox</span>
         </header>
         {!partner && <p className={styles.muted}>This inbox does not exist.</p>}
         {partner && (

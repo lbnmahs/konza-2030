@@ -24,6 +24,10 @@ export const TABLE_ORDER = [
   "addresses",
   "guardianships",
   "schools",
+  // K8 S4 (MED-332)
+  "payment_methods",
+  // MED-333: the children's birth certificates at Lango Square
+  "desk_documents",
 ];
 
 /** Extra fictional citizens from `deno task seed:gen` (scripts/seed/fixtures/generated.json). */

@@ -10,7 +10,8 @@ import { CURRENT_PHASE, record, requireBudget, USD_PER_CREDIT } from "./_cost.ts
 
 const [keyArg = "", repeatArg = "1", filter = ""] = Deno.args;
 // K3: scene files run against an agent of another key (tests/t1/k3.json against KONZA).
-const FILE_AGENT: Record<string, string> = { k3: "KONZA" };
+// K8 (MED-337): k8.json too, with has_screen set per test.
+const FILE_AGENT: Record<string, string> = { k3: "KONZA", k8: "KONZA" };
 const key = FILE_AGENT[keyArg.toLowerCase()] ?? keyArg.toUpperCase();
 const repeat = Math.max(1, Math.min(5, Number(repeatArg) || 1));
 const agentId = env(`AGENT_ID_${key}`);
@@ -22,6 +23,8 @@ const specs: {
   max_turns?: number;
   /** K5: this test's own mocks by tool name, tried before the shared ones (state such as a paid fee). */
   mocks?: Record<string, Mock[]>;
+  /** K8: dynamic variables for this test, such as has_screen (the resident app sets it true). */
+  dynamic_variables?: Record<string, unknown>;
 }[] = JSON
   .parse(
     await Deno.readTextFile(new URL(`../tests/t1/${keyArg.toLowerCase()}.json`, import.meta.url)),
@@ -76,6 +79,7 @@ for (const s of specs) {
       simulation_max_turns: s.max_turns ?? 12,
       tool_mock_config: { mocking_strategy: "all", fallback_strategy: "raise_error" },
       tool_mock_overrides: overrides(s.mocks),
+      dynamic_variables: s.dynamic_variables ?? {},
       chat_history: [],
     })).id,
   );
@@ -123,3 +127,8 @@ console.log(
   })` +
     (stored ? "" : "; cost_ledger not on the live database yet, counter used"),
 );
+
+// The tests go once their results are printed and recorded. While a saved test names a tool in
+// its mocks, ElevenLabs re-checks it on every update to that tool, and each push-agents tool
+// update then takes 30 to 50 s and fails with a 500.
+for (const id of ids) await eleven("DELETE", `/agent-testing/${id}`).catch(() => {});

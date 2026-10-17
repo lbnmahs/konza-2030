@@ -1,0 +1,148 @@
+/* K8 S5 (MED-335): the API page, on the site's global tokens (app/globals.css). */
+
+.page {
+  max-width: 880px;
+  margin: 5vh auto;
+  padding: 0 16px 48px;
+  line-height: 1.6;
+}
+
+.page h1 {
+  font-size: 28px;
+  margin-bottom: 4px;
+}
+
+.page h2 {
+  font-size: 20px;
+  margin: 40px 0 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.page h3 {
+  font-size: 16px;
+  margin: 24px 0 4px;
+}
+
+.page h4 {
+  font-size: 15px;
+  margin: 16px 0 4px;
+  color: var(--muted);
+}
+
+.page code {
+  font-family: var(--mono);
+  font-size: 0.92em;
+  overflow-wrap: anywhere;
+}
+
+.page a {
+  color: var(--accent);
+}
+
+.page a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.lead {
+  font-size: 17px;
+  margin: 0 0 8px;
+}
+
+.meta {
+  color: var(--muted);
+  margin: 0;
+}
+
+.toc ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  padding: 0;
+  margin: 24px 0 0;
+  list-style: none;
+}
+
+.toc a {
+  display: inline-block;
+  min-height: 24px;
+  padding: 2px 0;
+}
+
+.levels {
+  margin: 0;
+}
+
+.levels > div {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.levels dt {
+  font-weight: 600;
+}
+
+.levels dt code {
+  margin-left: 8px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.levels dd {
+  margin: 4px 0 0;
+}
+
+/* Wide tables scroll inside their own box, never the page (WCAG 1.4.10). */
+.scroll {
+  overflow-x: auto;
+  margin: 16px 0;
+}
+
+.scroll:focus-visible {
+  outline: 2px solid var(--accent);
+}
+
+.ops {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.ops caption {
+  text-align: left;
+  font-weight: 600;
+  text-transform: capitalize;
+  padding-bottom: 6px;
+}
+
+.ops th,
+.ops td {
+  text-align: left;
+  vertical-align: top;
+  padding: 8px 12px 8px 0;
+  border-top: 1px solid var(--border);
+}
+
+.ops thead th {
+  color: var(--muted);
+  font-weight: 600;
+  border-top: none;
+}
+
+.ops tbody th {
+  font-weight: 400;
+  min-width: 220px;
+}
+
+.opId {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.item {
+  margin: 4px 0 4px 16px;
+  padding-left: 12px;
+  border-left: 2px solid var(--border);
+}

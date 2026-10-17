@@ -42,7 +42,7 @@ async function* files(dir: URL): AsyncGenerator<URL> {
 
 Deno.test("K6: public pages never read an audit table", async () => {
   let n = 0;
-  for (const dir of ["demo", "transparency", "r", "c", "upload"]) {
+  for (const dir of ["demo", "transparency", "developers", "r", "c", "upload"]) {
     try {
       for await (const f of files(new URL(`../web/app/${dir}/`, import.meta.url))) {
         n++;

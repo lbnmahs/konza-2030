@@ -44,6 +44,6 @@ Deno.test("K5 (MED-303): lexicon shape: no word is both a yes and a no; keywords
   assertEquals([...NO.en, ...NO.sw].filter((w) => yes.has(w.toLowerCase())), []);
   assertEquals(new Set(ASR_KEYWORDS).size, ASR_KEYWORDS.length);
   assert(ASR_KEYWORDS.every((k) => k.trim() === k && k.length > 1));
-  // Sheng is out of K5 (Mahs, 6 Oct): no Sheng-only words.
+  // Sheng is out of scope: no Sheng-only words.
   assert(![...YES.sw, ...NO.sw].some((w) => ["poa", "fiti", "sawa sawa"].includes(w)));
 });

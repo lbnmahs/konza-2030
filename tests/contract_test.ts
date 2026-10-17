@@ -7,6 +7,7 @@
 //    against the spec's schema for that status.
 
 import { assert, assertEquals } from "jsr:@std/assert@1";
+import { fromFileUrl } from "jsr:@std/path@1";
 import { parse } from "jsr:@std/yaml@1";
 import { validate } from "npm:@readme/openapi-parser@4";
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -62,7 +63,9 @@ for (const [template, item] of Object.entries<any>(spec.paths)) {
 
 Deno.test("spec: OpenAPI 3.1 with every operation carrying the core's charter level", async () => {
   assertEquals(spec.openapi, "3.1.0");
-  const v = await validate(new URL("../spec/konza-2030-api/openapi.yaml", import.meta.url).pathname);
+  const v = await validate(
+    fromFileUrl(new URL("../spec/konza-2030-api/openapi.yaml", import.meta.url)),
+  );
   assert(v.valid, JSON.stringify(v));
   assertEquals(ops.map((o) => o.id).sort(), Object.keys(OPERATIONS).sort());
   for (const [template, item] of Object.entries<any>(spec.paths)) {
@@ -483,8 +486,9 @@ Deno.test("every documented path and status code, with responses that match the 
   );
 
   // K3 desk work (PY-02, DK-01): officer credential only; the amount must equal the open charge.
-  const fee = (await api("GET", `/applications/${del.item_ref}`, { resident: LABAN })).json.decision
-    .inputs.fee_kes;
+  // The open charge: the fee, plus home delivery when it was chosen (AD-04, one charge).
+  const inputs = (await api("GET", `/applications/${del.item_ref}`, { resident: LABAN })).json.decision.inputs;
+  const fee = inputs.total_kes ?? inputs.fee_kes;
   const dpay = {
     application_id: del.item_ref,
     amount_kes: fee - 1,

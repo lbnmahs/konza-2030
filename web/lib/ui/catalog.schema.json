@@ -1,0 +1,884 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:konza-2030-api:ui:v1",
+  "title": "Konza UI catalog ui/v1",
+  "description": "The closed set of cards the backend may show a resident. The backend emits these events after a tool result; the model never writes UI. Clients ignore and log any kind they do not know. All text is plain text, never markup. Independent open-source project, not affiliated with any government body.",
+  "type": "object",
+  "required": [
+    "v",
+    "seq",
+    "kind",
+    "at",
+    "payload"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "v": {
+      "const": "ui/v1"
+    },
+    "seq": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Per conversation, from 1, no gaps"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "progress",
+        "quote",
+        "identity",
+        "form",
+        "confirm",
+        "slots",
+        "payment",
+        "receipt"
+      ]
+    },
+    "at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "payload": {
+      "type": "object"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "progress"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/progress"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "quote"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/quote"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "identity"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/identity"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "form"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/form"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "confirm"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/confirm"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "slots"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/slots"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "payment"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/payment"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "receipt"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/receipt"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "text": {
+      "description": "A short plain-text string in English, and in Swahili when the backend has it (clients fall back to English)",
+      "type": "object",
+      "required": [
+        "en"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 400
+        },
+        "sw": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 400
+        }
+      }
+    },
+    "service": {
+      "type": "string",
+      "pattern": "^[a-z]+\\.[a-z_]+$",
+      "description": "agency.service, as service_open names it"
+    },
+    "ruleId": {
+      "type": "string",
+      "pattern": "^[A-Z]{2}-\\d{2}$"
+    },
+    "uuid": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "kes": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Kenyan shillings, from the rules module"
+    },
+    "progress": {
+      "description": "The service rail: only what the Konza core has recorded for this resident and service. done: recorded; current: recorded as waiting (a decision with an officer); todo: nothing recorded yet. Never a percentage, never a step inferred from another.",
+      "type": "object",
+      "required": [
+        "service",
+        "title",
+        "steps"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "service": {
+          "$ref": "#/$defs/service"
+        },
+        "title": {
+          "$ref": "#/$defs/text"
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "state"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "enum": [
+                  "identity",
+                  "consent",
+                  "details",
+                  "confirm",
+                  "pay",
+                  "book",
+                  "deliver",
+                  "decision"
+                ]
+              },
+              "state": {
+                "type": "string",
+                "enum": [
+                  "todo",
+                  "current",
+                  "done"
+                ]
+              }
+            }
+          }
+        },
+        "updated": {
+          "description": "When the newest recorded step was stored, and by what",
+          "type": "object",
+          "required": [
+            "at",
+            "source"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "source": {
+              "$ref": "#/$defs/text"
+            }
+          }
+        }
+      }
+    },
+    "quote": {
+      "description": "A fee from the rules: one row per option, each with its rule",
+      "type": "object",
+      "required": [
+        "title",
+        "rows",
+        "rule_ids"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/text"
+        },
+        "rows": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "required": [
+              "label",
+              "amount_kes"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "label": {
+                "$ref": "#/$defs/text"
+              },
+              "amount_kes": {
+                "$ref": "#/$defs/kes"
+              }
+            }
+          }
+        },
+        "rule_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/ruleId"
+          }
+        }
+      }
+    },
+    "identity": {
+      "description": "Identity check: the resident number and date of birth, then the one-time code. The code is never sent back in an event",
+      "type": "object",
+      "required": [
+        "step"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "step": {
+          "type": "string",
+          "enum": [
+            "details",
+            "code",
+            "verified"
+          ]
+        },
+        "channel": {
+          "type": "string",
+          "enum": [
+            "sms",
+            "voice"
+          ]
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "attempts_left": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        }
+      }
+    },
+    "form": {
+      "description": "Fields of a service, built from its applicationSchema; never hand-built per service",
+      "type": "object",
+      "required": [
+        "service",
+        "title",
+        "fields"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "service": {
+          "$ref": "#/$defs/service"
+        },
+        "title": {
+          "$ref": "#/$defs/text"
+        },
+        "fields": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "type",
+              "label",
+              "required"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^[a-z][a-z_]*$"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "integer",
+                  "string",
+                  "boolean",
+                  "evidence"
+                ],
+                "description": "evidence: a document an officer recorded at Lango Square (desk); the resident picks it, never types an id"
+              },
+              "multiple": {
+                "type": "boolean"
+              },
+              "label": {
+                "$ref": "#/$defs/text"
+              },
+              "required": {
+                "type": "boolean"
+              },
+              "options": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 12,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "value",
+                    "label"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "value": {
+                      "type": [
+                        "string",
+                        "integer"
+                      ]
+                    },
+                    "label": {
+                      "$ref": "#/$defs/text"
+                    }
+                  }
+                }
+              },
+              "value": {
+                "type": [
+                  "string",
+                  "integer",
+                  "boolean"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "confirm": {
+      "description": "An asks-first step waiting for a clear yes. The words are the same read-back SIA speaks. shown_hash binds a tap to exactly what was shown",
+      "type": "object",
+      "required": [
+        "confirmation_id",
+        "tool",
+        "variant",
+        "state",
+        "title",
+        "readback",
+        "items",
+        "expires_at",
+        "earliest_at",
+        "shown_hash"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "confirmation_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "tool": {
+          "type": "string",
+          "pattern": "^[a-z_]+$"
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "action",
+            "consent"
+          ]
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "open",
+            "done",
+            "refused",
+            "expired"
+          ]
+        },
+        "title": {
+          "$ref": "#/$defs/text"
+        },
+        "readback": {
+          "$ref": "#/$defs/text"
+        },
+        "items": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "object",
+            "required": [
+              "kind",
+              "spoken"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "amount",
+                  "date",
+                  "time",
+                  "number",
+                  "name",
+                  "place"
+                ]
+              },
+              "spoken": {
+                "$ref": "#/$defs/text"
+              },
+              "value": {
+                "type": [
+                  "string",
+                  "integer"
+                ],
+                "description": "The exact value (amount in KES, ISO date, window), from the rules; the screen shows it, the voice says spoken"
+              }
+            }
+          }
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "earliest_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "A commit before this is refused (the 4 s rule)"
+        },
+        "shown_hash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "slots": {
+      "description": "Days and windows to choose from, from the rules (working days only)",
+      "type": "object",
+      "required": [
+        "title",
+        "place",
+        "days",
+        "windows"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/text"
+        },
+        "place": {
+          "$ref": "#/$defs/text"
+        },
+        "days": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": {
+            "type": "object",
+            "required": [
+              "date",
+              "label"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "date": {
+                "type": "string",
+                "format": "date"
+              },
+              "label": {
+                "$ref": "#/$defs/text"
+              }
+            }
+          }
+        },
+        "windows": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "label"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "enum": [
+                  "morning",
+                  "afternoon"
+                ]
+              },
+              "label": {
+                "$ref": "#/$defs/text"
+              }
+            }
+          }
+        },
+        "selected": {
+          "type": "object",
+          "required": [
+            "date",
+            "window"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "date": {
+              "type": "string",
+              "format": "date"
+            },
+            "window": {
+              "type": "string",
+              "enum": [
+                "morning",
+                "afternoon"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "payment": {
+      "description": "A fee to approve. In the resident app (MED-332): choose a debit or credit card or mobile money (masked, seeded; nothing is charged), then the card's code texted to the phone (typed here or read to the agent) or the mobile money PIN typed on this card, which goes to the backend only. Without a screen: the phone code (waiting). Or a desk. The card never carries a code or a PIN",
+      "type": "object",
+      "required": [
+        "payment_id",
+        "state",
+        "amount_kes",
+        "label",
+        "expires_at",
+        "desk"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "payment_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "choose",
+            "code",
+            "pin",
+            "waiting",
+            "approved",
+            "declined",
+            "expired"
+          ]
+        },
+        "amount_kes": {
+          "$ref": "#/$defs/kes"
+        },
+        "label": {
+          "$ref": "#/$defs/text"
+        },
+        "channel": {
+          "type": "string",
+          "enum": [
+            "sms",
+            "voice"
+          ],
+          "description": "Where the code went (code and waiting states)"
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "desk": {
+          "$ref": "#/$defs/text"
+        },
+        "methods": {
+          "description": "The resident's own methods, masked (choose, code and pin states)",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "required": [
+              "method_id",
+              "type",
+              "label",
+              "masked"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "method_id": {
+                "$ref": "#/$defs/uuid"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "card",
+                  "mobile_money"
+                ]
+              },
+              "label": {
+                "$ref": "#/$defs/text"
+              },
+              "masked": {
+                "description": "Masked only, for example •••• 4417",
+                "type": "string",
+                "pattern": "^[0-9• ]{4,16}$"
+              }
+            }
+          }
+        },
+        "method_id": {
+          "description": "The method chosen (code and pin states)",
+          "$ref": "#/$defs/uuid"
+        },
+        "attempts_left": {
+          "description": "Tries left for the code or PIN",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "reference": {
+          "description": "The transaction reference, once approved",
+          "type": "string",
+          "pattern": "^[A-Z0-9]{6,16}$"
+        }
+      }
+    },
+    "receipt": {
+      "description": "A decision: what, who decided, why in one sentence, what next, and the review route. Charter 2: an adverse outcome is only ever an officer's; a rule decision names its rules",
+      "type": "object",
+      "required": [
+        "decision_id",
+        "outcome",
+        "decided_by",
+        "rule_ids",
+        "reason",
+        "review"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "decision_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "granted",
+            "pending_officer",
+            "refused",
+            "offered_alternative"
+          ]
+        },
+        "decided_by": {
+          "type": "string",
+          "enum": [
+            "rule",
+            "officer",
+            "pending"
+          ]
+        },
+        "rule_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ruleId"
+          }
+        },
+        "reason": {
+          "$ref": "#/$defs/text"
+        },
+        "next": {
+          "$ref": "#/$defs/text"
+        },
+        "review": {
+          "type": "object",
+          "required": [
+            "panel",
+            "ask_by",
+            "free",
+            "answer_within_working_days"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "panel": {
+              "const": "Aminia Review Panel"
+            },
+            "ask_by": {
+              "type": "string",
+              "format": "date"
+            },
+            "free": {
+              "const": true
+            },
+            "answer_within_working_days": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "link": {
+          "type": "string",
+          "pattern": "^/r/[0-9a-f-]{36}$"
+        },
+        "ref": {
+          "description": "The application's reference, as the resident quotes it at a desk or to SIA",
+          "type": "string",
+          "pattern": "^[A-Z]{2,5}-[A-Z0-9]{8}$"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "outcome": {
+                "enum": [
+                  "refused",
+                  "offered_alternative"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "decided_by": {
+                "const": "officer"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "outcome": {
+                "const": "pending_officer"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "decided_by": {
+                "const": "pending"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "decided_by": {
+                "enum": [
+                  "rule",
+                  "officer"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "decided_by": {
+                "const": "rule"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "rule_ids": {
+                "type": "array",
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -62,10 +62,11 @@
       "held_for_officer": 73,
       "holds_opened": [
         "PP-01",
-        "PP-02"
+        "PP-02",
+        "AD-04"
       ],
       "grants_listed_for_review": 3,
-      "holds_cleared_by_officer": 2,
+      "holds_cleared_by_officer": 3,
       "findings": {
         "C5:fee_wrong": 3,
         "C6:amount_drift": 3,
@@ -83,10 +84,11 @@
       "held_for_officer": 73,
       "holds_opened": [
         "PP-02",
-        "PP-01"
+        "PP-01",
+        "AD-04"
       ],
       "grants_listed_for_review": 3,
-      "holds_cleared_by_officer": 2,
+      "holds_cleared_by_officer": 3,
       "findings": {
         "C6:amount_drift": 3,
         "C6:rate_low": 1
@@ -103,10 +105,11 @@
       "held_for_officer": 77,
       "holds_opened": [
         "PP-01",
-        "PP-02"
+        "PP-02",
+        "AD-04"
       ],
       "grants_listed_for_review": 1,
-      "holds_cleared_by_officer": 2,
+      "holds_cleared_by_officer": 3,
       "findings": {
         "C5:fee_wrong": 1,
         "C6:amount_drift": 1,
@@ -176,10 +179,11 @@
       "held_for_officer": 77,
       "holds_opened": [
         "PP-02",
-        "PP-01"
+        "PP-01",
+        "AD-04"
       ],
       "grants_listed_for_review": 3,
-      "holds_cleared_by_officer": 2,
+      "holds_cleared_by_officer": 3,
       "findings": {
         "C5:renewal_not_open": 3,
         "C6:date_drift": 3,
@@ -197,10 +201,11 @@
       "held_for_officer": 77,
       "holds_opened": [
         "PP-02",
-        "PP-01"
+        "PP-01",
+        "AD-04"
       ],
       "grants_listed_for_review": 3,
-      "holds_cleared_by_officer": 2,
+      "holds_cleared_by_officer": 3,
       "findings": {
         "C6:date_drift": 3,
         "C6:rate_low": 1
@@ -217,10 +222,11 @@
       "held_for_officer": 83,
       "holds_opened": [
         "PP-02",
-        "PP-01"
+        "PP-01",
+        "AD-04"
       ],
       "grants_listed_for_review": 1,
-      "holds_cleared_by_officer": 2,
+      "holds_cleared_by_officer": 3,
       "findings": {
         "C5:renewal_not_open": 1,
         "C6:date_drift": 1,

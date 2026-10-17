@@ -25,12 +25,22 @@ import {
   WINDOW_HOURS,
 } from "../rules/konza/rules.ts";
 import type { ReadBack } from "../readback.ts";
+import { swShillings } from "../sw.ts";
 import { twoStepCheck } from "../twostep.ts";
 import { isUuid, sha256, str } from "../util.ts";
 import { formatAddress } from "./address.ts";
 import {
+  inputsFor,
+  inputsInForce,
+  type Receive,
+  receiveOf,
+  withDeliveryFee,
+  withDeliveryReadBack,
+} from "./delivery.ts";
+import {
   appointmentReadBack,
   consentReadBack,
+  deliveryChangeReadBack,
   deliveryReadBack,
   reviewReadBack,
 } from "./readbacks.ts";
@@ -51,6 +61,8 @@ const TZ = "Africa/Nairobi";
 /** Operations outside the REST profile, still logged with their charter level (K4). */
 const INTERNAL_OPERATIONS: Record<string, "acts_alone" | "asks_first" | "never_acts"> = {
   clearHold: "never_acts",
+  // AD-07: SIA's delivery_change; not in the REST profile yet.
+  changeDelivery: "asks_first",
 };
 
 /** Called after every stored decision, without waiting (K3, MED-286): the tools function sets it
@@ -476,6 +488,18 @@ export function submitApplication(
         consentId = c.id;
       }
 
+      const open = def.openApplication
+        ? await agencyCall(agency, () => def.openApplication!(subject))
+        : null;
+      if (open) {
+        throw new KonzaError(
+          409,
+          "application_open",
+          `Application ${open.ref} for this service is still in progress.`,
+          "This person already has this application in progress, so do not apply again. Say so, and continue it with rules_lookup topic my_application (fee, biometrics, delivery).",
+        );
+      }
+
       const prepared = await asksFirst(
         caller,
         `submitApplication:${agencyId}/${serviceId}`,
@@ -484,14 +508,18 @@ export function submitApplication(
           on_behalf_of: subject.resident_number,
           confirmation_id: confirmationId,
         },
-        await agencyCall(agency, () => def.summarize(fields, subject)),
+        withDeliveryReadBack(def, fields, await agencyCall(agency, () => def.summarize(fields, subject))),
       );
       if (prepared) return prepared;
 
       let draft = await held(
         agency.id,
         serviceId,
-        await agencyCall(agency, () => def.decide({ applicant, subject, fields, today: today() })),
+        withDeliveryFee(
+          def,
+          fields,
+          await agencyCall(agency, () => def.decide({ applicant, subject, fields, today: today() })),
+        ),
       );
       // A grant's effect (a school place) happens before the decision is stored; if it cannot,
       // the decision waits for an officer instead of saying granted (K4, MED-277).
@@ -928,7 +956,42 @@ export function bookDelivery(
     );
     if (already) throw new KonzaError(409, "already_booked", "This delivery is already booked.");
     const holder = await residentById(a.subject_citizen_id);
-    const on = deliveryDate(today());
+    let on = deliveryDate(today());
+    // MED-331: nothing is handed over before it is made. A service whose in-person step sets a
+    // ready date (PP-04: the passport about 10 working days after biometrics) needs that step
+    // booked first, and delivery or collection is no earlier than the ready date.
+    const ap = def.appointment;
+    if (ap?.readyBy) {
+      const booked = must(
+        await db.from("konza_appointments").select("on_date").eq("application_id", a.id)
+          .maybeSingle(),
+      );
+      if (!booked) {
+        throw new KonzaError(
+          409,
+          "appointment_first",
+          `Book ${ap.title.toLowerCase()} first; the ready date follows from it.`,
+          `Delivery or collection can be booked once ${ap.title.toLowerCase()} is booked, because the ready date follows from it. Offer appointment_book first.`,
+        );
+      }
+      const ready = ap.readyBy(booked.on_date);
+      if (ready > on) on = ready;
+    }
+    // AD-04 and AD-07: the choice in force (`receive`, or collection when none was made) stands.
+    // Home delivery is paid with the fee, so it is never added unpaid here; delivery_change alters
+    // the choice only while nothing is paid, and after a payment a change goes to an officer.
+    const chosen = await receiveOf(a);
+    if (chosen !== method) {
+      throw new KonzaError(
+        409,
+        "receive_chosen",
+        `This application chose ${chosen === "home" ? "home delivery" : "collection"}.`,
+        `This application chose ${
+          chosen === "home" ? "home delivery (its KES 200 is paid with the fee), so book delivery home" : "free collection (or made no choice), so book collection"
+        }. To change it: delivery_change works only while nothing is paid on the application; once anything is paid, offer create_case for an officer.`,
+      );
+    }
+    const paidWithFee = chosen === "home";
     // DK-02: collection needs no address; the desk follows from the document (AD-06).
     const desk = method === "collect" ? collectionDesk(req.item_kind) : null;
     const addr = desk ? null : await addressOf(holder);
@@ -941,6 +1004,7 @@ export function bookDelivery(
       on,
       window: req.window,
       fee_kes: fee,
+      feePaid: paidWithFee,
     });
     const prepared = await asksFirst(
       caller,
@@ -986,6 +1050,7 @@ export function bookDelivery(
             "AD-04",
             ...(def.deliverable.holderOnly ? ["AD-06"] : []),
             ...(desk ? ["DK-02"] : []),
+            ...(ap?.readyBy ? ap.rule_ids : []),
           ],
         },
       );
@@ -999,10 +1064,114 @@ export function bookDelivery(
       method: row.method,
       desk: desk ? DESKS[desk].name : null,
       fee_kes: row.fee_kes,
+      // AD-04: home delivery chosen when applying was paid with the fee; nothing more to pay.
+      ...(paidWithFee ? { fee_paid: true } : {}),
       status: row.status,
       handover: def.deliverable.holderOnly
         ? "Only the holder, in person, with ID and the one-time code sent on the delivery day."
         : "The resident or a parent with consent, with the one-time code sent on the delivery day.",
+    };
+  });
+}
+
+/** AD-07: change home delivery or collection while nothing is paid on
+ * the application. The decision stays as it is; the change is its own row, and the charge and
+ * delivery_book read the newest. A payment waiting on the old amount is closed (nothing had been
+ * charged), so the next payment_request asks for the new total. */
+export function changeDelivery(
+  caller: Caller,
+  req: { item_ref: string; to: string },
+  confirmationId: string | null,
+) {
+  return run(caller, "changeDelivery", { body: req }, async () => {
+    needResident(caller);
+    const to = str(req.to);
+    if (to !== "home" && to !== "collect") {
+      throw new KonzaError(400, "bad_method", "to must be home or collect.");
+    }
+    const a = await applicationFor(caller, str(req.item_ref));
+    const def = AGENCIES[a.agency]?.services[a.service];
+    if (!def?.deliverable) {
+      throw new KonzaError(400, "not_deliverable", "That application produces nothing to deliver.");
+    }
+    const d = must(
+      await db.from("konza_decisions").select("outcome").eq("application_id", a.id).single(),
+    );
+    if (d.outcome !== "granted") {
+      throw new KonzaError(409, "not_granted", "Only a granted application has a delivery choice.");
+    }
+    const from = await receiveOf(a);
+    if (from === to) {
+      throw new KonzaError(
+        409,
+        "same_choice",
+        `This application already has ${to === "home" ? "home delivery" : "collection"}.`,
+        `This application already has ${to === "home" ? "home delivery" : "collection"}: there is nothing to change.`,
+      );
+    }
+    // AD-07: only while nothing is paid on the reference. Delivery and collection are booked only
+    // once the fee is paid, so nothing is booked yet either.
+    const paid = must(
+      await db.from("payments").select("id").eq("case_ref", a.ref).eq("status", "approved").limit(1),
+    ) as { id: string }[];
+    if (paid.length) {
+      throw new KonzaError(
+        409,
+        "already_paid",
+        "Something is already paid on this application, so the choice can no longer change here.",
+        "Something is already paid on this application, so the delivery choice cannot change here. Say so and offer create_case so an officer can look at it. Never promise the change.",
+      );
+    }
+    const total = (await chargeFor(a, to))?.amount_kes ?? 0;
+    const summary = deliveryChangeReadBack({
+      item_kind: def.deliverable.kind,
+      to,
+      desk: collectionDesk(def.deliverable.kind),
+      delivery_kes: DELIVERY_FEE_KES,
+      total_kes: total,
+    });
+    const prepared = await asksFirst(
+      caller,
+      "changeDelivery",
+      { item_ref: a.id, to, confirmation_id: confirmationId },
+      summary,
+    );
+    if (prepared) return prepared;
+    must(
+      await db.from("konza_receive_changes").insert({
+        application_id: a.id,
+        from_receive: from,
+        to_receive: to,
+        delivery_kes: to === "home" ? DELIVERY_FEE_KES : 0,
+        rule_ids: ["AD-04", "AD-07"],
+        session: caller.session,
+      }),
+    );
+    const closed = must(
+      await db.from("payments").update({ status: "expired" }).eq("case_ref", a.ref)
+        .eq("status", "pending").select("id"),
+    ) as { id: string }[];
+    if (caller.client === "sia" && caller.session) {
+      await audit(
+        caller.session,
+        AGENCIES[a.agency].authority,
+        "Follow-up",
+        `Delivery choice changed to ${to === "home" ? "home delivery" : "collection"} before paying`,
+        { rule_ids: ["AD-04", "AD-07"] },
+      );
+    }
+    return {
+      item_kind: def.deliverable.kind,
+      receive: to,
+      amount_kes: total,
+      amount_spoken_sw: swShillings(total),
+      rule_ids: ["AD-04", "AD-07"],
+      ...(closed[0] ? { payment_id: closed[0].id } : {}),
+      next: total
+        ? `Changed. Say the new choice and the total of KES ${total}, then offer payment_request for it${
+          closed.length ? " (the earlier payment card was closed, nothing was charged)" : ""
+        }.`
+        : "Changed. Say the new choice; there is nothing to pay.",
     };
   });
 }
@@ -1144,18 +1313,31 @@ export async function openCharge(
 
 /** What is still owed on exactly this application (MED-296): its granted decision's charge less
  * the approved payments for its reference; null when nothing is owed. */
-export async function chargeFor(a: any) {
+export async function chargeFor(a: any, as?: Receive) {
   const agency = Object.hasOwn(AGENCIES, a.agency) ? AGENCIES[a.agency] : undefined;
   const def = agency && Object.hasOwn(agency.services, a.service)
     ? agency.services[a.service]
     : undefined;
-  if (!agency || !def?.charge) return null;
+  if (!agency || !def || (!def.charge && !def.deliverable)) return null;
   const d = must(
     await db.from("konza_decisions").select("outcome, inputs").eq("application_id", a.id)
       .maybeSingle(),
   );
   if (d?.outcome !== "granted") return null;
-  const c = def.charge(a.fields, d.inputs);
+  // AD-07: the delivery choice in force (or `as`, to price a change before it is made).
+  const inputs = as ? inputsFor(d.inputs, as) : await inputsInForce(a, d.inputs);
+  const base = def.charge?.(a.fields, inputs) ?? null;
+  // AD-04: home delivery chosen when applying is in the same charge (one payment, the
+  // paid-once rule); a service without a fee then charges the delivery alone. The passport prices
+  // it in its own charge (deliveryPriced).
+  const delivery = !def.deliveryPriced && typeof inputs.delivery_kes === "number" ? inputs.delivery_kes : 0;
+  const c = base
+    ? delivery
+      ? { ...base, amount_kes: base.amount_kes + delivery, rule_ids: [...base.rule_ids, "AD-04"], description: `${base.description}, with home delivery` }
+      : base
+    : delivery
+    ? { amount_kes: delivery, rule_ids: ["AD-04"], description: `${def.title}: home delivery` }
+    : null;
   if (!c) return null;
   const paid = (must(
     await db.from("payments").select("amount").eq("case_ref", a.ref).eq("status", "approved"),

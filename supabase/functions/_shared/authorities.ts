@@ -85,7 +85,7 @@ export const AUTHORITIES: Record<string, Authority> = Object.fromEntries(
       default_language: "sw",
       languages: ["sw", "en"],
     },
-    // K3 scenes (world.md section 2, names checked 5 Oct).
+    // K3 scenes (world.md section 2, names checked against real bodies).
     {
       ...KE,
       id: "sca",

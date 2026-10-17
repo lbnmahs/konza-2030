@@ -14,7 +14,7 @@ export default function Transparency() {
       <h1 style={{ fontSize: 24 }}>How Savannah works and how it is checked</h1>
       <p style={{ opacity: 0.8 }}>
         The public summary of the assistant&apos;s transparency record, in two tiers after the UK&apos;s
-        Algorithmic Transparency Recording Standard (followed in shape only). Updated 8 October 2026.
+        Algorithmic Transparency Recording Standard (followed in shape only). Updated 16 October 2026.
       </p>
       {TIER1.map((t) => (
         <section key={t.heading}>

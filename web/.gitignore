@@ -44,3 +44,10 @@ next-env.d.ts
 # written by next dev when an AI agent runs it
 AGENTS.md
 CLAUDE.md
+
+# K8: voice SDK worklets, copied by scripts/vendor-worklets.mjs
+/public/vendor/
+
+# K8 S5 (MED-334): Playwright output
+/test-results/
+/playwright-report/

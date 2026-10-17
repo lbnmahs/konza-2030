@@ -4,6 +4,7 @@
 import { audit } from "./audit.ts";
 import { AUTHORITIES, authority } from "./authorities.ts";
 import { type Agent, db, must, ToolError } from "./db.ts";
+import { HUBS } from "./hubs.ts";
 import { sms } from "./sms.ts";
 import { codeTwiml, voiceCall } from "./voice.ts";
 import { otpMessage } from "./templates.ts";
@@ -146,8 +147,8 @@ export async function startOtp(
   const dob = str(args.date_of_birth);
 
   // Country agents: a caller verified in the last 5 minutes is not sent another code when the
-  // service changes (Kenya T1 on 1 Oct: the model restarted verification on going back to a
-  // step). After 5 minutes a new code is sent, for the step-up on money tools.
+  // service changes (the model would restart verification on going back to a step). After 5
+  // minutes a new code is sent, for the step-up on money tools.
   if (agent.hub) {
     const conv = must(
       await db.from("conversations").select("verified_at, citizen_id").eq("id", conversationId)
@@ -234,10 +235,14 @@ export async function startOtp(
       .eq("adjustment", "voice_otp").limit(1),
   ).length > 0;
   const channel = str(args.channel) === "voice" || voiceNoted ? "voice" : "sms";
+  // The code comes from the assistant the resident is talking to: on SIA's hub that is SIA, even
+  // once a service is open and the gate acts as the agency (MED-331: a code read "NJIA" there).
+  const hub = agent.hub ? HUBS[agent.hub] : undefined;
+  const sender = hub?.generic ? AUTHORITIES[hub.authority] : undefined;
   if (channel === "voice") {
-    await voiceCall(citizen.phone, codeTwiml(agent.authority_name, code), conversationId);
+    await voiceCall(citizen.phone, codeTwiml(sender?.name ?? agent.authority_name, code), conversationId);
   } else {
-    await sms(citizen.phone, otpMessage(agent.authority, code), conversationId);
+    await sms(citizen.phone, otpMessage(sender?.id ?? agent.authority, code), conversationId);
   }
   await audit(
     conversationId,

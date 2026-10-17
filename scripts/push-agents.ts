@@ -69,6 +69,16 @@ if (!secretId) {
 
 // 2. Tools
 const fnBase = `${env("SUPABASE_URL")}/functions/v1`;
+// Run the tools next to the database (London). ElevenLabs calls from the US, so without this the
+// function runs in us-east-2 and every query crosses the Atlantic (1.3 to 4.6 s per tool).
+const FN_REGION = "eu-west-2";
+// Leftover T1 tests first (a run that stopped before its cleanup): while a saved test names a tool
+// in its mocks, every update to that tool times out with a 500. T1 makes them again.
+for (const t of (await eleven("GET", "/agent-testing?page_size=100")).tests ?? []) {
+  if (!String(t.name).startsWith("T1 ")) continue;
+  await eleven("DELETE", `/agent-testing/${t.id}`);
+  say(`Deleted leftover test ${t.name}`);
+}
 const existingTools = (await eleven("GET", "/tools")).tools ?? [];
 const toolIds: Record<string, string> = {};
 
@@ -87,7 +97,7 @@ for await (const f of Deno.readDir(new URL("agents/tools/", ROOT))) {
     api_schema: {
       url: `${fnBase}/${t.function ?? `tools/${t.name}`}`,
       method: "POST",
-      request_headers: { "x-tool-secret": { secret_id: secretId } },
+      request_headers: { "x-tool-secret": { secret_id: secretId }, "x-region": FN_REGION },
       request_body_schema: {
         type: "object",
         description: "Tool arguments",
@@ -172,7 +182,7 @@ for (const { dir, agent: a } of await findAgents()) {
   // Every public agent can note adjustments (Wave 3 inclusive design). A country agent's base
   // tools are the ones allowed in every node; each service node adds its own (see hubWorkflow).
   // create_case is only in service nodes: in triage and wrap the model used it instead of
-  // routing (Kenya calls and T1 on 1 Oct).
+  // routing.
   const generic = !!(a.hub && HUBS[a.hub]?.generic);
   const tools: string[] = generic
     ? CONCIERGE_BASE
@@ -212,10 +222,19 @@ for (const { dir, agent: a } of await findAgents()) {
       overrides: {
         enable_conversation_initiation_client_data_from_webhook: true,
         // Country agents also accept text-only sessions from the panel handset (P15 L2).
+        // K8 (MED-342): the resident app sends an empty first message so the resident speaks
+        // first on the web; phone calls keep the agent's spoken greeting and AI disclosure.
         ...(startsElsewhere || a.hub
           ? {
             conversation_config_override: {
-              ...(startsElsewhere ? { agent: { language: true } } : {}),
+              ...(startsElsewhere || a.hub
+                ? {
+                  agent: {
+                    ...(startsElsewhere ? { language: true } : {}),
+                    ...(a.hub ? { first_message: true } : {}),
+                  },
+                }
+                : {}),
               ...(a.hub ? { conversation: { text_only: true } } : {}),
             },
           }
@@ -224,7 +243,7 @@ for (const { dir, agent: a } of await findAgents()) {
       workspace_overrides: {
         conversation_initiation_client_data_webhook: {
           url: `${fnBase}/tools/call_started`,
-          request_headers: { "x-tool-secret": { secret_id: secretId } },
+          request_headers: { "x-tool-secret": { secret_id: secretId }, "x-region": FN_REGION },
         },
         webhooks: { post_call_webhook_id: postCallId, events: ["transcript"] },
       },
@@ -251,6 +270,9 @@ for (const { dir, agent: a } of await findAgents()) {
       agent: {
         first_message: a.first_message,
         language: a.language,
+        // K8 (MED-331): the resident app starts sessions with has_screen true; phone calls and
+        // T1 simulations get this default, so the prompt's {{has_screen}} is always filled.
+        ...(generic ? { dynamic_variables: { dynamic_variable_placeholders: { has_screen: false } } } : {}),
         prompt: {
           prompt,
           ...(a.llm ? { llm: a.llm } : {}),
@@ -271,6 +293,9 @@ for (const { dir, agent: a } of await findAgents()) {
         expressive_mode: false,
       },
       turn: { turn_timeout: a.turn_timeout ?? 10 },
+      // The longest a session may run ("max_duration_seconds" in agent.json; ElevenLabs' default
+      // is 600 s, which cuts a passport, payment and booking session mid-question).
+      ...(a.max_duration_seconds ? { conversation: { max_duration_seconds: a.max_duration_seconds } } : {}),
       // K5 (MED-303): the concierge also expects the shared English and Swahili lexicon.
       asr: a.asr_keywords || generic
         ? { keywords: [...new Set([...(a.asr_keywords ?? []), ...(generic ? ASR_KEYWORDS : [])])] }
@@ -479,8 +504,8 @@ async function hubWorkflow(a: any, dir: string, toolIds: Record<string, string>)
       ],
       undefined,
       "auto",
-      // Kenya T1 on 1 Oct: in the health node the model used shared tools (upload status,
-      // create_case) for the lost ID step instead of switching.
+      // Without this, in the health node the model used shared tools (upload status, create_case)
+      // for the lost ID step instead of switching.
       `\n# Scope\n- This step is only ${n.label.toLowerCase()}. If the caller asks for anything that belongs to another service (its photo, payment, appointment or case), call no tool for it: say you will switch to it now, and the call moves there.\n`,
     );
     edges[`triage_to_enter_${c}`] = llmEdge("triage", `enter_${c}`, n.when, n.label);
@@ -495,9 +520,9 @@ async function hubWorkflow(a: any, dir: string, toolIds: Record<string, string>)
       `The caller says they need nothing more with ${n.label.toLowerCase()} and has not asked for anything else.`,
       "Done",
     );
-    // Second Kenya call: the caller went back to an unfinished step and the node stayed put.
-    // Out of scope only; other services are reached directly (Kenya T1 on 1 Oct: going back
-    // through triage, the model answered instead of routing and claimed a booking).
+    // Back to triage for an out-of-scope request only (a caller returning to an unfinished step
+    // left the node stuck); other services are reached directly, since going back through triage
+    // the model answered instead of routing.
     edges[`${c}_to_triage`] = llmEdge(
       c,
       "triage",

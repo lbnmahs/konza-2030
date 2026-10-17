@@ -207,4 +207,20 @@ export const konzaTools: Record<string, Handler> = {
       }
       : r;
   }),
+
+  // AD-07: home delivery or collection changed while nothing is paid; the new total is
+  // the rules', said from the read-back.
+  delivery_change: wrap(async (ctx) => {
+    const r = await core.changeDelivery(
+      await callerFor(ctx),
+      { item_ref: await ownApplication(ctx), to: str(ctx.args.to) },
+      str(ctx.args.confirmation_id) || null,
+    );
+    return "needs_confirmation" in r
+      ? {
+        ...r,
+        next: `${READ_BACK} Then call again with the confirmation_id.`,
+      }
+      : r;
+  }),
 };

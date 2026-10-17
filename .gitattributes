@@ -1,0 +1,4 @@
+# LF everywhere, so a Windows checkout matches the repository byte for byte (hashes, prompt
+# builds, the dash and label checks, recorded simulator results).
+* text=auto eol=lf
+*.ico binary

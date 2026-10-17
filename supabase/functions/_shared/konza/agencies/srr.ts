@@ -9,9 +9,15 @@ import { checkEvidence } from "../evidence.ts";
 import { myApplication } from "../status.ts";
 import { type DecisionDraft, KonzaError, type Resident, type ServiceDef } from "../types.ts";
 import type { Agency } from "../types.ts";
+import { receiveField } from "../delivery.ts";
 import { rb, readBack } from "../../readback.ts";
 
-const EVIDENCE = { type: "string", pattern: "^desk(:[0-9a-f-]{36})?$" };
+const EVIDENCE = {
+  type: "string",
+  pattern: "^desk(:[0-9a-f-]{36})?$",
+  title: "Document handed in at Lango Square",
+  "x-konza-title-sw": "Hati uliyowasilisha Lango Square",
+};
 
 async function evidenceOrOfficer(
   evidence: string,
@@ -47,7 +53,7 @@ const addressRegistration: ServiceDef = {
     "Verify the resident. The address is registered with a tenancy agreement or an employer letter (AR-02): handed in at Lango Square (an officer records it); then field evidence is just desk.",
     "application_submit with field evidence; read back, clear yes, then again with the confirmation_id.",
     "Say the decision and its reason. If an officer must check the document, say so; never say it was refused.",
-    "The resident card can be delivered home (delivery_book) or collected free at Lango Square (method collect).",
+    "Ask before applying: the resident card delivered home (field receive home: KES 200, its own payment on the payment card) or collected free at Lango Square (receive collect, the default). delivery_book keeps that choice; to change it before paying, delivery_change (after a payment, an officer case).",
   ].join("\n"),
   topics: {
     my_application: myApplication("srr", "address_registration", "address registration"),
@@ -72,7 +78,8 @@ const addressRegistration: ServiceDef = {
     type: "object",
     required: ["evidence"],
     additionalProperties: false,
-    properties: { evidence: EVIDENCE },
+    // AD-04: the residency card delivered home (KES 200, its own charge) or collected free.
+    properties: { evidence: EVIDENCE, receive: receiveField("Lango Square") },
   },
   consentScope: null,
   summarize: () =>
@@ -86,7 +93,9 @@ const addressRegistration: ServiceDef = {
       rule_ids: ["AR-02"],
       reason_en: "The address is registered: the document checks out for this resident.",
       inputs: {},
-      next_en: "Your resident card can be delivered home or collected free at Lango Square.",
+      next_en: fields.receive === "home"
+        ? "Your resident card will be delivered home."
+        : "Your resident card can be collected free at Lango Square.",
     }),
   deliverable: card,
 };
@@ -133,7 +142,9 @@ const childRegistration: ServiceDef = {
       reason_en:
         "The child is registered: the parent is on record and the birth certificate checks out.",
       inputs: {},
-      next_en: "The child's resident card can be delivered home or collected free at Lango Square.",
+      next_en: fields.receive === "home"
+        ? "The child's resident card will be delivered home."
+        : "The child's resident card can be collected free at Lango Square.",
     });
   },
   deliverable: card,

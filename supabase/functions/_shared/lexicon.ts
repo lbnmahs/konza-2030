@@ -1,6 +1,6 @@
 // K5 (MED-303): English and Swahili words SIA listens for. One source for the agent's ASR keywords
 // (push-agents) and for the confirm-back check (C8, MED-302), which needs to know a yes from a no.
-// Draft by Claude, 6 Oct 2026, for Mahs to confirm. Sheng is out of K5 (Mahs, 6 Oct).
+// Sheng is out of scope.
 
 /** A clear yes after a read-back. Matched as whole words or phrases, case-insensitive. */
 export const YES = {
@@ -16,7 +16,7 @@ export const YES = {
     "sure",
     "confirm",
   ],
-  // "eeh" and "ee" are a common Kenyan yes (Mahs, 8 Oct); "eh" alone is also a hesitation, so it
+  // "eeh" and "ee" are a common Kenyan yes; "eh" alone is also a hesitation, so it
   // is left out.
   sw: [
     "ndio",

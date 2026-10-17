@@ -1,5 +1,5 @@
 {
-  "_note": "T1 mock replies (fictional seed values). Each tool lists mocks in order; the first whose conditions match is used. `when` maps a parameter to a regex. Installed on the workspace tools by deno task t1; mocks only apply inside tests. K3: SIA mocks (service_open, rules_lookup by topic, two-step tools answer needs_confirmation until a confirmation_id is sent). K3 rerun: per-service service_open, rules topics and application_submit results by fields_json.",
+  "_note": "T1 mock replies (fictional seed values). Each tool lists mocks in order; the first whose conditions match is used. `when` maps a parameter to a regex. Installed on the workspace tools by deno task t1; mocks only apply inside tests. K3: SIA mocks (service_open, rules_lookup by topic, two-step tools answer needs_confirmation until a confirmation_id is sent). K3 rerun: per-service service_open, rules topics and application_submit results by fields_json. K8 (MED-331): application_submit with a confirmation id starting 5c5c5c5c is one the resident confirmed on screen; it returns the stored result with already_done.",
   "capability_enter": [
     {
       "result": {
@@ -116,7 +116,7 @@
         "status": "pending",
         "amount_kes": 7550,
         "amount_spoken_sw": "shilingi elfu saba mia tano na hamsini",
-        "next": "Tell the caller a DEMO payment prompt is on its way with a 6-digit code. Ask them to say or text you the code to approve; doing nothing declines. Then call payment_confirm with the code."
+        "next": "Tell the caller a payment prompt is on its way with a 6-digit code. Ask them to say or text you the code to approve; doing nothing declines. Then call payment_confirm with the code."
       }
     },
     {
@@ -135,8 +135,8 @@
         "confirmation_id": "c0000000-0000-4000-8000-000000000001",
         "next": "Nothing has happened yet. Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, and ask for a clear yes. Only after the caller says yes, in their next turn, call payment_request again with the same arguments and this confirmation_id.",
         "readback": {
-          "en": "Send a DEMO payment prompt for 7,550 shillings to Savanahlands Passport Services, Kenyan passport renewal, 34-page booklet. You approve it by telling me the 6-digit code; doing nothing declines it.",
-          "sw": "Kutuma ombi la malipo la DEMO la shilingi elfu saba mia tano na hamsini kwa Savanahlands Passport Services. Utaidhinisha kwa kuniambia namba ya siri yenye tarakimu sita; usipofanya chochote, malipo yatakataliwa.",
+          "en": "Send a payment prompt for 7,550 shillings to Savanahlands Passport Services, Kenyan passport renewal, 34-page booklet. You approve it by telling me the 6-digit code; doing nothing declines it.",
+          "sw": "Kutuma ombi la malipo la shilingi elfu saba mia tano na hamsini kwa Savanahlands Passport Services. Utaidhinisha kwa kuniambia namba ya siri yenye tarakimu sita; usipofanya chochote, malipo yatakataliwa.",
           "items": [
             {
               "kind": "amount",
@@ -829,6 +829,28 @@
   "application_submit": [
     {
       "when": {
+        "confirmation_id": "^5c5c5c5c"
+      },
+      "result": {
+        "ref": "SPS-4F2A9C1D",
+        "application_id": "6b5f2027-0000-4000-8000-0000000000a1",
+        "decision_id": "6b5f2027-0000-4000-8000-0000000000d1",
+        "outcome": "granted",
+        "decided_by": "rule",
+        "reason": "The renewal is accepted: it expires within 12 months.",
+        "next": "Pay KES 7550, then give biometrics at the Konza Passport Desk. The old passport stays valid until the new one is handed over.",
+        "review": {
+          "panel": "Aminia Review Panel",
+          "ask_by": "2026-11-14",
+          "free": true,
+          "answer_within_working_days": 10
+        },
+        "say": "Say what was decided, the reason, what happens next, and that they can ask for a review.",
+        "already_done": true
+      }
+    },
+    {
+      "when": {
         "fields_json": "Konza|Government|Authority|Technopolis",
         "confirmation_id": ".+"
       },
@@ -1255,6 +1277,17 @@
   ],
   "payment_confirm": [
     {
+      "when": {
+        "method": ".+"
+      },
+      "result": {
+        "payment_id": "6b5f2027-0000-4000-8000-0000000000p1",
+        "status": "pending",
+        "method": "card",
+        "next": "The resident chose their card: a 6-digit code is on its way by text. They read it to you (call payment_confirm with it) or type it on the card."
+      }
+    },
+    {
       "result": {
         "payment_id": "6b5f2027-0000-4000-8000-0000000000p1",
         "status": "approved",
@@ -1314,6 +1347,37 @@
               "spoken_en": "Konza Passport Desk",
               "spoken_sw": "Konza Passport Desk"
             }
+          ]
+        }
+      }
+    }
+  ],
+  "delivery_change": [
+    {
+      "when": {
+        "confirmation_id": ".+"
+      },
+      "result": {
+        "item_kind": "certificate",
+        "receive": "home",
+        "amount_kes": 10700,
+        "amount_spoken_sw": "shilingi elfu kumi mia saba",
+        "rule_ids": ["AD-04", "AD-07"],
+        "next": "Changed. Say the new choice and the total of KES 10700, then offer payment_request for it."
+      }
+    },
+    {
+      "result": {
+        "needs_confirmation": true,
+        "confirmation_id": "6b5f2027-0000-4000-8000-0000000000d7",
+        "summary_en": "Change the certificate to home delivery for 200 shillings: 10,700 shillings in all, paid in one payment.",
+        "next": "Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, then ask for a clear yes. Then call again with the confirmation_id.",
+        "readback": {
+          "en": "Change the certificate to home delivery for 200 shillings: 10,700 shillings in all, paid in one payment.",
+          "sw": "Kubadilisha cheti iletwe nyumbani kwa shilingi mia mbili: jumla shilingi elfu kumi mia saba, kwa malipo moja.",
+          "items": [
+            { "kind": "amount", "value": 200, "spoken_en": "200 shillings", "spoken_sw": "shilingi mia mbili" },
+            { "kind": "amount", "value": 10700, "spoken_en": "10,700 shillings", "spoken_sw": "shilingi elfu kumi mia saba" }
           ]
         }
       }

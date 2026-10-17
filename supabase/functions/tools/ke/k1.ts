@@ -174,7 +174,7 @@ export const k1: Record<string, Handler> = {
       crypto.getRandomValues(new Uint8Array(6)),
       (b) => alphabet[b % alphabet.length],
     ).join("");
-    const body = `Tiba Njema (DEMO): uthibitisho wa bima ${code}. ${
+    const body = `Tiba Njema: uthibitisho wa bima ${code}. ${
       mask("Mwanachama", m.member_no)
     }, bima hai ${swMonth(monthOf(today))}. Onyesha code hii hospitalini. Huduma ya kubuni.`;
     const { sid } = await sms(citizen.phone, body, conversationId);

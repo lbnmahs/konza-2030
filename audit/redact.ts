@@ -28,9 +28,19 @@ const NUMBER_WORDS = new RegExp(`\\b(${DIGIT_WORDS})\\b`, "gi");
 /** Four or more digit words in a row: a code, reference or phone number read aloud. */
 const SPOKEN_RUN = new RegExp(`\\b(${DIGIT_WORDS})([\\s,.-]+(${DIGIT_WORDS})){3,}\\b`, "gi");
 
-/** A turn inside a code window with four or more digits or digit words is a code read aloud. */
-export const looksLikeCode = (text: string) =>
-  (text.match(/\d/g)?.length ?? 0) + (text.match(NUMBER_WORDS)?.length ?? 0) >= 4;
+/** Phone endings and code lengths say nothing of the code ("a 6-digit code ... ending in 878"). */
+const NOT_CODE = new RegExp(
+  `\\b(ending in|ends in|inayoishia na|inaishia na)\\s+((\\d[\\s,]*){1,4}|((${DIGIT_WORDS})[\\s,]*){1,4})|\\b\\d+-digit\\b`,
+  "gi",
+);
+
+/** A turn inside a code window with four or more digits or digit words is a code read aloud. Errs
+ * on hiding: only phone endings and code lengths are set aside before counting, so "a 6-digit
+ * code to the phone ending in 878" stays text. */
+export const looksLikeCode = (raw: string) => {
+  const text = raw.replace(NOT_CODE, " ");
+  return (text.match(/\d/g)?.length ?? 0) + (text.match(NUMBER_WORDS)?.length ?? 0) >= 4;
+};
 
 /** References and transaction codes (SPS-61D7396E, KZP055A010, QK20410039, QK-2041-0039): a short
  * prefix, then at least 6 characters with a digit. Rule ids such as PP-02 are too short to match. */
@@ -89,8 +99,8 @@ export function redactText(text: string): string {
 
 /** Keys that identify a person, a record or a secret: dropped from tool arguments and results.
  * Everything else is kept (rule outputs, decisions, read-backs, statuses) with its text redacted,
- * so a check can see what the backend actually said. Was an allowlist until 8 Oct, which hid
- * results such as create_case's {case_created: true} from the sampled checks. */
+ * so a check can see what the backend actually said (an allowlist would hide results such as
+ * create_case's {case_created: true}). */
 const DROP = new Set([
   "id",
   "ref",
@@ -153,6 +163,8 @@ function keep(v: unknown, depth = 0): unknown {
     const out: Record<string, unknown> = {};
     for (const [k, x] of Object.entries(v)) {
       if (!DROP.has(k) && !DROP_SUFFIX.test(k)) out[k] = keep(x, depth + 1);
+      // The key stays so a grader can tell a given value from an empty one; the value never does.
+      else out[k] = x === "" || x === null || x === undefined ? x : "[redacted]";
     }
     return out;
   }
@@ -177,7 +189,9 @@ export function redactTranscript(transcript: Turn[]): RedactedTurn[] {
       role: t.role === "agent" ? "agent" : "user",
     };
     if (t.message) {
-      out.text = codeWindow && looksLikeCode(t.message)
+      // Only the resident reads a code aloud; Savannah's read-backs say amounts in words, which
+      // would otherwise look like one. Her lines still go through redactText.
+      out.text = codeWindow && out.role === "user" && looksLikeCode(t.message)
         ? "[code read aloud, redacted]"
         : redactText(t.message);
     }
@@ -192,10 +206,14 @@ export function redactTranscript(transcript: Turn[]): RedactedTurn[] {
     if (t.tool_results?.length) {
       out.results = t.tool_results.map((r) => {
         const value = String(r.result_value ?? "");
+        // In the resident app the code and the payment are done on the card, and the app says so
+        // in a contextual update; without it the window would stay open and hide later lines.
         if (
           (r.tool_name === "identity_check_otp" && value.includes('"verified":true')) ||
           (r.tool_name === "payment_confirm" &&
-            /"status":"(approved|declined|expired)"/.test(value))
+            /"status":"(approved|declined|expired)"/.test(value)) ||
+          (r.tool_name === "contextual_update" &&
+            /entered the code on screen and is verified|approved the payment on screen/.test(value))
         ) codeWindow = false;
         return {
           tool: String(r.tool_name),

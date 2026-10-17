@@ -1,5 +1,5 @@
 // The Mirror Vale Audit Office's checker (K4, MED-272; the K4 design notes (kept private) section 2).
-// Deterministic checks C1 to C8 over a snapshot of the Konza logs. Pure functions: the snapshot
+// Deterministic checks C1 to C8 and C10 over a snapshot of the Konza logs. Pure functions: the snapshot
 // is read by audit/snapshot.ts, and audit/breaker.ts acts on the findings.
 
 import { ageOn, daysBetween, nairobiDay, plusMonths, REFERENCE as R } from "./reference.ts";
@@ -22,10 +22,12 @@ export type Snapshot = {
   holds: Row[];
   payments: Row[];
   appointments: Row[];
+  /** AD-07: home or collect changed before paying; ids, sessions and times only. */
+  receiveChanges?: Row[];
 };
 
 export type Finding = {
-  check: "C1" | "C2" | "C3" | "C4" | "C5" | "C6" | "C7" | "C8" | "C9";
+  check: "C1" | "C2" | "C3" | "C4" | "C5" | "C6" | "C7" | "C8" | "C9" | "C10";
   code: string;
   /** hold: opens the circuit breaker; report: an officer looks; info: no action. */
   severity: "hold" | "report" | "info";
@@ -419,6 +421,7 @@ export function check(s: Snapshot, opts: Options = {}): Finding[] {
     const writes: [Row[], (r: Row) => string, string][] = [
       [s.applications, (a) => `submitApplication:${a.agency}/${a.service}`, "submitApplication"],
       [s.deliveries, () => "bookDelivery", "bookDelivery"],
+      [s.receiveChanges ?? [], () => "changeDelivery", "changeDelivery"],
       [s.consents, () => "recordConsent", "recordConsent"],
       [s.appeals, () => "appealDecision", "appealDecision"],
     ];
@@ -475,6 +478,28 @@ export function check(s: Snapshot, opts: Options = {}): Finding[] {
         agency: e.agency ?? undefined,
         rule_ids: [],
         ref: String(e.operation).slice("readBack:".length),
+      });
+    }
+  }
+
+  // C10 (K8, MED-331; plan-k8 2.5.4): a screen commit ran with arguments other than those its card
+  // showed, or with no card recorded as shown. Count only: an officer looks; never a hold.
+  if (on("C10")) {
+    const shown = new Map<string, string>();
+    for (const e of s.events) {
+      if (String(e.operation).startsWith("uiShown:") && e.request_id) shown.set(e.request_id, e.request_hash);
+    }
+    for (const e of s.events) {
+      if (!String(e.operation).startsWith("uiCommit:")) continue;
+      const was = shown.get(e.request_id);
+      if (was !== undefined && was === e.request_hash) continue;
+      out.push({
+        check: "C10",
+        code: was === undefined ? "commit_without_card" : "commit_not_as_shown",
+        severity: "report",
+        agency: e.agency ?? undefined,
+        rule_ids: [],
+        ref: String(e.operation).slice("uiCommit:".length),
       });
     }
   }

@@ -8,16 +8,16 @@ import { mask, spokenDate } from "./util.ts";
 
 const OTP: Record<string, (code: string) => string> = {
   sia: (c) =>
-    `SIA (DEMO): your code is ${c}, valid 5 minutes. / Code yako ni ${c}, itaisha baada ya dakika 5.`,
-  njia: (c) => `NJIA (DEMO): code yako ya uthibitisho ni ${c}. Itaisha baada ya dakika 5.`,
+    `SIA: your code is ${c}, valid 5 minutes. / Code yako ni ${c}, itaisha baada ya dakika 5.`,
+  njia: (c) => `NJIA: code yako ya uthibitisho ni ${c}. Itaisha baada ya dakika 5.`,
   pwani_njema: (c) =>
-    `Kaunti ya Pwani Njema (DEMO): code yako ya uthibitisho ni ${c}. Itaisha baada ya dakika 5.`,
+    `Kaunti ya Pwani Njema: code yako ya uthibitisho ni ${c}. Itaisha baada ya dakika 5.`,
   usajili_njema: (c) =>
-    `Usajili Njema (DEMO): code yako ya uthibitisho ni ${c}. Itaisha baada ya dakika 5.`,
+    `Usajili Njema: code yako ya uthibitisho ni ${c}. Itaisha baada ya dakika 5.`,
   tiba_njema: (c) =>
-    `Tiba Njema (DEMO): code yako ya uthibitisho ni ${c}. Itaisha baada ya dakika 5.`,
+    `Tiba Njema: code yako ya uthibitisho ni ${c}. Itaisha baada ya dakika 5.`,
   wezesha_njema: (c) =>
-    `Wezesha Njema (DEMO): code yako ya uthibitisho ni ${c}. Itaisha baada ya dakika 5.`,
+    `Wezesha Njema: code yako ya uthibitisho ni ${c}. Itaisha baada ya dakika 5.`,
 };
 
 export function otpMessage(authority: string, code: string): string {
@@ -87,7 +87,7 @@ export const TEMPLATES: Record<string, { authority: string; compose: Composer }>
         swDate(permit.expires)
       }. Code ya uthibitisho: ${permit.verify_code}. Malipo: KES ${
         Number(pay.amount).toLocaleString("en-GB")
-      } (${pay.txn_code}). DEMO: huduma ya kubuni.`;
+      } (${pay.txn_code}). Huduma ya kubuni.`;
     },
   },
   id_replacement_ke_sw: {
@@ -134,7 +134,7 @@ export const TEMPLATES: Record<string, { authority: string; compose: Composer }>
           } (${booking.ref}). Fika na risiti ya malipo.`,
         );
       }
-      return `Usajili Njema (DEMO): ${parts.join(" ")} Huduma ya kubuni.`;
+      return `Usajili Njema: ${parts.join(" ")} Huduma ya kubuni.`;
     },
   },
   k1_summary_sw: {
@@ -172,7 +172,7 @@ export const TEMPLATES: Record<string, { authority: string; compose: Composer }>
         );
       }
       if (!parts.length) return null;
-      return `Tiba Njema (DEMO): ${parts.join(" ")} Huduma ya kubuni.`;
+      return `Tiba Njema: ${parts.join(" ")} Huduma ya kubuni.`;
     },
   },
   n2_summary_sw: {
@@ -201,7 +201,7 @@ export const TEMPLATES: Record<string, { authority: string; compose: Composer }>
         );
       }
       for (const line of await partnerLines(conversationId)) parts.push(line);
-      return `Wezesha Njema (DEMO): ${parts.join(" ")} Huduma ya kubuni.`;
+      return `Wezesha Njema: ${parts.join(" ")} Huduma ya kubuni.`;
     },
   },
   // P14: GP registration and the study visa desk on the FHS country agent.
@@ -214,7 +214,7 @@ export const TEMPLATES: Record<string, { authority: string; compose: Composer }>
       );
       if (!app) return null;
       const parts = [
-        `Njema Passport Service (DEMO): ombi ${app.ref}, kurasa ${app.pages}, ada KES ${
+        `Njema Passport Service: ombi ${app.ref}, kurasa ${app.pages}, ada KES ${
           Number(app.fee).toLocaleString("en-GB")
         }.`,
       ];
@@ -292,7 +292,7 @@ async function konzaReceipt(
     );
   }
   parts.push(`Receipt: ${Deno.env.get("WEB_BASE_URL")}/r/${d.id}`);
-  return `SIA (DEMO): ${parts.join(" ")} Fictional Konza.`;
+  return `SIA: ${parts.join(" ")} Fictional Konza.`;
 }
 
 for (const agencyId of ["sps", "siln", "srr", "sca", "sco"]) {

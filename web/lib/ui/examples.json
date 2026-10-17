@@ -1,0 +1,295 @@
+[
+  {
+    "v": "ui/v1",
+    "seq": 1,
+    "kind": "progress",
+    "at": "2026-10-09T09:00:00Z",
+    "payload": {
+      "service": "sps.passport_renewal",
+      "title": {
+        "en": "Passport renewal",
+        "sw": "Kuhuisha pasipoti"
+      },
+      "steps": [
+        {
+          "id": "identity",
+          "state": "done"
+        },
+        {
+          "id": "confirm",
+          "state": "done"
+        },
+        {
+          "id": "decision",
+          "state": "current"
+        }
+      ],
+      "updated": {
+        "at": "2026-10-09T08:59:58Z",
+        "source": {
+          "en": "Your application",
+          "sw": "Ombi lako"
+        }
+      }
+    }
+  },
+  {
+    "v": "ui/v1",
+    "seq": 2,
+    "kind": "quote",
+    "at": "2026-10-09T09:00:05Z",
+    "payload": {
+      "title": {
+        "en": "Passport fee",
+        "sw": "Ada ya pasipoti"
+      },
+      "rows": [
+        {
+          "label": {
+            "en": "34 pages",
+            "sw": "Kurasa 34"
+          },
+          "amount_kes": 7550
+        },
+        {
+          "label": {
+            "en": "50 pages",
+            "sw": "Kurasa 50"
+          },
+          "amount_kes": 9550
+        },
+        {
+          "label": {
+            "en": "66 pages",
+            "sw": "Kurasa 66"
+          },
+          "amount_kes": 12050
+        }
+      ],
+      "rule_ids": [
+        "PP-01"
+      ]
+    }
+  },
+  {
+    "v": "ui/v1",
+    "seq": 3,
+    "kind": "identity",
+    "at": "2026-10-09T09:00:20Z",
+    "payload": {
+      "step": "code",
+      "channel": "sms",
+      "expires_at": "2026-10-09T09:05:20Z",
+      "attempts_left": 3
+    }
+  },
+  {
+    "v": "ui/v1",
+    "seq": 4,
+    "kind": "form",
+    "at": "2026-10-09T09:01:00Z",
+    "payload": {
+      "service": "sps.passport_renewal",
+      "title": {
+        "en": "Your passport",
+        "sw": "Pasipoti yako"
+      },
+      "fields": [
+        {
+          "name": "pages",
+          "type": "integer",
+          "label": {
+            "en": "Booklet",
+            "sw": "Kitabu"
+          },
+          "required": true,
+          "options": [
+            {
+              "value": 34,
+              "label": {
+                "en": "34 pages",
+                "sw": "Kurasa 34"
+              }
+            },
+            {
+              "value": 50,
+              "label": {
+                "en": "50 pages",
+                "sw": "Kurasa 50"
+              }
+            },
+            {
+              "value": 66,
+              "label": {
+                "en": "66 pages",
+                "sw": "Kurasa 66"
+              }
+            }
+          ]
+        },
+        {
+          "name": "full_or_damaged",
+          "type": "boolean",
+          "label": {
+            "en": "My passport is full or damaged"
+          },
+          "required": false
+        }
+      ]
+    }
+  },
+  {
+    "v": "ui/v1",
+    "seq": 5,
+    "kind": "confirm",
+    "at": "2026-10-09T09:01:30Z",
+    "payload": {
+      "confirmation_id": "0b7c8f8e-3d2a-4c55-9a51-6f1f0c3e2a10",
+      "tool": "application_submit",
+      "variant": "action",
+      "state": "open",
+      "title": {
+        "en": "Confirm application",
+        "sw": "Thibitisha ombi"
+      },
+      "readback": {
+        "en": "Renew your passport with 34 pages, delivered home. The fee is 7,550 shillings.",
+        "sw": "Kuhuisha pasipoti yako ya kurasa thelathini na nne, kuletewa nyumbani. Ada ni shilingi elfu saba mia tano hamsini."
+      },
+      "items": [
+        {
+          "kind": "amount",
+          "spoken": {
+            "en": "7,550 shillings",
+            "sw": "shilingi elfu saba mia tano hamsini"
+          },
+          "value": 7550
+        }
+      ],
+      "expires_at": "2026-10-09T09:04:30Z",
+      "earliest_at": "2026-10-09T09:01:34Z",
+      "shown_hash": "3f6c1d0a9b2e4f5a6c7d8e9f0a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d"
+    }
+  },
+  {
+    "v": "ui/v1",
+    "seq": 6,
+    "kind": "slots",
+    "at": "2026-10-09T09:03:00Z",
+    "payload": {
+      "title": {
+        "en": "Biometrics",
+        "sw": "Biometriki"
+      },
+      "place": {
+        "en": "Konza Passport Desk"
+      },
+      "days": [
+        {
+          "date": "2026-10-12",
+          "label": {
+            "en": "Monday 12 October",
+            "sw": "Jumatatu tarehe 12 Oktoba"
+          }
+        },
+        {
+          "date": "2026-10-13",
+          "label": {
+            "en": "Tuesday 13 October",
+            "sw": "Jumanne tarehe 13 Oktoba"
+          }
+        }
+      ],
+      "windows": [
+        {
+          "id": "morning",
+          "label": {
+            "en": "Morning, 8 to 12",
+            "sw": "Asubuhi, saa mbili hadi saa sita"
+          }
+        },
+        {
+          "id": "afternoon",
+          "label": {
+            "en": "Afternoon, 2 to 5",
+            "sw": "Mchana, saa nane hadi saa kumi na moja"
+          }
+        }
+      ],
+      "selected": {
+        "date": "2026-10-12",
+        "window": "morning"
+      }
+    }
+  },
+  {
+    "v": "ui/v1",
+    "seq": 7,
+    "kind": "payment",
+    "at": "2026-10-09T09:03:30Z",
+    "payload": {
+      "payment_id": "6a1e4b0c-2f7d-4e8a-b3c9-1d2e3f4a5b6c",
+      "state": "choose",
+      "amount_kes": 7550,
+      "label": {
+        "en": "Passport fee",
+        "sw": "Ada ya pasipoti"
+      },
+      "expires_at": "2026-10-09T09:08:30Z",
+      "desk": {
+        "en": "Or pay at the Konza Passport Desk",
+        "sw": "Au lipa Konza Passport Desk"
+      },
+      "methods": [
+        {
+          "method_id": "3f2b1c0d-4e5f-4a6b-8c7d-9e0f1a2b3c4d",
+          "type": "card",
+          "label": {
+            "en": "Debit or credit card",
+            "sw": "Kadi ya benki"
+          },
+          "masked": "•••• 4417"
+        },
+        {
+          "method_id": "7a8b9c0d-1e2f-4a3b-9c4d-5e6f7a8b9c0d",
+          "type": "mobile_money",
+          "label": {
+            "en": "Mobile money",
+            "sw": "Pesa ya simu"
+          },
+          "masked": "07•• ••• 318"
+        }
+      ]
+    }
+  },
+  {
+    "v": "ui/v1",
+    "seq": 8,
+    "kind": "receipt",
+    "at": "2026-10-09T09:04:00Z",
+    "payload": {
+      "decision_id": "9d8c7b6a-5f4e-4d3c-8b2a-1f0e9d8c7b6a",
+      "outcome": "granted",
+      "decided_by": "rule",
+      "rule_ids": [
+        "PP-02"
+      ],
+      "reason": {
+        "en": "Your passport is within its renewal window.",
+        "sw": "Pasipoti yako iko ndani ya muda wa kuhuisha."
+      },
+      "next": {
+        "en": "Pay the fee, then book biometrics.",
+        "sw": "Lipa ada, kisha weka miadi ya biometriki."
+      },
+      "review": {
+        "panel": "Aminia Review Panel",
+        "ask_by": "2026-11-08",
+        "free": true,
+        "answer_within_working_days": 10
+      },
+      "link": "/r/9d8c7b6a-5f4e-4d3c-8b2a-1f0e9d8c7b6a",
+      "ref": "SPS-4F2A9C1D"
+    }
+  }
+]

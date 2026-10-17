@@ -1,14 +1,20 @@
 {
   "name": "payment_confirm",
-  "description": "Protected. Approve the waiting DEMO payment prompt with the 6-digit code the caller reads or texts you. Three wrong codes or 5 minutes decline it.",
+  "description": "Protected. Approve the waiting payment with the 6-digit code the caller reads or texts you (the phone prompt, or the code texted for a card on screen). Never a PIN: mobile money PINs are typed on the payment card. Three wrong codes or 5 minutes decline it. In the resident app, while the payment card waits for a choice, call it with method (and no code) when the resident tells you how to pay.",
   "params": {
     "code": {
       "type": "string",
       "description": "The 6 digits the caller gave you"
+    },
+    "method": {
+      "type": "string",
+      "enum": [
+        "card",
+        "mobile_money"
+      ],
+      "description": "Only while the payment card waits for a choice and the resident tells you how to pay: card (a code is texted, they read it to you) or mobile_money (they type the PIN on the card). Leave out otherwise."
     }
   },
-  "required": [
-    "code"
-  ],
+  "required": [],
   "no_interrupt": true
 }

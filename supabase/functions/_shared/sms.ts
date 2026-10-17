@@ -1,5 +1,5 @@
-// Twilio Messages API, from the one demo number. Every SMS must say DEMO, and goes through the
-// outbound guard (allowlist, daily budget, log).
+// Twilio Messages API, from the one demo number. Every SMS goes through the outbound guard
+// (allowlist, daily budget, log). Bodies carry no "DEMO" (MED-340); emails do.
 
 import { guardOutbound } from "./outbound.ts";
 
@@ -8,10 +8,12 @@ export async function sms(
   body: string,
   conversationId?: string,
 ): Promise<{ sid: string }> {
-  if (!body.includes("DEMO")) throw new Error("SMS body must contain DEMO");
-  // SMS_DRY_RUN=1 (local only, never on the deployed function) or a text test: print instead.
+  // SMS_DRY_RUN=1 (local only, never on the deployed function), a text test or the handset: not
+  // sent. The body is printed only for a local dry run; on the project it would put live codes in
+  // the function logs, and the handset reads it from handset_inbox.
   if (await guardOutbound("sms", to, conversationId, body)) {
-    console.log(JSON.stringify({ sms_dry_run: { to_last3: to.slice(-3), body } }));
+    const local = Deno.env.get("SMS_DRY_RUN") === "1";
+    console.log(JSON.stringify({ sms_dry_run: { to_last3: to.slice(-3), ...(local ? { body } : {}) } }));
     return { sid: "dry-run" };
   }
   const sid = Deno.env.get("TWILIO_ACCOUNT_SID")!;

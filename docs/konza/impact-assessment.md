@@ -4,20 +4,20 @@ Independent open-source project · not affiliated with any government body
 
 K1 (MED-256) template, 5 Oct 2026; filled in K6 (MED-309), 8 Oct 2026. Follows the Data Protection Act 2019 s31(2) (a data protection impact assessment) and the pre-deployment risk and human rights assessment the AI Bill 2026 proposes for high-risk systems (public administration is high risk; the Bill is not law). This repository holds no real personal data; the assessment covers what a live deployment needs and tests that the system already behaves that way. The public summary is the transparency record (`docs/konza/transparency.md`).
 
-Owner: Mahs. Reviewer: Mirror Vale Audit Office. Version 1, 8 Oct 2026; signed off by Mahs on 8 Oct 2026.
+Owner: Mahs. Reviewer: Mirror Vale Audit Office. Version 1, 8 Oct 2026; signed off by Mahs on 8 Oct 2026. Version 2, 16 Oct 2026, revised 17 Oct 2026 (K8, MED-336): the resident app with a screen, public with no panel sign-in since 17 Oct; signed off by Mahs on 17 Oct 2026.
 
 ## 1. What the system does and why (s31(2)(a))
 
-- **Purpose.** An AI assistant on the phone (Savannah, SIA) that answers residents' questions about public services and, with their clear yes, prepares and submits requests for themselves and, as a recorded parent, for their children. It never decides: a published rule or a human officer does, every decision carries a reason and a free review route, and an independent checker watches the decisions.
+- **Purpose.** An AI assistant on the phone and, in a test app, with a screen (Savannah, SIA) that answers residents' questions about public services and, with their clear yes, prepares and submits requests for themselves and, as a recorded parent, for their children. It never decides: a published rule or a human officer does, every decision carries a reason and a free review route, and an independent checker watches the decisions.
 - **Services in scope:** arrival (address and child registration, SRR), passport renewal (SPS), health cover and dependants (SCA), business registration and trading permit (SCO), primary school place (SILN), review (Aminia Review Panel). Rules in `docs/konza/world.md`.
 - **Who uses it:** residents, parents acting for children, officers (decisions, desk payments and documents, reviews, clearing holds), the Audit Office.
-- **Channels and languages:** phone (one number) and browser calls, SMS to an allowlisted phone, web receipts; English and Swahili (Sheng out of scope since K5).
+- **Channels and languages:** phone (one number) and browser calls, the resident app `/sia` (K8: voice or text with cards on a screen; public with no sign-in since 17 Oct 2026, the daily session limits capping use), SMS to an allowlisted phone, web receipts; English and Swahili in conversation, the screen in English only for now (Sheng out of scope since K5).
 - **Data processed, per service:**
 
 | Field | Purpose | Source | Sensitive (DPA s2) | Kept |
 |---|---|---|---|---|
 | Resident number, date of birth | identity check before personal records | caller, checked against the registry | no | registry (seed) |
-| Phone number | one-time codes, DEMO texts | registry | no | registry; calling numbers only as hashes |
+| Phone number | one-time codes, texts from the fictional sender | registry | no | registry; calling numbers only as hashes |
 | One-time and payment codes | identity, approving a payment | generated | no | hashes only, 5 minutes, 3 tries |
 | Passport number, expiry, pages | renewal window and fee (PP-01, PP-02) | registry | no | passports table |
 | Address and zone | delivery (AD-01 to AD-06), school catchment (ED-03) | registry, desk document | no | addresses table |
@@ -26,7 +26,11 @@ Owner: Mahs. Reviewer: Mirror Vale Audit Office. Version 1, 8 Oct 2026; signed o
 | Documents (tenancy, employer letter, birth certificate) | evidence | handed in at Lango Square; an officer records type and result | birth certificate: yes | the record of type and result, not the paper |
 | Biometrics appointment | passport (PP-03) | caller's choice | appointment only, no biometric data | appointments table |
 | Business name, tax number | registration (BZ-01 to BZ-05) | caller, rules | no | applications and decisions |
-| Payments | fees (PY-01, PY-02) | rules and the resident | no | payments, without card or account data |
+| Payments | fees (PY-01, PY-02; PY-03 on a screen, simulated) | rules and the resident | no | payments, without card or account data |
+| Demo payment methods (K8) | a simulated payment on the screen | seeded per demo resident, masked (`•••• 4242`); one fictional mobile money PIN | no | payment_methods; the PIN only as a hash, never in a log, event or transcript |
+| Screen events (K8) | the card a resident sees: fee, form fields and choices, read-back, decision | backend, from tool results | may name a child by first name; a child's form carries the children's resident numbers as choices | ui_events, append-only, wiped at each demo reset; read only through the resident's own session |
+| Session and CSRF tokens (K8) | binding the app to its one conversation | generated | no | hashes only; a session lasts 45 minutes, the rows stay until the demo reset |
+| Delivery choice changes (K8, AD-07) | home or collect changed before paying | the resident, asked first | no | konza_receive_changes, append-only |
 | Call transcript | the call; C8 and C9 checks | ElevenLabs | may hold anything the caller says | 30 days at ElevenLabs; the repo keeps ids and counts only; no audio |
 
 - **Automated decisions** (rule grants; each with a receipt, an SMS notice and the review route; DPA s35(3)): resident card and child registration with a checked document (AR-01 to AR-03), passport renewal grant (PP-02, PP-01), appointment and delivery bookings (PP-03, AD-03, AD-04), health contribution accepted (SH-01, SH-02) and dependant with a checked document (SH-03, SH-04), business name and permit (BZ-01, BZ-03, BZ-04), school place in zone with space (ED-01 to ED-06). **No adverse decision is automated**: refusals, other offers, documents that do not check out, names that suggest a government body (BZ-05), a full or out-of-zone school (ED-04) and every review go to an officer (database check: adverse outcomes only by an officer).
@@ -34,7 +38,7 @@ Owner: Mahs. Reviewer: Mirror Vale Audit Office. Version 1, 8 Oct 2026; signed o
 
 ## 2. Necessity and proportionality (s31(2)(b))
 
-- **Each field is needed** for a rule or an identity check named above. Not collected: card or bank numbers (payments are prompts approved by code, or at a desk), biometric data (only the appointment), audio, full names of children in speech, national ID numbers (only the Konza resident number verifies).
+- **Each field is needed** for a rule or an identity check named above. Not collected: card or bank numbers (payments are prompts approved by code, at a desk, or in the app a simulated payment with a seeded, masked method; never a card number, expiry, security code or real PIN), biometric data (only the appointment), audio, full names of children in speech, national ID numbers (only the Konza resident number verifies).
 - **Why an assistant and not a form:** many residents phone rather than fill forms (feature phones, low literacy, poor signal; the exclusion simulation has 0 dead ends because every step has a desk or officer route). What stays manual on purpose: every adverse decision, every review, desk documents and desk payments, clearing a hold.
 - **Retention:** transcripts 30 days (ElevenLabs), no audio; data reset before each test session; audit log, holds and findings append-only and kept for the life of the deployment (a real deployment would set a period in law; the AI Bill proposes 5 years for records); receipt links expire after 60 days; test calls are deleted when a phase closes unless cited, and then only the conversation id is kept.
 
@@ -54,7 +58,10 @@ Likelihood and severity are for a real deployment with the safeguards in section
 | Exclusion (feature phones, low literacy, poor signal) | residents without smartphones | medium | medium | phone-code payments and desk routes; exclusion simulation 0 dead ends |
 | Outage leaves people stuck | anyone mid-request | medium | medium | outage simulation: 100% answered or routed, 0 partial writes, 0 false "done" |
 | Manipulation through uploads or speech | all | medium | medium | dictated text stored as data or refused (manipulation simulation 100%); T1 manipulation tests; no tool decides |
-| Mistaken for an official service | the public | low | medium | label on every surface, DEMO in every SMS, AI disclosure in the first message, look-alike review (`docs/konza/labelling.md`) |
+| A tap on a screen commits something not shown, or pays twice (K8) | app users | low | medium | a tap commits only the arguments of the card shown (`shown_hash`, C10); one approved payment per reference, one method choice per payment (`test:local` MED-331 and MED-332 tests) |
+| The screen cannot be used with assistive technology (K8) | blind, low-vision and motor-impaired residents | medium | medium | axe on every card in both themes with no serious or critical finding, keyboard, reflow, target size, live regions (`npm --prefix web run test:a11y`); everything on a card can also be done by voice except typing a mobile money PIN (to pay, the card is chosen by voice and its texted code read back; plan-k8 2.12); a keyboard pass of the app's shell and a throttled load on the live app (17 Oct); no screen reader pass (VoiceOver, TalkBack) was run in K8 |
+| A stranger uses up the day's sessions or credits (the app is public since 17 Oct) | the demo's owner; other visitors that day | medium | low | no sign-in, but every session counts against the daily limits (20 browser sessions, SIA's daily call limit, the SMS budget); codes and texts go only to allowlisted phones; resident routes refuse a request without the session cookie or from another origin (`web/e2e/access.spec.ts`) |
+| Mistaken for an official service | the public | low | medium | label on every surface, fictional sender names in SMS (no "DEMO" since 12 Oct), AI disclosure in the first message of a call and on screen in every web mode, look-alike review (`docs/konza/labelling.md`) |
 
 ## 4. Safeguards (s31(2)(d))
 
@@ -69,13 +76,14 @@ Likelihood and severity are for a real deployment with the safeguards in section
 | Exclusion | phone-code payment; desk payment and documents; officer cases | backend; process | `sim exclusion` |
 | Outage | fallback route on any failure, never a false "done"; refuse when the audit log is down | backend | `sim outage` |
 | Manipulation | caller text and documents are data; never in `next`; no deciding tool | backend; prompt | `sim manipulation`; T1 manipulation tests |
-| Disclosure and look-alikes | AI line first; label; DEMO texts; designed names only | prompt, web, SMS sender | label check; `tests/demo_test.ts`; `sms.ts` refuses texts without DEMO |
+| Disclosure and look-alikes | AI line first; label; designed names only (SMS without "DEMO" since 12 Oct) | prompt, web, SMS sender | label check; `tests/demo_test.ts`; outbound allowlist and budget in `outbound.ts` |
 | Data leaving the system | one redaction module for any transcript that leaves ElevenLabs; leftovers block the send | `audit/redact.ts` | `audit/redact_test.ts`; `tests/demo_test.ts` |
-| Public links | receipts: allowlisted inputs, 60-day expiry; public pages read no audit table | web | `tests/receipt_test.ts`; `tests/demo_test.ts` |
+| Public links | receipts: allowlisted inputs, 60-day expiry; public pages (`/demo`, `/transparency`, `/developers`) read no audit table | web | `tests/receipt_test.ts`; `tests/demo_test.ts` |
+| The screen (K8) | the backend alone chooses cards from a closed catalog; taps go through the same gates as a spoken yes; resident session cookie and CSRF token; strict CSP; text rendered as text | backend (`_shared/ui/`, `/tools/ui/act`), web (`proxy.ts`, `/api/resident/*`) | `test:local` K8 tests; `tests/resident_session_test.ts`; `test:a11y` injection fixture; C10 |
 
 ## 5. Residual risk and sign-off
 
-- **Residual risk: medium.** The controls are enforced in code and tested, but speech recognition errors, manipulation through conversation and exclusion cannot be removed entirely, and the checker's drift test (C6) needs history it does not have live yet. Each is mitigated by read-back and a yes, by having no deciding tool, by desk and officer routes, and by the recomputation checks (C1 to C5, C7 to C9) running after every decision.
+- **Residual risk: medium.** The controls are enforced in code and tested, but speech recognition errors, manipulation through conversation and exclusion cannot be removed entirely, and the checker's drift test (C6) needs history it does not have live yet. Each is mitigated by read-back and a yes, by having no deciding tool, by desk and officer routes, and by the recomputation checks (C1 to C5, C7 to C10) running after every decision.
 - **If residual risk were high**, a real deployment would consult the Data Commissioner first (s31(3)). At medium, a real deployment should still consult before launch, because the system processes children's data and family links.
 - **Human rights check.** Equality and non-discrimination: the same rules for every resident; desk routes for those without smartphones; two languages, more needed. Children's best interests: only a recorded parent acts, by scope, withdrawable, first names only. Access to remedy: every decision has a free review by a person within 30 days, answered within 10 working days with reasons. Privacy: least data per step, no audio, short transcript retention, hashes for codes, redaction before anything leaves the system.
-- **Sign-off:** owner Mahs, 8 Oct 2026; Audit Office: the checks in section 4 pass on 8 Oct 2026 (suites and simulations in `docs/konza/transparency.md` section 6). Review again after any change to the charter, a new service, a new processor or a new model.
+- **Sign-off:** owner Mahs, 8 Oct 2026; Audit Office: the checks in section 4 pass on 8 Oct 2026 (suites and simulations in `docs/konza/transparency.md` section 6); for version 2 the K8 rows pass on 16 Oct 2026 (same section); owner Mahs signed off version 2 on 17 Oct 2026, with the resident app public. Review again after any change to the charter, a new service, a new processor or a new model.

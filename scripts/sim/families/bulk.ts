@@ -206,7 +206,7 @@ async function run(sim: Sim, seed: number, fault: Fault, mode: Mode, base?: Base
 
 function concat(snaps: Snapshot[]): Snapshot {
   const out = {} as Snapshot;
-  for (const k of Object.keys(snaps[0]) as (keyof Snapshot)[]) out[k] = snaps.flatMap((s) => s[k]);
+  for (const k of Object.keys(snaps[0]) as (keyof Snapshot)[]) out[k] = snaps.flatMap((s) => s[k] ?? []);
   return out;
 }
 

@@ -1,5 +1,5 @@
-// K4 (MED-276): the conversational T1 tests for SIA are written now and run after 14 Oct, once
-// the agent exists (K3). This dry parse checks the file the T1 runner will read.
+// The conversational T1 tests for SIA (K4, MED-276; K8, MED-337). This dry parse checks the files
+// the T1 runner reads, without credits.
 
 import { assert, assertEquals } from "jsr:@std/assert@1";
 
@@ -10,7 +10,7 @@ Deno.test("K5 T1 definitions: 31 tests (13 advice, 12 language, 6 manipulation; 
   assertEquals(tests.length, 31);
   const kind = (k: string) => tests.filter((t) => t.name.startsWith(`${k}:`)).length;
   assertEquals([kind("advice"), kind("language"), kind("manipulation")], [13, 12, 6]);
-  // K5 (Mahs, 6 Oct): English and Swahili only; each language test has its pair.
+  // K5: English and Swahili only; each language test has its pair.
   assert(!tests.some((t) => /sheng/i.test(t.name)));
   const lang = tests.filter((t) => t.name.startsWith("language:")).map((t) => t.name);
   for (const n of lang.filter((n) => n.endsWith(" in English"))) {
@@ -79,6 +79,53 @@ Deno.test("K3 T1 scene tests: 17 (passport 5 first, then arrival, health, busine
   ) {
     for (const m of mocks[tool].filter((m: any) => m.result?.needs_confirmation)) {
       assert(m.result.readback?.en && m.result.readback?.sw, `${tool} prepare mock has readback`);
+    }
+  }
+});
+
+Deno.test("K8 (MED-328): SIA's prompt, node and agent name say nothing of Sheng; the simulator has none", async () => {
+  const read = (p: string) => Deno.readTextFile(new URL(`../../${p}`, import.meta.url));
+  for (
+    const p of [
+      "agents/konza/sia/prompt.md",
+      "agents/konza/sia/nodes/concierge.md",
+      "agents/konza/sia/agent.json",
+      "agents/blocks/language.md",
+    ]
+  ) {
+    assert(!/sheng/i.test(await read(p)), p);
+  }
+  assert(!/"sheng"/.test(await read("scripts/sim/residents.ts")), "simulator languages");
+});
+
+Deno.test("K8 (MED-337) T1 k8: 14 tests, each scene with and without a screen, mocks on SIA's tools", async () => {
+  const { KONZA_HUB_TOOLS } = await import("../../supabase/functions/_shared/hubs.ts");
+  const k8: {
+    name: string;
+    scenario: string;
+    conditions: string[];
+    dynamic_variables?: { has_screen?: unknown };
+    mocks?: Record<string, { when?: Record<string, string>; result: any }[]>;
+  }[] = JSON.parse(await Deno.readTextFile(new URL("../../tests/t1/k8.json", import.meta.url)));
+  assertEquals(k8.length, 14);
+  assertEquals(new Set(k8.map((t) => t.name)).size, 14);
+  for (const scene of ["passport apply", "pay", "health", "arrival", "business", "school"]) {
+    const of = (mode: string) => k8.filter((t) => t.name.startsWith(`${mode}: ${scene}`)).length;
+    assert(of("screen") >= 1 && of("phone") >= 1, `${scene} with and without a screen`);
+  }
+  assertEquals(k8.filter((t) => /Swahili/.test(t.name)).length, 2);
+  for (const t of k8) {
+    assertEquals(typeof t.dynamic_variables?.has_screen, "boolean", t.name);
+    assertEquals(t.dynamic_variables!.has_screen, t.name.startsWith("screen:"), t.name);
+    assert(t.scenario.length > 40 && t.conditions.length >= 2, t.name);
+    for (const m of t.scenario.matchAll(/QK-\d{4}-\d{4}/g)) {
+      assert(["QK-2041-0039", "QK-2041-0036"].includes(m[0]), m[0]);
+    }
+    for (const [tool, list] of Object.entries(t.mocks ?? {})) {
+      assert(KONZA_HUB_TOOLS.includes(tool), `${t.name}: ${tool} is not on SIA's hub`);
+      for (const m of list.filter((m) => m.result?.needs_confirmation)) {
+        assert(m.result.readback?.en && m.result.readback?.sw, `${t.name}: ${tool} read-back in both languages`);
+      }
     }
   }
 });

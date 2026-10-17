@@ -1,0 +1,27 @@
+{
+  "name": "delivery_change",
+  "description": "Protected, two-step. Change a granted application from home delivery to collection, or back, while nothing is paid on it (AD-07). The read-back gives the new total from the rules; say it as given. A payment card still waiting for a choice, code or PIN is not paid: this works then and closes that card. After a payment is approved it is refused: offer create_case instead.",
+  "params": {
+    "to": {
+      "type": "string",
+      "enum": [
+        "home",
+        "collect"
+      ],
+      "description": "home: delivered home (adds KES 200, paid with the fee); collect: collected free at the desk"
+    },
+    "application_id": {
+      "type": "string",
+      "description": "application_id from application_submit on this call. Leave it out on a later call: the caller's newest granted application in the open service is used."
+    },
+    "confirmation_id": {
+      "type": "string",
+      "description": "Empty the first time; after the caller says yes, the confirmation_id you were given"
+    }
+  },
+  "required": [
+    "to"
+  ],
+  "no_interrupt": true,
+  "pre_speech": true
+}

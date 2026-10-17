@@ -9,6 +9,9 @@ import { assert, assertEquals } from "jsr:@std/assert@1";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { AUTHORITIES } from "../supabase/functions/_shared/authorities.ts";
 import { buildSeed, TABLE_ORDER } from "../scripts/seed/common.ts";
+import { DEMO_MOMO_PIN } from "../scripts/seed/konza.ts";
+import { todayIn } from "../supabase/functions/_shared/rules/common/dates.ts";
+import { appointmentDays } from "../supabase/functions/_shared/rules/konza/rules.ts";
 import { connect, localAuditUrl, type Sql } from "../audit/db.ts";
 
 const status = new TextDecoder().decode(
@@ -190,11 +193,16 @@ Deno.test("two-step: prepare, refuse same-turn and changed commits, then commit"
   });
   assertEquals(done.card_status, "BLOCKED");
   assertEquals(await card(), "blocked");
+  // K8 (plan-k8 2.4): a second yes for the same confirmation gets the stored result back, and
+  // nothing happens twice.
   const reuse = await call("id_report_loss", id, {
     ...args,
     confirmation_id: prep3.confirmation_id,
   });
-  assertEquals(reuse.error, "confirmation_invalid");
+  assertEquals([reuse.already_done, reuse.card_status], [true, "BLOCKED"]);
+  const { count } = await db.from("id_losses").select("id", { count: "exact", head: true })
+    .eq("conversation_id", id);
+  assertEquals(count, 1);
 });
 
 Deno.test("step-up: money tools need a check from the last 5 minutes", async () => {
@@ -320,7 +328,7 @@ Deno.test("browser calls: the code goes to the handset inbox, not Twilio", async
   assertEquals(r.code_sent, true);
   const { data } = await db.from("handset_inbox").select("kind, body").eq("conversation_id", id);
   assertEquals(data!.length, 1);
-  assert(/DEMO/.test(data![0].body) && /\d{6}/.test(data![0].body));
+  assert(!/DEMO/.test(data![0].body) && /\d{6}/.test(data![0].body));
 });
 
 Deno.test("a different person within 5 minutes gets their own code", async () => {
@@ -377,8 +385,41 @@ Deno.test("K2: adding a dependant and emailing the calendar are two-step on the 
 
 // ---------- K2 Konza (MED-264, MED-265, MED-268) ----------
 
-const konza = (tool: string, id: string, args: Record<string, unknown> = {}) =>
-  call(tool, id, args, KONZA);
+/** MED-331: one passport renewal at a time. Tests here renew Laban's passport again and again in
+ * one seeded database, so before each new application every renewal still in progress is recorded
+ * as handed over (a delivered delivery), as when the holder receives the new passport. The test
+ * "one renewal at a time" calls the tool directly to see the guard. */
+async function handOverPassports() {
+  const { data: apps } = await db.from("konza_applications").select("id, subject_citizen_id")
+    .eq("agency", "sps").eq("service", "passport_renewal");
+  for (const a of apps ?? []) {
+    // The holder's address, or any seeded one (an address test may have changed the holder's);
+    // the row only needs a valid address for its foreign key.
+    const { data: own } = await db.from("addresses").select("id").eq("citizen_id", a.subject_citizen_id)
+      .maybeSingle();
+    const { data: any } = own ? { data: own } : await db.from("addresses").select("id").limit(1).maybeSingle();
+    const addr = own ?? any;
+    if (!addr) throw new Error("handOverPassports: no address in the seed");
+    ok(
+      await db.from("deliveries").upsert({
+        citizen_id: a.subject_citizen_id,
+        address_id: addr.id,
+        item_kind: "passport",
+        item_ref: a.id,
+        deliver_on: new Date().toISOString().slice(0, 10),
+        window: "morning",
+        fee_kes: 0,
+        status: "delivered",
+        handover_code_hash: "test",
+      }, { onConflict: "item_kind,item_ref" }),
+    );
+  }
+}
+
+const konza = async (tool: string, id: string, args: Record<string, unknown> = {}) => {
+  if (tool === "application_submit" && !args.confirmation_id) await handOverPassports();
+  return call(tool, id, args, KONZA);
+};
 
 Deno.test("Konza: service_open from the manifest; fees need no identity; personal topics do", async () => {
   const id = await startedCall(null, 0, KONZA);
@@ -402,7 +443,8 @@ Deno.test("Konza passport: two-step application granted by rule with a receipt; 
   const args = { fields_json: JSON.stringify({ pages: 34, receive: "home" }) };
   const prep = await konza("application_submit", id, args);
   assertEquals(prep.needs_confirmation, true);
-  assert(prep.summary_en.includes("7,550 shillings"), prep.summary_en);
+  // AD-04: home delivery is paid with the fee, said with the total before the yes.
+  assert(prep.summary_en.includes("7,550 shillings plus 200 shillings for home delivery, 7,750 shillings in all"), prep.summary_en);
   // K5 (MED-301): the Swahili read-back says the rules amount in words.
   assert(prep.readback.sw.includes("shilingi elfu saba mia tano na hamsini"), prep.readback.sw);
   assert(prep.readback.items.some((i: any) => i.kind === "amount" && i.value === 7550));
@@ -422,15 +464,24 @@ Deno.test("Konza passport: two-step application granted by rule with a receipt; 
   const why = await konza("decision_explain", id, { decision_id: app.decision_id });
   assert(why.rule_ids.includes("PP-02"));
   // K3 (MED-296): the fee is paid first, here at the desk.
-  await payAtDesk(app.application_id, 7550);
+  // The fee and the home delivery, one charge (AD-04).
+  await payAtDesk(app.application_id, 7750);
   const dargs = { item_kind: "passport", application_id: app.application_id, window: "morning" };
+  // MED-331: nothing is handed over before it is made; biometrics come first (PP-04).
+  assertEquals((await konza("delivery_book", id, dargs)).error, "appointment_first");
+  const bio = await twice(id, "appointment_book", { application_id: app.application_id, window: "morning" });
+  assert(bio.ready_by > bio.on_date, JSON.stringify(bio));
+  // Chosen when applying: collection now would leave the delivery paid for nothing.
+  assertEquals((await konza("delivery_book", id, { ...dargs, method: "collect" })).error, "receive_chosen");
   const dprep = await konza("delivery_book", id, dargs);
   assert(dprep.summary_en.includes("zone three, block B twelve"), dprep.summary_en);
   assert(dprep.readback.sw.includes("eneo la tatu, bloku B kumi na mbili"), dprep.readback.sw);
   assert(dprep.readback.items.some((i: any) => i.value === "Z3 B12 P047 U02"));
   await sleep(4200);
   const d = await konza("delivery_book", id, { ...dargs, confirmation_id: dprep.confirmation_id });
-  assertEquals([d.status, d.fee_kes], ["booked", 200]);
+  assertEquals([d.status, d.fee_kes, d.fee_paid], ["booked", 200, true]);
+  assert(dprep.summary_en.includes("already paid with the fee"), dprep.summary_en);
+  assertEquals(d.deliver_on, bio.ready_by, "delivered on the ready date, not the next working day");
   // Another resident cannot read Laban's decision.
   const other = await startedCall("kz_neema", 0, KONZA);
   await konza("service_open", other, { agency: "sps", service: "passport_renewal" });
@@ -695,7 +746,7 @@ async function codeFrom(id: string) {
     .order("at", { ascending: false }).limit(1);
   const m = String(data?.[0]?.body ?? "").match(/code: (\d{6})/);
   assert(m, JSON.stringify(data));
-  assert(data![0].body.includes("DEMO"));
+  assert(!data![0].body.includes("DEMO"));
   return m[1];
 }
 const officer = (path: string, body: unknown) =>
@@ -718,7 +769,7 @@ Deno.test("K3 PY-01: pay by phone code; wrong code, then right; no second charge
   assert(pprep.readback.en.includes("7,550 shillings"), pprep.readback.en);
   assert(pprep.readback.sw.includes("shilingi elfu saba mia tano na hamsini"), pprep.readback.sw);
   const wrongAmount = await twice(id, "payment_request", { amount: 1 });
-  assertEquals(wrongAmount.error, "amount_mismatch");
+  assertEquals(wrongAmount.error, "amount_mismatch", JSON.stringify(wrongAmount));
   const req = await twice(id, "payment_request", { amount: 7550 });
   assertEquals(req.status, "pending", JSON.stringify(req));
   const code = await codeFrom(id);
@@ -803,9 +854,18 @@ Deno.test("K3 DK-02: collection needs no address; passports only at the Konza Pa
     "not_paid",
   );
   await payAtDesk(app.application_id, 7550);
-  assertEquals((await twice(id, "delivery_book", base)).error, "no_address");
+  assertEquals(
+    (await twice(id, "delivery_book", { ...base, method: "collect" })).error,
+    "appointment_first",
+  );
+  const bio = await twice(id, "appointment_book", { application_id: app.application_id, window: "morning" });
+  // This renewal chose collection when applying (AD-04): home delivery is not on offer.
+  assertEquals((await twice(id, "delivery_book", base)).error, "receive_chosen");
   const d = await twice(id, "delivery_book", { ...base, method: "collect" });
   assertEquals([d.method, d.desk, d.fee_kes], ["collect", "the Konza Passport Desk", 0]);
+  // MED-331: collection from the ready date, never the biometrics day.
+  assertEquals(d.deliver_on, bio.ready_by);
+  assert(d.deliver_on > bio.on_date);
 });
 
 // ---------- K3 passport scene on SPS (MED-284, MED-291) ----------
@@ -862,7 +922,8 @@ Deno.test("K3 passport scene: quote, apply, pay by code, biometrics, collect, re
   const why = await konza("decision_explain", id, { decision_id: app.decision_id });
   assert(why.rule_ids.includes("PP-02") && why.review, JSON.stringify(why));
 
-  // The receipt SMS: DEMO, the reference, the payment, biometrics, collection, the review route.
+  // The receipt SMS (no "DEMO" since MED-340): sender, reference, payment, biometrics,
+  // collection, the review route.
   const sent = await konza("send_message", id, {});
   assertEquals(sent.sent, true, JSON.stringify(sent));
   const { data: inbox } = await db.from("handset_inbox").select("body").eq("conversation_id", id)
@@ -870,7 +931,7 @@ Deno.test("K3 passport scene: quote, apply, pay by code, biometrics, collect, re
   const body = String(inbox?.[0]?.body);
   for (
     const part of [
-      "SIA (DEMO)",
+      "SIA: ",
       "Paid KES 9,550",
       "Biometrics",
       "Collect",
@@ -1186,14 +1247,9 @@ Deno.test("MED-299: biometrics on a chosen working day, then moved; a weekend is
   await payAtDesk(app.application_id, 12050);
   const later = await startedCall("kz_laban", 0, KONZA);
   await konza("service_open", later, { agency: "sps", service: "passport_renewal" });
-  const days: string[] = [];
-  for (
-    let d = new Date(Date.now() + 3 * 3_600_000 + 86_400_000);
-    days.length < 2;
-    d = new Date(d.getTime() + 86_400_000)
-  ) {
-    if (![0, 6].includes(d.getUTCDay())) days.push(d.toISOString().slice(0, 10));
-  }
+  // The first two days the rules offer: working days, so public holidays are skipped too (the
+  // naive weekday walk picks Mashujaa Day, 20 Oct).
+  const days = appointmentDays(todayIn("Africa/Nairobi")).slice(0, 2);
   const saturday = (() => {
     const d = new Date(Date.now() + 3 * 3_600_000);
     d.setUTCDate(d.getUTCDate() + ((6 - d.getUTCDay() + 7) % 7 || 7));
@@ -1407,4 +1463,754 @@ Deno.test("K6: a parent asks about the child's school place on a later call; no 
   await konza("service_open", other, { agency: "siln", service: "primary_place" });
   const theirs = await konza("rules_lookup", other, { topic: "my_application" });
   assertEquals(theirs.values.has_application, false, JSON.stringify(theirs));
+});
+
+// ---------- K8 S2 screen taps (MED-330, plan-k8 2.4 and 2.5) ----------
+
+const UI_ACT_SECRET = "local-ui-act-secret";
+const act = (body: Record<string, unknown>, secret = UI_ACT_SECRET) =>
+  fetch(`${API}/functions/v1/tools/ui/act`, {
+    method: "POST",
+    headers: { "x-ui-act-secret": secret, "content-type": "application/json" },
+    body: JSON.stringify(body),
+  }).then(async (r) => ({ status: r.status, json: await r.json() }));
+const passportArgs = { fields_json: JSON.stringify({ pages: 34, receive: "collect" }) };
+
+/** A SIA browser call with a passport application prepared, as the resident's screen shows it. */
+async function shownCard(citizenId = "kz_laban") {
+  const id = await browserCall(citizenId);
+  await konza("service_open", id, { agency: "sps", service: "passport_renewal" });
+  const prep = await konza("application_submit", id, passportArgs);
+  assertEquals(prep.needs_confirmation, true, JSON.stringify(prep));
+  const { data } = await db.from("confirmations").select("ui_tool, args, shown_hash")
+    .eq("id", prep.confirmation_id).single();
+  assertEquals(data!.ui_tool, "application_submit");
+  assert(data!.shown_hash, "the shown card's hash is recorded at emit");
+  return { id, confirmationId: prep.confirmation_id as string, hash: data!.shown_hash as string };
+}
+const tap = (c: { id: string; confirmationId: string; hash: string }, conversationId = c.id) =>
+  act({
+    conversation_id: conversationId,
+    action: "confirm",
+    confirmation_id: c.confirmationId,
+    shown_hash: c.hash,
+  });
+const stored = async (confirmationId: string) =>
+  (await db.from("confirmations").select("result, committed_via").eq("id", confirmationId)
+    .single()).data!;
+const applications = async () =>
+  (await db.from("konza_applications").select("id", { count: "exact", head: true })
+    .eq("applicant_citizen_id", "kz_laban")).count ?? 0;
+
+Deno.test("K8 S2: service_open and the prepare emit progress and a confirm card with its hash", async () => {
+  const card = await shownCard();
+  const { data } = await db.from("ui_events").select("seq, kind, payload")
+    .eq("conversation_id", card.id).order("seq");
+  assertEquals(data!.map((e) => e.seq), data!.map((_, i) => i + 1), "seq counts from 1, no gaps");
+  assertEquals(data![0].kind, "progress");
+  const confirm = data!.find((e) => e.kind === "confirm");
+  assertEquals(confirm?.payload.shown_hash, card.hash);
+  assertEquals(confirm?.payload.confirmation_id, card.confirmationId);
+});
+
+Deno.test("K8 S2: the act route takes only its own secret, never TOOL_SECRET", async () => {
+  const card = await shownCard();
+  const body = {
+    conversation_id: card.id,
+    action: "confirm",
+    confirmation_id: card.confirmationId,
+    shown_hash: card.hash,
+  };
+  assertEquals((await act(body, "wrong")).status, 403);
+  assertEquals((await act(body, SECRET)).status, 403);
+  assertEquals((await stored(card.confirmationId)).result, null);
+});
+
+Deno.test("K8 S2: a confirm with the wrong shown_hash is refused and audited; nothing is committed", async () => {
+  const card = await shownCard();
+  const before = await applications();
+  await sleep(4200);
+  const r = await tap({ ...card, hash: "0".repeat(64) });
+  assertEquals([r.status, r.json.error], [409, "card_changed"]);
+  assertEquals((await stored(card.confirmationId)).result, null);
+  assertEquals(await applications(), before);
+  const { data } = await db.from("audit_log").select("action, result").eq("conversation_id", card.id);
+  assert(data!.some((a) => /card changed/.test(a.action) && a.result === "warn"), JSON.stringify(data));
+});
+
+Deno.test("K8 S2: a tap within 4 s is refused, the same tap later commits once; a double tap gets the stored result", async () => {
+  const card = await shownCard();
+  const before = await applications();
+  const fast = await tap(card);
+  assertEquals(fast.json.error, "confirmation_invalid", JSON.stringify(fast.json));
+  assertEquals((await stored(card.confirmationId)).result, null);
+  await sleep(4200);
+  const first = await tap(card);
+  assertEquals([first.status, first.json.outcome, first.json.already_done], [200, "granted", undefined]);
+  assertEquals((await stored(card.confirmationId)).committed_via, "screen");
+  const second = await tap(card);
+  assertEquals([second.json.already_done, second.json.application_id], [true, first.json.application_id]);
+  assertEquals(await applications(), before + 1, "one application, not two");
+  const receipts = await db.from("ui_events").select("kind").eq("conversation_id", card.id)
+    .eq("kind", "receipt");
+  assertEquals(receipts.data!.length, 1, "one receipt on screen");
+});
+
+Deno.test("K8 S2: a tap then the agent's commit, and the agent then a tap, both return the stored result", async () => {
+  const a = await shownCard();
+  await sleep(4200);
+  const tapped = await tap(a);
+  assertEquals(tapped.json.outcome, "granted", JSON.stringify(tapped.json));
+  const agent = await konza("application_submit", a.id, { ...passportArgs, confirmation_id: a.confirmationId });
+  assertEquals([agent.already_done, agent.application_id], [true, tapped.json.application_id]);
+
+  const b = await shownCard();
+  await sleep(4200);
+  const spoken = await konza("application_submit", b.id, { ...passportArgs, confirmation_id: b.confirmationId });
+  assertEquals(spoken.outcome, "granted", JSON.stringify(spoken));
+  assertEquals((await stored(b.confirmationId)).committed_via, "voice");
+  const late = await tap(b);
+  assertEquals([late.json.already_done, late.json.application_id], [true, spoken.application_id]);
+});
+
+Deno.test("K8 S2: session A cannot act on B's card, and a phone call has no screen to act on", async () => {
+  const a = await shownCard("kz_laban");
+  const b = await shownCard("kz_neema");
+  await sleep(4200);
+  const cross = await tap(b, a.id);
+  assertEquals([cross.status, cross.json.error], [404, "unknown_confirmation"]);
+  const refreshB = await act({ conversation_id: a.id, action: "refresh", confirmation_id: b.confirmationId });
+  assertEquals(refreshB.status, 404);
+  assertEquals((await stored(b.confirmationId)).result, null);
+  // A phone call never gets screen events, so it has nothing to tap.
+  const phone = await startedCall("kz_laban", 0, KONZA);
+  await konza("service_open", phone, { agency: "sps", service: "passport_renewal" });
+  const prep = await konza("application_submit", phone, passportArgs);
+  const { count } = await db.from("ui_events").select("id", { count: "exact", head: true })
+    .eq("conversation_id", phone);
+  assertEquals(count, 0);
+  const onPhone = await tap({ id: phone, confirmationId: prep.confirmation_id, hash: "x" });
+  assertEquals([onPhone.status, onPhone.json.error], [404, "unknown_conversation"]);
+});
+
+Deno.test("K8 S2: Refresh prepares again with a new id and a new hash; the old card is untouched", async () => {
+  const card = await shownCard();
+  const r = await act({ conversation_id: card.id, action: "refresh", confirmation_id: card.confirmationId });
+  assertEquals([r.status, r.json.needs_confirmation], [200, true], JSON.stringify(r.json));
+  assert(r.json.confirmation_id !== card.confirmationId, "a new confirmation");
+  const { data } = await db.from("confirmations").select("shown_hash")
+    .eq("id", r.json.confirmation_id).single();
+  assert(data!.shown_hash && data!.shown_hash !== card.hash, "a new hash");
+  assertEquals((await stored(card.confirmationId)).result, null);
+  await sleep(4200);
+  const done = await tap({ id: card.id, confirmationId: r.json.confirmation_id, hash: data!.shown_hash });
+  assertEquals(done.json.outcome, "granted", JSON.stringify(done.json));
+});
+
+Deno.test("K8 S2: browsers cannot read, insert or append ui_events; the service role cannot rewrite them", async () => {
+  const card = await shownCard();
+  const sql = connect(local.DB_URL);
+  try {
+    for (const role of ["anon", "authenticated"]) {
+      await sql.begin(async (tx) => {
+        await tx.unsafe(`set local role ${role}`);
+        for (
+          const q of [
+            `select * from ui_events limit 1`,
+            `insert into ui_events (conversation_id, seq, kind, payload) values ('x', 1, 'progress', '{}')`,
+            `select * from ui_event_append('x', 'progress', '{}')`,
+          ]
+        ) {
+          let refused = false;
+          try {
+            await tx.savepoint((sp) => sp.unsafe(q));
+          } catch {
+            refused = true;
+          }
+          assert(refused, `${role}: ${q}`);
+        }
+      });
+    }
+  } finally {
+    await sql.end({ timeout: 0 });
+  }
+  assert((await db.from("ui_events").update({ kind: "receipt" }).eq("conversation_id", card.id)).error, "update");
+  assert((await db.from("ui_events").delete().eq("conversation_id", card.id)).error, "delete");
+});
+
+// ---------- K8 S2 cards (MED-331) ----------
+
+const events = async (id: string) =>
+  (await db.from("ui_events").select("seq, kind, payload").eq("conversation_id", id).order("seq")).data!;
+const railOf = (e: { payload: any }) => Object.fromEntries(e.payload.steps.map((s: any) => [s.id, s.state]));
+
+Deno.test("K8 S2 (MED-331): service_open shows the rail (recorded steps only) and the form", async () => {
+  await handOverPassports();
+  const id = await browserCall("kz_laban");
+  await konza("service_open", id, { agency: "sps", service: "passport_renewal" });
+  const [rail, form] = await events(id);
+  assertEquals(rail.kind, "progress");
+  // The rail is where Laban is in the service: his latest renewal from any earlier call counts.
+  const { count } = await db.from("konza_applications").select("id", { count: "exact", head: true })
+    .eq("subject_citizen_id", "kz_laban").eq("service", "passport_renewal");
+  assertEquals(railOf(rail).identity, "done");
+  assertEquals(railOf(rail).confirm, count ? "done" : "todo");
+  assertEquals(rail.payload.updated.source.en, "Identity check");
+  assertEquals(form.kind, "form");
+  assert(form.payload.fields.some((f: any) => f.name === "pages" && f.label.en), JSON.stringify(form.payload));
+});
+
+Deno.test("MED-331: no form while the resident's renewal is in progress (the core would refuse it)", async () => {
+  await handOverPassports();
+  const id = await browserCall("kz_laban");
+  await grantedPassport(id);
+  const again = await browserCall("kz_laban");
+  await konza("service_open", again, { agency: "sps", service: "passport_renewal" });
+  assertEquals((await events(again)).map((e) => e.kind), ["progress"]);
+});
+
+Deno.test("K8 S2 (MED-331): a commit turns the shown card done, then the rail, then the receipt", async () => {
+  const card = await shownCard();
+  await sleep(4200);
+  const before = (await events(card.id)).length;
+  const r = await tap(card);
+  assertEquals(r.json.outcome, "granted", JSON.stringify(r.json));
+  const after = (await events(card.id)).slice(before);
+  assertEquals(after.map((e) => e.kind), ["confirm", "progress", "receipt"]);
+  assertEquals([after[0].payload.confirmation_id, after[0].payload.state], [card.confirmationId, "done"]);
+  assertEquals(railOf(after[1]), { identity: "done", confirm: "done", decision: "done" });
+  assertEquals(after[1].payload.updated.source.en, "A published rule");
+});
+
+Deno.test("K8 S2 (MED-331): the form card prepares; the agent's yes with only the id commits what the card showed", async () => {
+  const id = await browserCall("kz_laban");
+  await konza("service_open", id, { agency: "sps", service: "passport_renewal" });
+  await handOverPassports();
+  const prep = await act({ conversation_id: id, action: "form_submit", fields: { pages: 34, receive: "collect" } });
+  assertEquals([prep.status, prep.json.needs_confirmation], [200, true], JSON.stringify(prep.json));
+  const shown = (await events(id)).filter((e) => e.kind === "confirm").at(-1)!;
+  assertEquals(shown.payload.confirmation_id, prep.json.confirmation_id);
+  await sleep(4200);
+  // The agent never sees the form values; it says yes with the id only, and even different
+  // arguments commit exactly what the card showed.
+  const yes = await konza("application_submit", id, {
+    fields_json: JSON.stringify({ pages: 66, receive: "home" }),
+    confirmation_id: prep.json.confirmation_id,
+  });
+  assertEquals(yes.outcome, "granted", JSON.stringify(yes));
+  const { data } = await db.from("konza_applications").select("fields").eq("id", yes.application_id).single();
+  assertEquals([data!.fields.pages, data!.fields.receive], [34, "collect"]);
+  assertEquals((await stored(prep.json.confirmation_id)).committed_via, "voice");
+  const bad = await act({ conversation_id: id, action: "form_submit", fields: [] });
+  assertEquals(bad.status, 400);
+});
+
+Deno.test("K8 S2 (MED-331): the identity card's code verifies the conversation; a wrong code counts", async () => {
+  const id = await startedCall(null, 0, KONZA);
+  ok(await db.from("conversations").update({ channel: "browser" }).eq("id", id));
+  const noCode = await act({ conversation_id: id, action: "identity_code", code: "123456" });
+  assertEquals([noCode.status, noCode.json.error], [404, "unknown_verification"]);
+  // As in a real call: the service is open first, so the gate acts as the agency; the code
+  // still comes from SIA, never "NJIA".
+  await konza("service_open", id, { agency: "sps", service: "passport_renewal" });
+  const start = await konza("identity_start_otp", id, { id_number: "QK-2041-0039", date_of_birth: "1987-04-12" });
+  assertEquals(start.code_sent, true, JSON.stringify(start));
+  assertEquals((await events(id)).at(-1)!.kind, "identity");
+  const { data: sms } = await db.from("handset_inbox").select("body").eq("conversation_id", id);
+  assert(String(sms!.at(-1)!.body).startsWith("SIA: your code is"), sms!.at(-1)!.body);
+  const code = String(sms!.at(-1)!.body).match(/\b(\d{6})\b/)![1];
+  const wrong = await act({ conversation_id: id, action: "identity_code", code: code === "000000" ? "111111" : "000000" });
+  assertEquals([wrong.status, wrong.json.error, wrong.json.attempts_left], [409, "wrong_code", 2]);
+  const right = await act({ conversation_id: id, action: "identity_code", code });
+  assertEquals(right.json.verified, true, JSON.stringify(right.json));
+  const { data } = await db.from("conversations").select("citizen_id, verified_at").eq("id", id).single();
+  assertEquals(data!.citizen_id, "kz_laban");
+  assert(data!.verified_at);
+  const [card, rail] = (await events(id)).slice(-2);
+  assertEquals([card.kind, card.payload.step], ["identity", "verified"]);
+  assertEquals([rail.kind, railOf(rail).identity, rail.payload.updated.source.en], ["progress", "done", "Identity check"]);
+});
+
+Deno.test("K8 S2 (MED-331): shown, tap and screen commit are audited with matching hashes; C8 counts the tap", async () => {
+  const card = await shownCard();
+  await sleep(4200);
+  assertEquals((await tap(card)).json.outcome, "granted");
+  const { data: rows } = await db.from("konza_audit_events").select("operation, outcome, reason, request_hash")
+    .eq("request_id", card.confirmationId).order("id");
+  assertEquals(rows!.map((r) => [r.operation, r.outcome, r.reason]), [
+    ["uiShown:application_submit", "shown", "screen"],
+    ["uiTap:application_submit", "accepted", "screen"],
+    ["uiCommit:application_submit", "committed", "screen"],
+  ]);
+  // C10 holds on a real commit: the arguments hash at commit equals the one recorded when shown.
+  assertEquals(rows![2].request_hash, rows![0].request_hash);
+  assertEquals(rows![1].request_hash, card.hash);
+  // The Audit Office can read the two columns C10 needs, and still not the free text.
+  await asAudit(async (sql) => {
+    const r = await sql`select request_id, request_hash from konza_audit_events where request_id = ${card.confirmationId}`;
+    assertEquals(r.length, 3);
+    let refused = false;
+    try {
+      await sql`select reason from konza_audit_events limit 1`;
+    } catch {
+      refused = true;
+    }
+    assert(refused, "mirror_vale must not read reason");
+  });
+  // After the call: the tap is the read-back and yes (C8 ok), even though nobody said yes.
+  const res = await fetch(`${API}/functions/v1/tools/call_ended`, {
+    method: "POST",
+    headers: { "x-tool-secret": "local-postcall-secret", "content-type": "application/json" },
+    body: JSON.stringify({
+      type: "post_call_transcription",
+      data: { conversation_id: card.id, metadata: { call_duration_secs: 60 }, transcript: [] },
+    }),
+  });
+  assertEquals(res.status, 200, await res.clone().text());
+  await res.body?.cancel();
+  const { data: rb } = await db.from("konza_audit_events").select("outcome, reason")
+    .eq("session", card.id).eq("operation", "readBack:application_submit");
+  assertEquals(rb, [{ outcome: "ok", reason: "screen" }]);
+});
+
+Deno.test("MED-331: one passport renewal at a time; a new one only once the passport is handed over", async () => {
+  await handOverPassports();
+  const id = await startedCall("kz_laban", 0, KONZA);
+  await konza("service_open", id, { agency: "sps", service: "passport_renewal" });
+  const args = { fields_json: JSON.stringify({ pages: 34, receive: "collect" }) };
+  const first = await twice(id, "application_submit", args);
+  assertEquals(first.outcome, "granted", JSON.stringify(first));
+  // The tool directly (not the konza helper, which hands passports over first).
+  const again = await call("application_submit", id, { ...args, fields_json: JSON.stringify({ pages: 50, receive: "home" }) }, KONZA);
+  assertEquals(again.error, "application_open", JSON.stringify(again));
+  assert(String(again.message ?? "").includes("my_application"), JSON.stringify(again));
+  const { count } = await db.from("confirmations").select("id", { count: "exact", head: true })
+    .eq("conversation_id", id).is("committed_at", null);
+  assertEquals(count, 0, "nothing was prepared for the second one");
+  // On a screen too: the form tap is refused the same way, and no confirm card is shown.
+  ok(await db.from("conversations").update({ channel: "browser" }).eq("id", id));
+  const tapped = await act({ conversation_id: id, action: "form_submit", fields: { pages: 66, receive: "collect" } });
+  assertEquals([tapped.status, tapped.json.error], [409, "application_open"]);
+  // Once the new passport is handed over, a later renewal can be applied for.
+  await handOverPassports();
+  const later = await call("application_submit", id, args, KONZA);
+  assertEquals(later.needs_confirmation, true, JSON.stringify(later));
+});
+
+Deno.test("MED-331: the collection card is titled for collection; the renewal reason says the date in words", async () => {
+  const id = await browserCall("kz_laban");
+  const app = await grantedPassport(id);
+  await payAtDesk(app.application_id, 7550);
+  await twice(id, "appointment_book", { application_id: app.application_id, window: "morning" });
+  const prep = await konza("delivery_book", id, {
+    item_kind: "passport",
+    application_id: app.application_id,
+    window: "morning",
+    method: "collect",
+  });
+  assertEquals(prep.needs_confirmation, true, JSON.stringify(prep));
+  const card = (await db.from("ui_events").select("payload").eq("conversation_id", id).eq("kind", "confirm")
+    .order("seq", { ascending: false }).limit(1).single()).data!;
+  assertEquals(card.payload.title.en, "Confirm collection");
+  const renewal = await konza("rules_lookup", id, { topic: "renewal" });
+  assert(!/\d{4}-\d{2}-\d{2}/.test(renewal.reason_en), renewal.reason_en);
+  assert(/\b(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday) \d{1,2} \w+ \d{4}\b/.test(renewal.reason_en), renewal.reason_en);
+});
+
+Deno.test("MED-331: the decision card shows the application reference; a code-approved payment its transaction reference", async () => {
+  const id = await browserCall("kz_laban");
+  const app = await grantedPassport(id);
+  const { data: a } = await db.from("konza_applications").select("ref").eq("id", app.application_id).single();
+  const last = async (kind: string) =>
+    (await db.from("ui_events").select("payload").eq("conversation_id", id).eq("kind", kind)
+      .order("seq", { ascending: false }).limit(1).single()).data!.payload;
+  assertEquals((await last("receipt")).ref, a!.ref);
+  await twice(id, "payment_request", { amount: 7550 });
+  const good = await konza("payment_confirm", id, { code: await codeFrom(id) });
+  assertEquals(good.status, "approved", JSON.stringify(good));
+  const paid = await last("payment");
+  assertEquals([paid.state, paid.amount_kes, paid.reference], ["approved", 7550, good.txn_code]);
+});
+
+// ---------- K8 S4 payment card (MED-332, plan-k8 2.10) ----------
+
+/** A resident app conversation (/sia): a browser call bound to a resident session. */
+async function residentCall(citizenId: string) {
+  const id = await browserCall(citizenId);
+  ok(
+    await db.from("handset_tokens").insert({
+      token_hash: crypto.randomUUID(),
+      agent_id: KONZA,
+      expires_at: new Date(Date.now() + 180_000).toISOString(),
+      used_at: new Date().toISOString(),
+      conversation_id: id,
+      session_hash: crypto.randomUUID(),
+      session_expires_at: new Date(Date.now() + 3_600_000).toISOString(),
+    }),
+  );
+  return id;
+}
+
+/** A contribution granted and its payment started on the screen: the card offers the methods. */
+async function payingOnScreen(citizenId = "kz_neema") {
+  const id = await residentCall(citizenId);
+  await konza("service_open", id, { agency: "sca", service: "contribution" });
+  const month = new Date(Date.now() + 3 * 3_600_000).toISOString().slice(0, 7);
+  const c = await twice(id, "application_submit", { fields_json: JSON.stringify({ amount_kes: 500, month }) });
+  assertEquals(c.outcome, "granted", JSON.stringify(c));
+  const prep = await konza("payment_request", id, { amount: 500 });
+  assert(/payment card/.test(prep.readback?.en ?? ""), "the read-back names the card, not an SMS prompt");
+  await sleep(4200);
+  const pay = await konza("payment_request", id, { amount: 500, confirmation_id: prep.confirmation_id });
+  assertEquals([pay.status, pay.on_screen], ["pending", true], JSON.stringify(pay));
+  const card = (await events(id)).filter((e) => e.kind === "payment").at(-1)!;
+  assertEquals(card.payload.state, "choose");
+  const methods = card.payload.methods as { method_id: string; type: string; masked: string }[];
+  assertEquals(methods.map((m) => m.type).sort(), ["card", "mobile_money"]);
+  return { id, paymentId: pay.payment_id as string, methods };
+}
+
+Deno.test("MED-332: mobile money on screen: the PIN typed on the card approves it; a wrong PIN counts", async () => {
+  const { id, paymentId, methods } = await payingOnScreen();
+  const momo = methods.find((m) => m.type === "mobile_money")!;
+  // Nothing is texted for mobile money, and the agent cannot approve it with anything said aloud.
+  const chose = await act({ conversation_id: id, action: "pay_method", payment_id: paymentId, method_id: momo.method_id });
+  assertEquals([chose.status, chose.json.method], [200, "mobile_money"], JSON.stringify(chose.json));
+  assertEquals((await events(id)).filter((e) => e.kind === "payment").at(-1)!.payload.state, "pin");
+  assertEquals((await konza("payment_confirm", id, { code: DEMO_MOMO_PIN })).error, "pin_on_screen");
+  const wrong = await act({ conversation_id: id, action: "pay_pin", pin: "0000" });
+  assertEquals([wrong.json.wrong_pin, wrong.json.tries_left], [true, 2], JSON.stringify(wrong.json));
+  const paid = await act({ conversation_id: id, action: "pay_pin", pin: DEMO_MOMO_PIN });
+  assertEquals(paid.json.status, "approved", JSON.stringify(paid.json));
+  const card = (await events(id)).filter((e) => e.kind === "payment").at(-1)!;
+  assertEquals(card.payload.state, "approved");
+  assert(/^KZP/.test(card.payload.reference), JSON.stringify(card.payload));
+  assertEquals((await konza("rules_lookup", id, { topic: "cover_status" })).values.active, true);
+  // The PIN is nowhere: not in the payment row, the audit or the events.
+  const { data: row } = await db.from("payments").select("*").eq("id", paymentId).single();
+  const { data: logs } = await db.from("audit_log").select("*").eq("conversation_id", id);
+  for (const blob of [row, logs, await events(id)]) {
+    assert(!JSON.stringify(blob).includes(DEMO_MOMO_PIN), "the PIN is not stored or logged");
+  }
+});
+
+Deno.test("MED-332: a card on screen: the texted code, typed on the card or read aloud, approves it", async () => {
+  const { id, paymentId, methods } = await payingOnScreen();
+  const card = methods.find((m) => m.type === "card")!;
+  const chose = await act({ conversation_id: id, action: "pay_method", payment_id: paymentId, method_id: card.method_id });
+  assertEquals(chose.json.method, "card", JSON.stringify(chose.json));
+  assertEquals((await events(id)).filter((e) => e.kind === "payment").at(-1)!.payload.state, "code");
+  const code = await codeFrom(id);
+  const typed = await act({ conversation_id: id, action: "pay_code", code });
+  assertEquals(typed.json.status, "approved", JSON.stringify(typed.json));
+  // Read aloud instead, on another payment: the agent's payment_confirm takes the same code.
+  const other = await payingOnScreen("kz_laban");
+  const lc = other.methods.find((m) => m.type === "card")!;
+  await act({ conversation_id: other.id, action: "pay_method", payment_id: other.paymentId, method_id: lc.method_id });
+  assertEquals((await konza("payment_confirm", other.id, { code: await codeFrom(other.id) })).status, "approved");
+});
+
+Deno.test("MED-332 (16 Oct): in the resident app, deliver pesa still shows the payment card", async () => {
+  // Asked for mobile money, Savannah sent deliver pesa: the KE PIN simulator's payment, never shown.
+  const id = await residentCall("kz_neema");
+  await konza("service_open", id, { agency: "sca", service: "contribution" });
+  const month = new Date(Date.now() + 3 * 3_600_000).toISOString().slice(0, 7);
+  await twice(id, "application_submit", { fields_json: JSON.stringify({ amount_kes: 500, month }) });
+  const pay = await twice(id, "payment_request", { amount: 500, deliver: "pesa" });
+  assertEquals([pay.status, pay.on_screen], ["pending", true], JSON.stringify(pay));
+  assertEquals((await db.from("payments").select("method").eq("id", pay.payment_id).single()).data!.method, "screen");
+  assertEquals((await events(id)).filter((e) => e.kind === "payment").at(-1)!.payload.state, "choose");
+});
+
+Deno.test("Plan-k8 2.12: the card chosen by voice texts one code, the code read back pays once; a tap after it changes nothing", async () => {
+  const { id, paymentId, methods } = await payingOnScreen();
+  const card = methods.find((m) => m.type === "card")!;
+  const said = await konza("payment_confirm", id, { method: "card" });
+  assertEquals([said.status, said.method, said.payment_id], ["pending", "card", paymentId], JSON.stringify(said));
+  assertEquals((await events(id)).filter((e) => e.kind === "payment").at(-1)!.payload.state, "code");
+  const tapped = await act({ conversation_id: id, action: "pay_method", payment_id: paymentId, method_id: card.method_id });
+  assertEquals(tapped.json.already_chosen, true, JSON.stringify(tapped.json));
+  const { data: texts } = await db.from("handset_inbox").select("body").eq("conversation_id", id);
+  assertEquals((texts ?? []).filter((t) => /card payment/.test(t.body)).length, 1, "one code texted");
+  assertEquals((await konza("payment_confirm", id, { code: await codeFrom(id) })).status, "approved");
+  const { count } = await db.from("payments").select("id", { count: "exact", head: true })
+    .eq("conversation_id", id).eq("status", "approved");
+  assertEquals(count, 1, "paid once");
+  const { data: logs } = await db.from("audit_log").select("action").eq("conversation_id", id);
+  assert((logs ?? []).some((l) => /Card chosen by voice/.test(l.action)), JSON.stringify(logs));
+});
+
+Deno.test("Plan-k8 2.12: mobile money by voice shows the PIN box, a spoken PIN is still refused; no card waiting is refused; step-up applies", async () => {
+  const { id } = await payingOnScreen();
+  // An identity check older than 5 minutes: a fresh code first, as for a tap.
+  ok(await db.from("conversations").update({ verified_at: new Date(Date.now() - 6 * 60_000).toISOString() }).eq("id", id));
+  assertEquals((await konza("payment_confirm", id, { method: "mobile_money" })).error, "step_up");
+  ok(await db.from("conversations").update({ verified_at: new Date().toISOString() }).eq("id", id));
+  const said = await konza("payment_confirm", id, { method: "mobile_money" });
+  assertEquals([said.status, said.method], ["pending", "mobile_money"], JSON.stringify(said));
+  assertEquals((await events(id)).filter((e) => e.kind === "payment").at(-1)!.payload.state, "pin");
+  assertEquals((await konza("payment_confirm", id, { code: DEMO_MOMO_PIN })).error, "pin_on_screen");
+  // A call with no payment card at all.
+  const none = await residentCall("kz_neema");
+  await konza("service_open", none, { agency: "sca", service: "contribution" });
+  assertEquals((await konza("payment_confirm", none, { method: "card" })).error, "no_payment");
+});
+
+Deno.test("MED-332 (16 Oct): a double tap on Pay texts one code, and that code still approves", async () => {
+  const { id, paymentId, methods } = await payingOnScreen();
+  const card = methods.find((m) => m.type === "card")!;
+  const momo = methods.find((m) => m.type === "mobile_money")!;
+  const tapPay = (method_id: string) => act({ conversation_id: id, action: "pay_method", payment_id: paymentId, method_id });
+  // Two taps in the same instant, then a late one for the other method: one choice, one code.
+  const both = await Promise.all([tapPay(card.method_id), tapPay(card.method_id)]);
+  assertEquals(both.map((r) => r.json.status), ["pending", "pending"], JSON.stringify(both.map((r) => r.json)));
+  assertEquals(both.filter((r) => r.json.already_chosen).length, 1, JSON.stringify(both.map((r) => r.json)));
+  const late = await tapPay(momo.method_id);
+  assertEquals([late.json.method, late.json.already_chosen], ["card", true], JSON.stringify(late.json));
+  const { data: texts } = await db.from("handset_inbox").select("body").eq("conversation_id", id);
+  assertEquals((texts ?? []).filter((t) => /card payment/.test(t.body)).length, 1, "one code texted");
+  assertEquals((await act({ conversation_id: id, action: "pay_code", code: await codeFrom(id) })).json.status, "approved");
+  const { count } = await db.from("payments").select("id", { count: "exact", head: true })
+    .eq("conversation_id", id).eq("status", "approved");
+  assertEquals(count, 1, "paid once");
+});
+
+Deno.test("MED-332: the payment card refuses another resident's method, an unchosen method and a held session", async () => {
+  const { id, paymentId, methods } = await payingOnScreen();
+  assertEquals((await konza("payment_confirm", id, { code: "123456" })).error, "choose_method");
+  const { data: lab } = await db.from("payment_methods").select("id").eq("citizen_id", "kz_laban").limit(1).single();
+  const foreign = await act({ conversation_id: id, action: "pay_method", payment_id: paymentId, method_id: lab!.id });
+  assertEquals(foreign.json.error, "unknown_method", JSON.stringify(foreign.json));
+  // A PIN before mobile money was chosen.
+  assertEquals((await act({ conversation_id: id, action: "pay_pin", pin: DEMO_MOMO_PIN })).json.error, "no_payment");
+  // After an identity concern nothing more is paid on this session.
+  await konza("create_case", id, { type: "identity_concern", summary: "test", priority: "routine" });
+  const held = await act({
+    conversation_id: id,
+    action: "pay_method",
+    payment_id: paymentId,
+    method_id: methods.find((m) => m.type === "mobile_money")!.method_id,
+  });
+  assertEquals(held.status, 409, JSON.stringify(held.json));
+  assert(!held.json.method, JSON.stringify(held.json));
+});
+
+Deno.test("C5 (13 Oct): a health cover contribution records every amount its reason quotes, so no hold opens", async () => {
+  const since = new Date().toISOString();
+  await payingOnScreen("kz_laban");
+  // The audit function runs after each decision without being waited for.
+  await sleep(3000);
+  const { data } = await db.from("konza_holds").select("finding").eq("agency", "sca").gte("opened_at", since);
+  assertEquals(data, [], "no checker hold after a contribution grant");
+});
+
+Deno.test("MED-332: after the fee is paid on screen, the slots card books biometrics through a confirm", async () => {
+  await handOverPassports();
+  const id = await residentCall("kz_laban");
+  await konza("service_open", id, { agency: "sps", service: "passport_renewal" });
+  const app = await twice(id, "application_submit", passportArgs);
+  assertEquals(app.outcome, "granted", JSON.stringify(app));
+  const prep = await konza("payment_request", id, { amount: 7550 });
+  await sleep(4200);
+  const pay = await konza("payment_request", id, { amount: 7550, confirmation_id: prep.confirmation_id });
+  const card = (await db.from("payment_methods").select("id").eq("citizen_id", "kz_laban").eq("type", "card").single()).data!;
+  await act({ conversation_id: id, action: "pay_method", payment_id: pay.payment_id, method_id: card.id });
+  assertEquals((await act({ conversation_id: id, action: "pay_code", code: await codeFrom(id) })).json.status, "approved");
+  // Paid: the slots card follows, with the days the rules accept.
+  const slots = (await events(id)).filter((e) => e.kind === "slots").at(-1)!;
+  assert(slots, "a slots card after the payment");
+  const day = slots.payload.days[2].date as string;
+  // A day outside the rules is refused; a listed day prepares appointment_book and its confirm card.
+  assertEquals((await act({ conversation_id: id, action: "slot_pick", date: "2026-01-01", window: "morning" })).json.error, "bad_day");
+  const picked = await act({ conversation_id: id, action: "slot_pick", date: day, window: "afternoon" });
+  assertEquals(picked.json.needs_confirmation, true, JSON.stringify(picked.json));
+  const { data: c } = await db.from("confirmations").select("ui_tool, shown_hash").eq("id", picked.json.confirmation_id).single();
+  assertEquals(c!.ui_tool, "appointment_book");
+  await sleep(4200);
+  const booked = await tap({ id, confirmationId: picked.json.confirmation_id, hash: c!.shown_hash });
+  assertEquals([booked.json.on_date, booked.json.window], [day, "afternoon"], JSON.stringify(booked.json));
+});
+
+Deno.test("15 Oct: a business status lookup, the decision card on a status lookup, and no form for a paid month", async () => {
+  // Business: the newest registration, with its reference.
+  const id = await residentCall("kz_laban");
+  await konza("service_open", id, { agency: "sco", service: "business_registration" });
+  const reg = await twice(id, "application_submit", {
+    fields_json: JSON.stringify({ name: `Njoroge Works ${crypto.randomUUID().slice(0, 4)}`, type: "business_name" }),
+  });
+  const mine = await konza("rules_lookup", id, { topic: "my_application" });
+  assertEquals([mine.values.has_application, mine.values.ref], [true, reg.ref], JSON.stringify(mine));
+  // The decision card with that reference is on the screen.
+  const receipt = (await events(id)).filter((e) => e.kind === "receipt").at(-1)!;
+  assertEquals(receipt.payload.ref, reg.ref);
+  // Health cover paid this month: opening the service shows no fresh form.
+  const paid = await payingOnScreen("kz_neema");
+  const momo = paid.methods.find((m) => m.type === "mobile_money")!;
+  await act({ conversation_id: paid.id, action: "pay_method", payment_id: paid.paymentId, method_id: momo.method_id });
+  assertEquals((await act({ conversation_id: paid.id, action: "pay_pin", pin: DEMO_MOMO_PIN })).json.status, "approved");
+  const later = await residentCall("kz_neema");
+  await konza("service_open", later, { agency: "sca", service: "contribution" });
+  assertEquals((await events(later)).map((e) => e.kind), ["progress"], "rail only, no form");
+});
+
+Deno.test("AD-04 (16 Oct): a business certificate delivered home is paid with the registration fee, in one payment", async () => {
+  const id = await residentCall("kz_laban");
+  await konza("service_open", id, { agency: "sco", service: "business_registration" });
+  const args = {
+    fields_json: JSON.stringify({ name: `Kibanda ${crypto.randomUUID().slice(0, 4)}`, type: "business_name", receive: "home" }),
+  };
+  const prep = await konza("application_submit", id, args);
+  assert(/Delivered home for 200 shillings, paid with the fee: 1,150 shillings in all/.test(prep.readback.en), prep.readback.en);
+  await sleep(4200);
+  const reg = await konza("application_submit", id, { ...args, confirmation_id: prep.confirmation_id });
+  assertEquals(reg.outcome, "granted", JSON.stringify(reg));
+  // The open charge is the fee and the delivery together: the read-back before the yes says 1,150.
+  const pay = await konza("payment_request", id, { amount: 1150 });
+  assert(pay.readback.items.some((i: any) => i.kind === "amount" && i.value === 1150), JSON.stringify(pay.readback));
+  // No choice made means collection: home delivery is not added unpaid afterwards.
+  await konza("service_open", id, { agency: "sco", service: "business_registration" });
+  const plain = await twice(id, "application_submit", {
+    fields_json: JSON.stringify({ name: `Duka ${crypto.randomUUID().slice(0, 4)}`, type: "business_name" }),
+  });
+  await payAtDesk(plain.application_id, 950);
+  const home = await konza("delivery_book", id, { item_kind: "certificate", application_id: plain.application_id, method: "home", window: "morning" });
+  assertEquals(home.error, "receive_chosen", JSON.stringify(home));
+});
+
+Deno.test("AD-07 (16 Oct): collection changed to home before paying moves the charge, closes the waiting card, then pays once", async () => {
+  const since = new Date().toISOString();
+  const id = await residentCall("kz_laban");
+  await konza("service_open", id, { agency: "sco", service: "business_registration" });
+  const reg = await twice(id, "application_submit", {
+    fields_json: JSON.stringify({ name: `Kiosk ${crypto.randomUUID().slice(0, 4)}`, type: "business_name", receive: "collect" }),
+  });
+  assertEquals(reg.outcome, "granted", JSON.stringify(reg));
+  // A payment card for the old amount is waiting on the screen.
+  const old = await twice(id, "payment_request", { amount: 950 });
+  assertEquals([old.status, old.on_screen], ["pending", true], JSON.stringify(old));
+  // The change is asked first, with the rules' total in the read-back.
+  const prep = await konza("delivery_change", id, { to: "home" });
+  assertEquals(prep.needs_confirmation, true, JSON.stringify(prep));
+  assert(/home delivery for 200 shillings: 1,150 shillings in all/.test(prep.readback.en), prep.readback.en);
+  const card = (await events(id)).filter((e) => e.kind === "confirm").at(-1)!;
+  assertEquals(card.payload.title.en, "Change to home delivery");
+  await sleep(4200);
+  const done = await konza("delivery_change", id, { to: "home", confirmation_id: prep.confirmation_id });
+  assertEquals([done.receive, done.amount_kes, done.payment_id], ["home", 1150, old.payment_id], JSON.stringify(done));
+  // A repeated yes changes nothing more; the decision is untouched.
+  const again = await konza("delivery_change", id, { to: "home", confirmation_id: prep.confirmation_id });
+  assertEquals(again.already_done, true, JSON.stringify(again));
+  const { data: rows } = await db.from("konza_receive_changes").select("to_receive").eq("application_id", reg.application_id);
+  assertEquals(rows, [{ to_receive: "home" }]);
+  const { data: dec } = await db.from("konza_decisions").select("inputs").eq("application_id", reg.application_id).single();
+  assertEquals(dec!.inputs.delivery_kes, undefined, "the decision is not edited");
+  // The old card is closed and its code would be refused; the status and the charge say 1,150.
+  assertEquals((await db.from("payments").select("status").eq("id", old.payment_id).single()).data!.status, "expired");
+  assertEquals((await events(id)).filter((e) => e.kind === "payment").at(-1)!.payload.state, "expired");
+  const mine = await konza("rules_lookup", id, { topic: "my_application" });
+  assertEquals([mine.values.owed_kes, mine.values.receive], [1150, "home"], JSON.stringify(mine));
+  // The next payment reads back the new total, whatever amount is asked for.
+  const next = await konza("payment_request", id, { amount: 950 });
+  assert(next.readback.items.some((i: any) => i.kind === "amount" && i.value === 1150), JSON.stringify(next.readback));
+  const pay = await twice(id, "payment_request", { amount: 1150 });
+  const { data: method } = await db.from("payment_methods").select("id").eq("citizen_id", "kz_laban").eq("type", "card").single();
+  await act({ conversation_id: id, action: "pay_method", payment_id: pay.payment_id, method_id: method!.id });
+  assertEquals((await act({ conversation_id: id, action: "pay_code", code: await codeFrom(id) })).json.status, "approved");
+  // Paid: no more changes here, and delivery_book keeps the changed choice.
+  assertEquals((await konza("delivery_change", id, { to: "collect" })).error, "already_paid");
+  // (Only the refusal is checked: an earlier test, DK-02, removes Laban's address.)
+  assertEquals((await konza("delivery_book", id, { item_kind: "certificate", method: "collect", window: "morning" })).error, "receive_chosen");
+  const { count } = await db.from("payments").select("id", { count: "exact", head: true })
+    .eq("case_ref", reg.ref).eq("status", "approved");
+  assertEquals(count, 1, "paid once");
+  // The checker opens no hold for it (C5 reads the decision, which is unchanged).
+  await sleep(3000);
+  assertEquals((await db.from("konza_holds").select("finding").eq("agency", "sco").gte("opened_at", since)).data, []);
+});
+
+Deno.test("AD-07 (16 Oct): a passport's home delivery changed to collection drops the KES 200; the same choice is refused", async () => {
+  await handOverPassports();
+  const id = await residentCall("kz_laban");
+  await konza("service_open", id, { agency: "sps", service: "passport_renewal" });
+  const app = await twice(id, "application_submit", { fields_json: JSON.stringify({ pages: 34, receive: "home" }) });
+  assertEquals(app.outcome, "granted", JSON.stringify(app));
+  const { data: dec } = await db.from("konza_decisions").select("inputs").eq("application_id", app.application_id).single();
+  const fee = dec!.inputs.fee_kes as number;
+  assertEquals((await konza("rules_lookup", id, { topic: "my_application" })).values.owed_kes, fee + 200);
+  assertEquals((await konza("delivery_change", id, { to: "home" })).error, "same_choice");
+  const done = await twice(id, "delivery_change", { to: "collect" });
+  assertEquals([done.receive, done.amount_kes], ["collect", fee], JSON.stringify(done));
+  const mine = await konza("rules_lookup", id, { topic: "my_application" });
+  assertEquals([mine.values.owed_kes, mine.values.receive], [fee, "collect"], JSON.stringify(mine));
+  const pay = await konza("payment_request", id, { amount: fee });
+  assert(pay.readback.items.some((i: any) => i.kind === "amount" && i.value === fee), JSON.stringify(pay.readback));
+});
+
+Deno.test("MED-333: a child's form waits for the identity check, names the child, and asks the parent's consent first", async () => {
+  const id = await startedCall(null, 0, KONZA);
+  ok(await db.from("conversations").update({ channel: "browser" }).eq("id", id));
+  await konza("service_open", id, { agency: "sca", service: "dependant" });
+  assertEquals((await events(id)).filter((e) => e.kind === "form").length, 0, "no form before the identity check");
+  // The suite's earlier codes reach the daily code limits (per resident, per caller and 50 in all,
+  // session.ts) by the time this test runs: move them out of the 24 hours counted.
+  ok(
+    await db.from("verifications").update({ created_at: new Date(Date.now() - 2 * 86_400_000).toISOString() })
+      .gt("created_at", new Date(Date.now() - 86_400_000).toISOString()),
+  );
+  const start = await konza("identity_start_otp", id, { id_number: "QK-2041-0036", date_of_birth: "1990-06-20" });
+  assertEquals(start.code_sent, true, JSON.stringify(start));
+  const { data: sms } = await db.from("handset_inbox").select("body").eq("conversation_id", id);
+  const code = String(sms!.at(-1)!.body).match(/\b(\d{6})\b/)![1];
+  assertEquals((await act({ conversation_id: id, action: "identity_code", code })).json.verified, true);
+  // Verified: the form names the children on record by first name, and the document is a choice.
+  const form = (await events(id)).filter((e) => e.kind === "form").at(-1)!;
+  const fields = form.payload.fields as { name: string; options?: { value: string; label: { en: string } }[] }[];
+  assertEquals(fields[0].name, "on_behalf_of");
+  assertEquals(fields[0].options!.map((o) => o.label.en).sort(), ["Imani", "Tumaini"]);
+  assertEquals(fields.find((f) => f.name === "evidence")!.options!.map((o) => o.value), ["desk"]);
+  // No consent yet for Tumaini: the form tap prepares the consent, a consent card.
+  ok(
+    await db.from("delegation_consents").update({ withdrawn_at: new Date().toISOString() })
+      .eq("grantor_citizen_id", "kz_neema").eq("subject_citizen_id", "kz_tumaini").is("withdrawn_at", null),
+  );
+  // Tumaini's birth certificate is the seed's (accepted at Lango Square), so "desk" finds it.
+  const values = { on_behalf_of: "QK-2041-0003", evidence: "desk" };
+  const sent = await act({ conversation_id: id, action: "form_submit", fields: values });
+  assertEquals([sent.json.consent_for_form, sent.json.needs_confirmation], [true, true], JSON.stringify(sent.json));
+  const consent = (await events(id)).filter((e) => e.kind === "confirm").at(-1)!;
+  assertEquals([consent.payload.tool, consent.payload.variant], ["consent_record", "consent"]);
+  await sleep(4200);
+  const yes = await tap({ id, confirmationId: sent.json.confirmation_id, hash: consent.payload.shown_hash });
+  assert(!yes.json.error, JSON.stringify(yes.json));
+  // The app sends the form again: the application is prepared, its card the consent variant too.
+  const again = await act({ conversation_id: id, action: "form_submit", fields: values });
+  assertEquals(again.json.needs_confirmation, true, JSON.stringify(again.json));
+  const app = (await events(id)).filter((e) => e.kind === "confirm").at(-1)!;
+  assertEquals([app.payload.tool, app.payload.variant], ["application_submit", "consent"]);
+  await sleep(4200);
+  const added = await tap({ id, confirmationId: again.json.confirmation_id, hash: app.payload.shown_hash });
+  assertEquals(added.json.outcome, "granted", JSON.stringify(added.json));
+});
+
+Deno.test("MED-333: the school form offers the schools; the permit form waits for the identity check and offers the resident's businesses", async () => {
+  const laban = await residentCall("kz_laban");
+  await konza("service_open", laban, { agency: "siln", service: "primary_place" });
+  const school = (await events(laban)).filter((e) => e.kind === "form").at(-1)!;
+  const sf = school.payload.fields as { name: string; options?: { value: string }[] }[];
+  assert(sf.find((f) => f.name === "preferred_school_id")!.options!.length > 0, JSON.stringify(sf));
+  assertEquals(sf.find((f) => f.name === "documents")!.options!.map((o) => o.value), ["desk"]);
+  // Not verified: no permit form. Verified: the resident's own granted businesses, by name.
+  const anon = await startedCall(null, 0, KONZA);
+  ok(await db.from("conversations").update({ channel: "browser" }).eq("id", anon));
+  await konza("service_open", anon, { agency: "sco", service: "trading_permit" });
+  assertEquals((await events(anon)).filter((e) => e.kind === "form").length, 0);
+  await konza("service_open", laban, { agency: "sco", service: "business_registration" });
+  const reg = await twice(laban, "application_submit", {
+    fields_json: JSON.stringify({ name: `Fundi ${crypto.randomUUID().slice(0, 4)}`, type: "business_name" }),
+  });
+  await konza("service_open", laban, { agency: "sco", service: "trading_permit" });
+  const permit = (await events(laban)).filter((e) => e.kind === "form").at(-1)!;
+  const biz = (permit.payload.fields as { name: string; options?: { value: string }[] }[])
+    .find((f) => f.name === "business_ref")!;
+  assert(biz.options!.some((o) => o.value === reg.ref), JSON.stringify(biz));
 });

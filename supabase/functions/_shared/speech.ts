@@ -47,9 +47,16 @@ const RULE: Record<string, string> = {
   en:
     "Do not read these references unless asked. Say they are in the text message. If asked, say 'ending' and last4. If asked for all of it, read full slowly.",
 };
+/** On a screen the references are on the cards (MED-331): never "in the SMS" there. */
+const SCREEN_RULE: Record<string, string> = {
+  sw:
+    "Usisome kumbukumbu hizi bila kuombwa. Sema kwamba ziko kwenye skrini. Mkazi akiuliza, sema 'inayoishia' na last4. Akiomba yote, soma full polepole.",
+  en:
+    "Do not read these references unless asked. Say they are on the screen. If asked, say 'ending' and last4. If asked for all of it, read full slowly.",
+};
 
 /** Adds `say` to a tool result (and to nested objects) for every reference it carries. */
-export function withSpeech(result: unknown, lang: string): unknown {
+export function withSpeech(result: unknown, lang: string, screen = false): unknown {
   if (!result || typeof result !== "object" || Array.isArray(result)) return result;
   const refs: Record<string, { last4: string; full: string }> = {};
   for (const [k, v] of Object.entries(result as Record<string, unknown>)) {
@@ -58,5 +65,6 @@ export function withSpeech(result: unknown, lang: string): unknown {
     }
   }
   if (!Object.keys(refs).length) return result;
-  return { ...result, say: { references: refs, rule: RULE[lang] ?? RULE.en } };
+  const rules = screen ? SCREEN_RULE : RULE;
+  return { ...result, say: { references: refs, rule: rules[lang] ?? rules.en } };
 }

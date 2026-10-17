@@ -10,7 +10,7 @@ K1 (MED-251), 5 Oct 2026; names and the city framing set by Mahs on 5 Oct. Every
 | Code | `KONZA` in code, `QK` where two letters are needed | `KZ` is Kazakhstan; `QK` is in the ISO user-assigned range |
 | Currency | KES | Fees reuse sourced Kenyan figures where they exist |
 | Time zone, holidays | Africa/Nairobi, Kenyan public holidays (`rules/ke/calendar.ts`) | Reuse; the audience is Kenyan |
-| Languages | English, Swahili, Sheng (understood; spoken in a Swahili frame, judged in K5) | Kickoff |
+| Languages | English and Swahili (Sheng dropped: out of K5 on 6 Oct, removed in K8) | Kickoff; Mahs |
 | Resident number | `QK-` then 8 digits (`QK-1234-5678`), synthetic; plays the role the Maisha Number has in Kenya's interoperability framework | Must never look like a real Kenyan ID or Maisha Number |
 | Passports | Konza processes **Kenyan** passports at its own biometrics desk (by agreement, in the story) | Kickoff; turns the brief's physical-visit gap into a scene |
 | Addresses | Every building and unit has a precise address (section 3) | Mahs (5 Oct): lets the system run deliveries |
@@ -48,7 +48,8 @@ Konza has a complete, precise addressing system (designed; not KoTDA's real layo
 | AD-01 | Every plot and unit in Konza has a unique address and check code | designed |
 | AD-02 | Deliveries go only to the resident's registered address, or are collected at Lango Square (DK-02) or, for passports, the Konza Passport Desk; the address is read back before booking | designed (amended K3, MED-278) |
 | AD-03 | Delivery is the next working day, morning (8 to 12) or afternoon (2 to 6) | designed |
-| AD-04 | Delivery costs KES 200 per item; collection at a desk is free | designed |
+| AD-04 | Delivery costs KES 200 per item; collection at a desk is free. Home delivery is chosen when applying and paid together with the service fee in one payment (a free service, such as the resident card, then has a KES 200 charge of its own); no choice means collection, and the choice stands when booking (Mahs, 15 and 16 Oct) | designed |
+| AD-07 | Home delivery or collection can be changed while nothing is paid on the application: the new total (fee plus KES 200, or the fee alone) is read back first and charged in one payment; a payment waiting on the old amount is closed, nothing having been charged. Once anything is paid, an officer decides (Mahs, 16 Oct) | designed |
 | AD-05 | The courier hands over to the named resident or, for a child's document, a parent with consent; the recipient confirms with a one-time code | designed |
 | AD-06 | Passports can be delivered home, handed only to the holder in person, who shows ID and gives the one-time code; or collected at the Konza Passport Desk | designed (a real Kenyan passport is collected in person) |
 
@@ -86,8 +87,9 @@ Every value lives in the rules module with its id; the LLM never states one it d
 | RV-02 | A human officer who did not make the decision reviews it; the review is free | designed |
 | RV-03 | The answer comes within 10 working days, with reasons | designed |
 | RF-01 to RF-05 | Refunds (`rules/common/refunds.ts`) | designed |
-| PY-01 | Any Konza fee can be paid on the phone itself: SIA sends a "DEMO" prompt (payee, amount, reference) by SMS or by a code call; the resident approves by saying or texting back the 6-digit code within 5 minutes; ignoring it declines; three wrong codes decline it | designed (K3, MED-278: no smartphone needed) |
+| PY-01 | Any Konza fee can be paid on the phone itself: SIA sends a payment prompt (payee, amount, reference) by SMS or by a code call; the resident approves by saying or texting back the 6-digit code within 5 minutes; ignoring it declines; three wrong codes decline it | designed (K3, MED-278: no smartphone needed) |
 | PY-02 | Any fee can be paid at any Konza desk (Lango Square or the Konza Passport Desk); an officer records it against the reference; the amount must equal the open charge | designed (K3, MED-278) |
+| PY-03 | In the resident app any Konza fee can be paid on the payment card with a method the resident already holds: a debit or credit card (approved with a 6-digit code texted to the phone, typed on the card or said to SIA) or mobile money (approved with the PIN typed on the card, never spoken); masked details only; nothing is charged; three wrong tries or 5 minutes decline it | designed (K8, MED-332; Mahs, 13 Oct) |
 | DK-01 | Lango Square takes paper documents (tenancy, employer letter, birth certificate, immunisation card); an officer checks them and records type and result; the paper goes back and nothing is scanned; the record counts wherever an upload is accepted | designed (K3, MED-278: no upload needed) |
 | DK-02 | Any deliverable can be collected free at Lango Square with ID and a one-time code, with no address needed; passports are collected only at the Konza Passport Desk (AD-06) | designed (K3, MED-278) |
 

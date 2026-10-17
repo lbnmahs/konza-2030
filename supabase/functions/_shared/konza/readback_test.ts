@@ -5,7 +5,7 @@ Deno.env.set("SUPABASE_SERVICE_ROLE_KEY", Deno.env.get("SUPABASE_SERVICE_ROLE_KE
 const { AGENCIES } = await import("./manifest.ts");
 const { rb, readBackProblems } = await import("../readback.ts");
 const { passportQuote } = await import("../rules/ke/pp.ts");
-const { BUSINESS_FEES_KES, TRADING_PERMIT_FEE_KES, WINDOW_HOURS } = await import(
+const { BUSINESS_FEES_KES, DELIVERY_FEE_KES, TRADING_PERMIT_FEE_KES, WINDOW_HOURS } = await import(
   "../rules/konza/rules.ts"
 );
 import type { Resident } from "./types.ts";
@@ -50,10 +50,11 @@ Deno.test("K5 (MED-301): read-back amounts equal the rule outputs", () => {
     return AGENCIES[a].services[s].summarize(f, child).items.filter((i) => i.kind === "amount")
       .map((i) => i.value);
   };
+  // AD-04: home delivery adds its fee to what is paid, said with the total; collection is free.
   for (const pages of [34, 50, 66]) {
-    assertEquals(amounts("sps/passport_renewal", { pages, receive: "home" }), [
-      passportQuote(pages)!.fee_kes,
-    ]);
+    const fee = passportQuote(pages)!.fee_kes;
+    assertEquals(amounts("sps/passport_renewal", { pages, receive: "home" }), [fee, DELIVERY_FEE_KES, fee + DELIVERY_FEE_KES]);
+    assertEquals(amounts("sps/passport_renewal", { pages, receive: "collect" }), [fee]);
   }
   assertEquals(amounts("sco/business_registration", { name: "X", type: "company" }), [
     BUSINESS_FEES_KES.company,

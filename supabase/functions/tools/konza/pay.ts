@@ -37,7 +37,11 @@ const resolver: Parameters<typeof registerCharge>[1] = {
       )
       : null;
     if (!c) {
-      throw new ToolError("nothing_to_pay", "There is no fee to pay on this service right now.");
+      // "Nothing to pay" is not "paid", so Savannah never calls an uncharged delivery fee settled.
+      throw new ToolError(
+        "nothing_to_pay",
+        "No fee on this service can be paid here right now. Do not say anything was paid unless a tool said so; check rules_lookup topic my_application.",
+      );
     }
     return {
       case_ref: c.application.ref,

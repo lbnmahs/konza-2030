@@ -34,7 +34,7 @@ const contribution: ServiceDef = {
     "A returning caller: rules_lookup topic my_application gives their application (or their child's), the decision and its reason, any fee still owed, and delivery.",
     "Verify the resident, then rules_lookup topic cover_status.",
     "To pay this month: application_submit with fields amount_kes (at least the minimum) and month (YYYY-MM, this month); read back, clear yes, then again with the confirmation_id.",
-    "Then payment_request for that amount (a DEMO code prompt, or at any desk) and payment_confirm. Cover is active once it has cleared.",
+    "Then payment_request for that amount (a code prompt, or at any desk) and payment_confirm. Cover is active once it has cleared.",
   ].join("\n"),
   topics: {
     my_application: myApplication("sca", "contribution", "health cover contribution"),
@@ -69,11 +69,42 @@ const contribution: ServiceDef = {
     required: ["amount_kes", "month"],
     additionalProperties: false,
     properties: {
-      amount_kes: { type: "integer", minimum: SH_MIN_CONTRIBUTION_KES, maximum: 100000 },
-      month: { type: "string", pattern: "^20[0-9]{2}-(0[1-9]|1[0-2])$" },
+      amount_kes: {
+        type: "integer",
+        minimum: SH_MIN_CONTRIBUTION_KES,
+        maximum: 100000,
+        title: "Amount (KES)",
+        "x-konza-title-sw": "Kiasi (KES)",
+      },
+      month: {
+        type: "string",
+        pattern: "^20[0-9]{2}-(0[1-9]|1[0-2])$",
+        title: "Month",
+        "x-konza-title-sw": "Mwezi",
+      },
     },
   },
   consentScope: null,
+  // No fresh contribution form for a resident who has already paid this month: this month's
+  // contribution, granted and paid in full, hides it. A top-up is still possible.
+  formDone: async (subject) => {
+    const month = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Nairobi" }).slice(0, 7);
+    const apps = must(
+      await db.from("konza_applications").select("id, ref").eq("agency", "sca").eq("service", "contribution")
+        .eq("subject_citizen_id", subject.id).eq("fields->>month", month),
+    ) as { id: string; ref: string }[];
+    for (const a of apps) {
+      const d = must(
+        await db.from("konza_decisions").select("outcome, inputs").eq("application_id", a.id).maybeSingle(),
+      );
+      if (d?.outcome !== "granted") continue;
+      const paid = (must(
+        await db.from("payments").select("amount").eq("case_ref", a.ref).eq("status", "approved"),
+      ) as { amount: number }[]).reduce((n, p) => n + Number(p.amount), 0);
+      if (paid >= Number(d.inputs?.contribution_kes ?? Infinity)) return true;
+    }
+    return false;
+  },
   summarize: (f) =>
     readBack(
       { amount: rb.amount(Number(f.amount_kes)), month: rb.month(String(f.month)) },
@@ -95,7 +126,9 @@ const contribution: ServiceDef = {
       rule_ids: ["SH-02", "SH-01"],
       reason_en:
         `The contribution is accepted: KES ${amount} is at least the KES ${SH_MIN_CONTRIBUTION_KES} minimum.`,
-      inputs: { month: fields.month, contribution_kes: amount },
+      // C5: every amount the reason quotes is recorded, the minimum too; without it the checker
+      // would hold every contribution grant.
+      inputs: { month: fields.month, contribution_kes: amount, minimum_kes: SH_MIN_CONTRIBUTION_KES },
       next_en: `Pay KES ${amount}; cover is active once it has cleared.`,
     });
   },
@@ -126,7 +159,14 @@ const dependant: ServiceDef = {
     type: "object",
     required: ["evidence"],
     additionalProperties: false,
-    properties: { evidence: { type: "string", pattern: "^desk(:[0-9a-f-]{36})?$" } },
+    properties: {
+      evidence: {
+        type: "string",
+        pattern: "^desk(:[0-9a-f-]{36})?$",
+        title: "Document handed in at Lango Square",
+        "x-konza-title-sw": "Hati uliyowasilisha Lango Square",
+      },
+    },
   },
   consentScope: "health_cover",
   summarize: (_f, subject) =>

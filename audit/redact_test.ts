@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "jsr:@std/assert@1";
-import { leftovers, redactText, redactTranscript } from "./redact.ts";
+import { leftovers, looksLikeCode, redactText, redactTranscript } from "./redact.ts";
 
 Deno.test("K6 (MED-307): references, codes, resident numbers and phone endings go; rules stay", () => {
   const t = redactText(
@@ -53,10 +53,15 @@ Deno.test("K6 (MED-307): a spoken code in the code window is dropped; tool field
     { role: "user", message: "Ndio, four eight two" },
   ]);
   assertEquals(turns[2].text, "[code read aloud, redacted]");
-  assertEquals(turns[1].calls![0].args, {});
-  assertEquals(turns[1].results![0].value, { code_sent: true });
-  assertEquals(turns[3].calls![0].args, {});
+  assertEquals(turns[1].calls![0].args, { id_number: "[redacted]" });
+  assertEquals(turns[1].results![0].value, {
+    verification_id: "[redacted]",
+    phone_last3: "[redacted]",
+    code_sent: true,
+  });
+  assertEquals(turns[3].calls![0].args, { code: "[redacted]" });
   assertEquals(turns[4].results![0].value, {
+    ref: "[redacted]",
     outcome: "granted",
     rule_ids: ["PP-02"],
     readback: { sw: "ada shilingi elfu kumi na mbili na hamsini" },
@@ -82,7 +87,11 @@ Deno.test("K6 (MED-307): results a check needs survive; identifiers inside them 
       },
     ],
   }]);
-  assertEquals(t.results![0].value, { case_created: true, officer_will_call_back: true });
+  assertEquals(t.results![0].value, {
+    case_created: true,
+    officer_will_call_back: true,
+    case_id: "[redacted]",
+  });
   assertEquals(t.results![1].value, {
     topic: "cover_status",
     values: { active: false, month: "2026-10", minimum_kes: 300 },
@@ -103,8 +112,14 @@ Deno.test("K6 security review: nested JSON, more keys, ids, dates and comma code
       params_as_json: '{"dependant_name":"Amani","dependant_dob":"2019-03-02","window":"morning"}',
     }],
   }]);
-  assertEquals(t.calls![0].args, { fields_json: { pages: 34 } });
-  assertEquals(t.calls![1].args, { window: "morning" });
+  assertEquals(t.calls![0].args, {
+    fields_json: { name: "[redacted]", dob: "[redacted]", evidence: "[redacted]", pages: 34 },
+  });
+  assertEquals(t.calls![1].args, {
+    dependant_name: "[redacted]",
+    dependant_dob: "[redacted]",
+    window: "morning",
+  });
   const text = redactText(
     "Evidence desk:6b5f2027-0000-4000-8000-0000000000e1, id 6b5f2027-0000-4000-8000-0000000000e1, " +
       "born April 12, 1987, born 12/04/1987, code 4, 8, 2, 9, 1, 3.",
@@ -114,4 +129,41 @@ Deno.test("K6 security review: nested JSON, more keys, ids, dates and comma code
     leftovers([{ i: 0, at: 0, role: "user", text: "desk:6b5f2027 e1 12/04/1987" }]).length,
     2,
   );
+});
+
+Deno.test("K8 C9 re-sample: a given name shows as [redacted], an empty one stays empty", () => {
+  const [t] = redactTranscript([{
+    role: "agent",
+    tool_calls: [
+      { tool_name: "rules_lookup", params_as_json: '{"topic":"name_check","inputs_json":"{\\"name\\":\\"Jax\\"}"}' },
+      { tool_name: "rules_lookup", params_as_json: '{"topic":"name_check","inputs_json":"{\\"name\\":\\"\\"}"}' },
+    ],
+  }]);
+  assertEquals(t.calls![0].args, { topic: "name_check", inputs_json: { name: "[redacted]" } });
+  assertEquals(t.calls![1].args, { topic: "name_check", inputs_json: { name: "" } });
+  assert(!JSON.stringify(t).includes("Jax"));
+});
+
+Deno.test("K8: a code entered or a payment approved on the card closes the code window", () => {
+  const booked = "Booked for Thursday twenty two October, between two and five.";
+  for (const done of ["Resident entered the code on screen and is verified.", "Resident approved the payment on screen."]) {
+    const turns = redactTranscript([
+      { role: "agent", tool_calls: [{ tool_name: "payment_request", params_as_json: "{}" }] },
+      { role: "agent", tool_results: [{ tool_name: "contextual_update", result_value: done }] },
+      { role: "agent", message: booked },
+    ]);
+    assertEquals(turns[2].text, booked);
+  }
+  const open = redactTranscript([
+    { role: "agent", tool_calls: [{ tool_name: "identity_start_otp", params_as_json: "{}" }] },
+    { role: "user", message: "four eight two nine one three" },
+  ]);
+  assertEquals(open[1].text, "[code read aloud, redacted]");
+});
+
+Deno.test("MED-331: a code sent line is kept; a code read aloud is still hidden", () => {
+  assert(!looksLikeCode("I've sent a 6-digit code by SMS to the phone ending in 878. Could you read it to me?"));
+  assert(!looksLikeCode("Nimetuma code ya tarakimu 6 kwa simu inayoishia na nane saba nane."));
+  assert(looksLikeCode("Your code is 4 8 2 9 1 3."));
+  assert(looksLikeCode("It's four eight two nine one three, ending in 878."));
 });

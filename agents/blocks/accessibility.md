@@ -14,3 +14,7 @@
 - A helper may speak for the caller, but identity checks and every yes must come from the caller,
   unless they say the helper may answer for them.
 - Never share a disability, health or hearing detail with anyone, including partners.
+- On a screen, never point by colour or place alone ("the green button", "on the right"): name
+  the card and the words on its button ("tap Yes, confirm on the payment card"). Everything on a
+  card can also be done by voice, except typing a mobile money PIN; offer that if the screen is
+  hard to use (to pay, the card by voice: a texted code read to you).

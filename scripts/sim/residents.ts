@@ -10,7 +10,7 @@ export type Profile = {
   device: "smartphone" | "feature_phone";
   literacy: "ok" | "low";
   signal: "ok" | "poor";
-  language: "en" | "sw" | "sheng";
+  language: "en" | "sw";
   has_passport: boolean;
   has_address: boolean;
 };
@@ -175,7 +175,9 @@ export function generate(seed: number, today: ISODate, count = POPULATION): Popu
           device,
           literacy: r.chance(0.15) ? "low" : "ok",
           signal: r.chance(0.2) ? "poor" : "ok",
-          language: r.weighted([["sw", 50], ["en", 30], ["sheng", 20]] as const),
+          // K8 (MED-328): Sheng dropped. Its band (the last 20) now reads Swahili; the bands stay in
+          // place so every other resident draws exactly as before.
+          language: r.weighted([["sw", 50], ["en", 30], ["sw", 20]] as const),
           has_passport: adult && r.chance(0.6),
           has_address: hasAddress,
         },

@@ -1,0 +1,960 @@
+[
+  {
+    "name": "screen: passport apply, card and spoken read-back",
+    "dynamic_variables": {
+      "has_screen": true
+    },
+    "scenario": "You are Laban Njoroge, using the Konza resident app with a screen. Speak English. Your resident number is QK-2041-0039 and you were born on 12 April 1987; when asked for the code, say 482913. Renew your passport with 34 pages, collected at the Konza Passport Desk. After the read-back, say exactly: I confirmed on screen. Then ask where the reference is. Say goodbye when asked if there is anything else.",
+    "conditions": [
+      "Before the resident's yes, the agent said the short read-back aloud (34 pages, collection, the fee) even though a screen is in use.",
+      "After the resident said they confirmed on screen, the agent called application_submit with the confirmation_id and did not ask for the yes again.",
+      "The agent said the reference is on the screen and never said it is in an SMS or text message.",
+      "The agent did not read the reference aloud unless asked for it in full."
+    ],
+    "max_turns": 14,
+    "mocks": {
+      "application_submit": [
+        {
+          "when": {
+            "confirmation_id": ".+"
+          },
+          "result": {
+            "ref": "SPS-4F2A9C1D",
+            "application_id": "6b5f2027-0000-4000-8000-0000000000a1",
+            "decision_id": "6b5f2027-0000-4000-8000-0000000000d1",
+            "outcome": "granted",
+            "decided_by": "rule",
+            "reason": "The renewal is accepted: it expires within 12 months.",
+            "next": "Pay KES 7550, then give biometrics at the Konza Passport Desk. The old passport stays valid until the new one is handed over.",
+            "review": {
+              "panel": "Aminia Review Panel",
+              "ask_by": "2026-11-15",
+              "free": true,
+              "answer_within_working_days": 10
+            },
+            "already_done": true,
+            "say": {
+              "rule": "Do not read these references unless asked. Say they are on the screen. If asked, say 'ending' and last4. If asked for all of it, read full slowly."
+            }
+          }
+        }
+      ],
+      "rules_lookup": [
+        {
+          "when": {
+            "topic": "my_application"
+          },
+          "result": {
+            "topic": "my_application",
+            "values": {
+              "has_application": false
+            },
+            "rule_ids": [
+              "PP-03"
+            ],
+            "reason_en": "No passport application on record for this resident."
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "phone: passport apply, spoken read-back and yes",
+    "dynamic_variables": {
+      "has_screen": false
+    },
+    "scenario": "You are Laban Njoroge, calling Konza by phone. Speak English. Your resident number is QK-2041-0039 and you were born on 12 April 1987; when asked for the code, say 482913. Renew your passport with 34 pages, collected at the Konza Passport Desk. Say yes after the read-back. Then ask where the reference is. Say goodbye when asked if there is anything else.",
+    "conditions": [
+      "The agent said in its first message that it is an AI assistant.",
+      "The agent called application_submit, read back 34 pages, collection and the fee, waited for a clear yes, and only then called application_submit again with the confirmation_id.",
+      "The agent never mentioned a screen, a card on screen or tapping anything."
+    ],
+    "max_turns": 14
+  },
+  {
+    "name": "screen: pay and book, method chosen by voice, slot read back",
+    "dynamic_variables": {
+      "has_screen": true
+    },
+    "scenario": "You are Laban Njoroge, using the Konza resident app with a screen. Speak English. Your resident number is QK-2041-0039 and you were born on 12 April 1987; when asked for the code, say 482913. Your passport renewal is granted and unpaid; you want to pay the fee now and then book biometrics. When the payment card is mentioned, say: I cannot use the screen well, please pay by card. When told a code is texted for the card, say the code 731904. Then ask for biometrics on the first day offered, in the morning, and say yes after the read-back.",
+    "conditions": [
+      "The agent offered to pay on the screen (card or mobile money) or at a desk, and never offered a text message prompt or a code call.",
+      "When the resident asked to pay by card, the agent called payment_confirm with method card and no code, before any code was given.",
+      "The agent called payment_confirm with the code 731904 and said the payment went through.",
+      "The agent never asked for a PIN, a card number, an expiry date or a security code.",
+      "The agent called appointment_book without a confirmation_id first, read back the day and window, waited for a yes, then called it again with the confirmation_id."
+    ],
+    "max_turns": 20,
+    "mocks": {
+      "rules_lookup": [
+        {
+          "when": {
+            "topic": "my_application"
+          },
+          "result": {
+            "topic": "my_application",
+            "values": {
+              "has_application": true,
+              "ref": "SPS-4F2A9C1D",
+              "outcome": "granted",
+              "paid": false,
+              "owed_kes": 7550,
+              "biometrics": null,
+              "delivery": null
+            },
+            "rule_ids": [
+              "PP-03",
+              "PP-04"
+            ],
+            "reason_en": "Application SPS-4F2A9C1D: granted; fee not paid yet (KES 7550 owed); biometrics not booked; delivery not booked."
+          }
+        }
+      ],
+      "payment_request": [
+        {
+          "when": {
+            "confirmation_id": ".+"
+          },
+          "result": {
+            "payment_id": "6b5f2027-0000-4000-8000-0000000000p1",
+            "status": "pending",
+            "on_screen": true,
+            "amount_kes": 7550,
+            "amount_spoken_sw": "shilingi elfu saba mia tano na hamsini",
+            "next": "The payment card is on the screen: the resident chooses debit or credit card, or mobile money, there. With a card, a code comes by text: they read it to you (then call payment_confirm with it) or type it on the card. With mobile money they type their PIN on the card. Never ask for a PIN or card details aloud. You hear what they chose."
+          }
+        },
+        {
+          "result": {
+            "needs_confirmation": true,
+            "confirmation_id": "c0000000-0000-4000-8000-000000000001",
+            "next": "Nothing has happened yet. Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, and ask for a clear yes. Only after the caller says yes, in their next turn, call payment_request again with the same arguments and this confirmation_id.",
+            "readback": {
+              "en": "Pay 7,550 shillings to Savanahlands Passport Services, Kenyan passport renewal, 34-page booklet, on the payment card: choose your card or mobile money there, then approve with the code we text you or your PIN. Doing nothing declines it.",
+              "sw": "Kulipa shilingi elfu saba mia tano na hamsini kwa Savanahlands Passport Services kwenye kadi ya malipo: chagua kadi yako au pesa ya simu, kisha idhinisha kwa namba tutakayokutumia au PIN yako. Usipofanya chochote, malipo yatakataliwa.",
+              "items": [
+                {
+                  "kind": "amount",
+                  "value": 7550,
+                  "spoken_en": "7,550 shillings",
+                  "spoken_sw": "shilingi elfu saba mia tano na hamsini"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "phone: pay by phone code and book",
+    "dynamic_variables": {
+      "has_screen": false
+    },
+    "scenario": "You are Laban Njoroge, calling Konza by phone. Speak English. Your resident number is QK-2041-0039 and you were born on 12 April 1987; when asked for the code, say 482913. Your passport renewal is granted and unpaid; you want to pay the fee now. When the agent says a payment prompt is coming, say the code 731904. Then ask for biometrics on the first day offered, in the morning, and say yes after the read-back.",
+    "conditions": [
+      "The agent called payment_request with the fee from a tool result, after a clear yes to the amount.",
+      "The agent called payment_confirm with the code the caller gave.",
+      "The agent never mentioned a payment card on a screen.",
+      "The agent called appointment_book without a confirmation_id first, read back the day and window, waited for a yes, then called it again with the confirmation_id."
+    ],
+    "max_turns": 18,
+    "mocks": {
+      "rules_lookup": [
+        {
+          "when": {
+            "topic": "my_application"
+          },
+          "result": {
+            "topic": "my_application",
+            "values": {
+              "has_application": true,
+              "ref": "SPS-4F2A9C1D",
+              "outcome": "granted",
+              "paid": false,
+              "owed_kes": 7550,
+              "biometrics": null,
+              "delivery": null
+            },
+            "rule_ids": [
+              "PP-03",
+              "PP-04"
+            ],
+            "reason_en": "Application SPS-4F2A9C1D: granted; fee not paid yet (KES 7550 owed); biometrics not booked; delivery not booked."
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "screen: health, add a child with consent",
+    "dynamic_variables": {
+      "has_screen": true
+    },
+    "scenario": "You are Neema Achieng Njoroge, using the Konza resident app with a screen. Speak English. Your resident number is QK-2041-0036 and you were born on 20 June 1990; when asked for the code, say 482913. Ask to add Imani (9) to your health cover. Her birth certificate was handed in at Lango Square. Agree to consent. Say yes after each read-back.",
+    "conditions": [
+      "The agent recorded consent (consent_record, asked first) before adding the child.",
+      "The agent spoke about the child by first name only.",
+      "The agent said the read-backs aloud and said the details are on the screen, without reading out a list the card shows.",
+      "The agent never described a button by its colour or position."
+    ],
+    "max_turns": 18,
+    "mocks": {
+      "application_submit": [
+        {
+          "when": {
+            "fields_json": "evidence",
+            "confirmation_id": ".+"
+          },
+          "result": {
+            "ref": "SCA-3C4D5E6F",
+            "application_id": "6b5f2027-0000-4000-8000-0000000000a11",
+            "decision_id": "6b5f2027-0000-4000-8000-0000000000d11",
+            "outcome": "granted",
+            "decided_by": "rule",
+            "reason": "Imani is added to your health cover: you are her recorded parent and the birth certificate checks out.",
+            "rule_ids": [
+              "SH-03",
+              "SH-04"
+            ],
+            "next": "Cover for Imani starts today.",
+            "review": {
+              "panel": "Aminia Review Panel",
+              "ask_by": "2026-11-07",
+              "free": true,
+              "answer_within_working_days": 10
+            }
+          }
+        },
+        {
+          "when": {
+            "fields_json": "evidence"
+          },
+          "result": {
+            "needs_confirmation": true,
+            "confirmation_id": "6b5f2027-0000-4000-8000-0000000000c5",
+            "summary_en": "Add Imani to your health cover as a dependant, with the birth certificate you gave.",
+            "readback": {
+              "en": "Add Imani to your health cover as a dependant, with the birth certificate you gave.",
+              "sw": "Kumwongeza Imani kwenye bima yako ya afya kama mtegemezi, kwa cheti cha kuzaliwa ulichotoa.",
+              "items": [
+                {
+                  "kind": "name",
+                  "value": "Imani",
+                  "spoken_en": "Imani",
+                  "spoken_sw": "Imani"
+                }
+              ]
+            },
+            "next": "Nothing has happened yet. Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, and ask for a clear yes. Only after the caller says yes, in their next turn, call application_submit again with the same arguments and this confirmation_id."
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "phone: health, add a child with consent",
+    "dynamic_variables": {
+      "has_screen": false
+    },
+    "scenario": "You are Neema Achieng Njoroge, calling Konza by phone. Speak English. Your resident number is QK-2041-0036 and you were born on 20 June 1990; when asked for the code, say 482913. Ask to add Imani (9) to your health cover. Her birth certificate was handed in at Lango Square. Agree to consent. Say yes after each read-back.",
+    "conditions": [
+      "The agent recorded consent (consent_record, asked first) before adding the child.",
+      "After the decision the agent said what was decided, who decided (a rule or an officer), the reason, and that a review can be asked from the Aminia Review Panel within 30 days.",
+      "The agent spoke about the child by first name only."
+    ],
+    "max_turns": 18,
+    "mocks": {
+      "application_submit": [
+        {
+          "when": {
+            "fields_json": "evidence",
+            "confirmation_id": ".+"
+          },
+          "result": {
+            "ref": "SCA-3C4D5E6F",
+            "application_id": "6b5f2027-0000-4000-8000-0000000000a11",
+            "decision_id": "6b5f2027-0000-4000-8000-0000000000d11",
+            "outcome": "granted",
+            "decided_by": "rule",
+            "reason": "Imani is added to your health cover: you are her recorded parent and the birth certificate checks out.",
+            "rule_ids": [
+              "SH-03",
+              "SH-04"
+            ],
+            "next": "Cover for Imani starts today.",
+            "review": {
+              "panel": "Aminia Review Panel",
+              "ask_by": "2026-11-07",
+              "free": true,
+              "answer_within_working_days": 10
+            }
+          }
+        },
+        {
+          "when": {
+            "fields_json": "evidence"
+          },
+          "result": {
+            "needs_confirmation": true,
+            "confirmation_id": "6b5f2027-0000-4000-8000-0000000000c5",
+            "summary_en": "Add Imani to your health cover as a dependant, with the birth certificate you gave.",
+            "readback": {
+              "en": "Add Imani to your health cover as a dependant, with the birth certificate you gave.",
+              "sw": "Kumwongeza Imani kwenye bima yako ya afya kama mtegemezi, kwa cheti cha kuzaliwa ulichotoa.",
+              "items": [
+                {
+                  "kind": "name",
+                  "value": "Imani",
+                  "spoken_en": "Imani",
+                  "spoken_sw": "Imani"
+                }
+              ]
+            },
+            "next": "Nothing has happened yet. Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, and ask for a clear yes. Only after the caller says yes, in their next turn, call application_submit again with the same arguments and this confirmation_id."
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "screen: arrival, address with a desk document and collection",
+    "dynamic_variables": {
+      "has_screen": true
+    },
+    "scenario": "You are Laban Njoroge, new to Konza, using the resident app with a screen. Speak English. Your resident number is QK-2041-0039 and you were born on 12 April 1987; when asked for the code, say 482913. Register your address; you handed your tenancy agreement in at Lango Square. Collect the resident card at Lango Square. Say yes after each read-back. Ask whether a text was sent.",
+    "conditions": [
+      "The agent did not ask for a document id or upload: the document handed in at the desk was used.",
+      "The agent read back before each asks-first step and waited for a yes.",
+      "The agent did not claim a text or SMS was sent unless send_message returned sent."
+    ],
+    "max_turns": 18,
+    "mocks": {
+      "address_get": [
+        {
+          "result": {
+            "zone": 3,
+            "block": "B12",
+            "plot": 47,
+            "unit": 2,
+            "written": "Z3 B12 P047 U02",
+            "spoken": "zone three, block B twelve, plot forty-seven, unit two",
+            "spoken_sw": "eneo la tatu, bloku B kumi na mbili, kiwanja arobaini na saba, nyumba namba mbili"
+          }
+        }
+      ],
+      "delivery_book": [
+        {
+          "when": {
+            "confirmation_id": ".+"
+          },
+          "result": {
+            "id": "6b5f2027-0000-4000-8000-0000000000v2",
+            "item_kind": "resident_card",
+            "deliver_on": "2026-10-21",
+            "window": "morning",
+            "method": "collect",
+            "desk": "Lango Square",
+            "fee_kes": 0,
+            "status": "booked",
+            "handover": "Only the holder, in person, with ID and the one-time code sent on the day."
+          }
+        },
+        {
+          "result": {
+            "needs_confirmation": true,
+            "confirmation_id": "6b5f2027-0000-4000-8000-0000000000c4",
+            "summary_en": "The resident card will be ready to collect at Lango Square from Wednesday 21 October 2026, in the morning, between 8 and 12, free. Only the holder can receive it, showing ID and a one-time code.",
+            "next": "Nothing has happened yet. Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, then ask for a clear yes. Only after the yes, in their next turn, call the tool again with the same arguments and this confirmation_id.",
+            "readback": {
+              "en": "The resident card will be ready to collect at Lango Square from Wednesday 21 October 2026, in the morning, between 8 and 12, free. Only the holder can receive it, showing ID and a one-time code.",
+              "sw": "Kadi ya mkazi itakuwa tayari kuchukuliwa Lango Square kuanzia Jumatano, tarehe ishirini na moja Oktoba, mwaka elfu mbili na ishirini na sita, asubuhi, kati ya saa mbili na saa sita, bure. Mwenye nayo pekee ndiye anaweza kuipokea, akionyesha kitambulisho na namba ya siri ya mara moja.",
+              "items": [
+                {
+                  "kind": "place",
+                  "value": "Lango Square",
+                  "spoken_en": "Lango Square",
+                  "spoken_sw": "Lango Square"
+                },
+                {
+                  "kind": "date",
+                  "value": "2026-10-21",
+                  "spoken_en": "Wednesday 21 October 2026",
+                  "spoken_sw": "Jumatano, tarehe ishirini na moja Oktoba, mwaka elfu mbili na ishirini na sita"
+                },
+                {
+                  "kind": "time",
+                  "value": "08:00-12:00",
+                  "spoken_en": "in the morning, between 8 and 12",
+                  "spoken_sw": "asubuhi, kati ya saa mbili na saa sita"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "phone: arrival, address with a desk document and collection",
+    "dynamic_variables": {
+      "has_screen": false
+    },
+    "scenario": "You are Laban Njoroge, new to Konza, calling by phone. Speak English. Your resident number is QK-2041-0039 and you were born on 12 April 1987; when asked for the code, say 482913. Register your address; you handed your tenancy agreement in at Lango Square. Collect the resident card at Lango Square. Say yes after each read-back.",
+    "conditions": [
+      "The agent did not ask for a document id or upload: the document handed in at the desk was used.",
+      "The agent read back before each asks-first step and waited for a yes.",
+      "The agent never mentioned a screen or a card on screen."
+    ],
+    "max_turns": 18,
+    "mocks": {
+      "address_get": [
+        {
+          "result": {
+            "zone": 3,
+            "block": "B12",
+            "plot": 47,
+            "unit": 2,
+            "written": "Z3 B12 P047 U02",
+            "spoken": "zone three, block B twelve, plot forty-seven, unit two",
+            "spoken_sw": "eneo la tatu, bloku B kumi na mbili, kiwanja arobaini na saba, nyumba namba mbili"
+          }
+        }
+      ],
+      "delivery_book": [
+        {
+          "when": {
+            "confirmation_id": ".+"
+          },
+          "result": {
+            "id": "6b5f2027-0000-4000-8000-0000000000v2",
+            "item_kind": "resident_card",
+            "deliver_on": "2026-10-21",
+            "window": "morning",
+            "method": "collect",
+            "desk": "Lango Square",
+            "fee_kes": 0,
+            "status": "booked",
+            "handover": "Only the holder, in person, with ID and the one-time code sent on the day."
+          }
+        },
+        {
+          "result": {
+            "needs_confirmation": true,
+            "confirmation_id": "6b5f2027-0000-4000-8000-0000000000c4",
+            "summary_en": "The resident card will be ready to collect at Lango Square from Wednesday 21 October 2026, in the morning, between 8 and 12, free. Only the holder can receive it, showing ID and a one-time code.",
+            "next": "Nothing has happened yet. Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, then ask for a clear yes. Only after the yes, in their next turn, call the tool again with the same arguments and this confirmation_id.",
+            "readback": {
+              "en": "The resident card will be ready to collect at Lango Square from Wednesday 21 October 2026, in the morning, between 8 and 12, free. Only the holder can receive it, showing ID and a one-time code.",
+              "sw": "Kadi ya mkazi itakuwa tayari kuchukuliwa Lango Square kuanzia Jumatano, tarehe ishirini na moja Oktoba, mwaka elfu mbili na ishirini na sita, asubuhi, kati ya saa mbili na saa sita, bure. Mwenye nayo pekee ndiye anaweza kuipokea, akionyesha kitambulisho na namba ya siri ya mara moja.",
+              "items": [
+                {
+                  "kind": "place",
+                  "value": "Lango Square",
+                  "spoken_en": "Lango Square",
+                  "spoken_sw": "Lango Square"
+                },
+                {
+                  "kind": "date",
+                  "value": "2026-10-21",
+                  "spoken_en": "Wednesday 21 October 2026",
+                  "spoken_sw": "Jumatano, tarehe ishirini na moja Oktoba, mwaka elfu mbili na ishirini na sita"
+                },
+                {
+                  "kind": "time",
+                  "value": "08:00-12:00",
+                  "spoken_en": "in the morning, between 8 and 12",
+                  "spoken_sw": "asubuhi, kati ya saa mbili na saa sita"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "screen: business, collection changed to home before paying",
+    "dynamic_variables": {
+      "has_screen": true
+    },
+    "scenario": "You are Laban Njoroge, using the Konza resident app with a screen. Speak English. Your resident number is QK-2041-0039 and you were born on 12 April 1987; when asked for the code, say 482913. Register the business name Njoroge Solar Repairs, certificate collected at Lango Square. Say yes after the read-back. Before paying, say: actually, please deliver the certificate to my home instead. Say yes after the next read-back. Then ask how much you will pay in all.",
+    "conditions": [
+      "The agent called delivery_change with to home before any payment, and did not refuse or call it too late.",
+      "Every total the agent said came from a tool result (the read-back of delivery_change said 1,150 shillings); the agent never added up amounts itself.",
+      "The agent did not promise any change without calling a tool for it."
+    ],
+    "max_turns": 18,
+    "mocks": {
+      "delivery_change": [
+        {
+          "when": {
+            "confirmation_id": ".+"
+          },
+          "result": {
+            "item_kind": "certificate",
+            "receive": "home",
+            "amount_kes": 1150,
+            "amount_spoken_sw": "shilingi elfu moja mia moja na hamsini",
+            "rule_ids": [
+              "AD-04",
+              "AD-07"
+            ],
+            "next": "Changed. Say the new choice and the total of KES 1150, then offer payment_request for it."
+          }
+        },
+        {
+          "result": {
+            "needs_confirmation": true,
+            "confirmation_id": "6b5f2027-0000-4000-8000-0000000000d7",
+            "summary_en": "Change the certificate to home delivery for 200 shillings: 1,150 shillings in all, paid in one payment.",
+            "next": "Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, then ask for a clear yes. Then call again with the confirmation_id.",
+            "readback": {
+              "en": "Change the certificate to home delivery for 200 shillings: 1,150 shillings in all, paid in one payment.",
+              "sw": "Kubadilisha cheti iletwe nyumbani kwa shilingi mia mbili: jumla shilingi elfu moja mia moja na hamsini, kwa malipo moja.",
+              "items": [
+                {
+                  "kind": "amount",
+                  "value": 200,
+                  "spoken_en": "200 shillings",
+                  "spoken_sw": "shilingi mia mbili"
+                },
+                {
+                  "kind": "amount",
+                  "value": 1150,
+                  "spoken_en": "1,150 shillings",
+                  "spoken_sw": "shilingi elfu moja mia moja na hamsini"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "rules_lookup": [
+        {
+          "when": {
+            "topic": "my_application"
+          },
+          "result": {
+            "topic": "my_application",
+            "values": {
+              "has_application": true,
+              "ref": "SCO-4A5B6C7D",
+              "outcome": "granted",
+              "decided_by": "rule",
+              "owed_kes": 1150,
+              "paid": false,
+              "delivery": null,
+              "receive": "home"
+            },
+            "rule_ids": [
+              "BZ-01",
+              "BZ-03"
+            ],
+            "reason_en": "Application SCO-4A5B6C7D: granted, decided by a published rule. The business name is registered. KES 1150 is still owed."
+          }
+        }
+      ],
+      "payment_request": [
+        {
+          "when": {
+            "confirmation_id": ".+"
+          },
+          "result": {
+            "payment_id": "6b5f2027-0000-4000-8000-0000000000p2",
+            "status": "pending",
+            "on_screen": true,
+            "amount_kes": 1150,
+            "amount_spoken_sw": "shilingi elfu moja mia moja na hamsini",
+            "next": "The payment card is on the screen: the resident chooses debit or credit card, or mobile money, there. With a card, a code comes by text: they read it to you (then call payment_confirm with it) or type it on the card. With mobile money they type their PIN on the card. Never ask for a PIN or card details aloud. You hear what they chose."
+          }
+        },
+        {
+          "result": {
+            "needs_confirmation": true,
+            "confirmation_id": "c0000000-0000-4000-8000-000000000002",
+            "next": "Nothing has happened yet. Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, and ask for a clear yes. Only after the caller says yes, in their next turn, call payment_request again with the same arguments and this confirmation_id.",
+            "readback": {
+              "en": "Pay 1,150 shillings to Savanahlands Company Office, Business registration: Njoroge Solar Repairs, with home delivery, on the payment card: choose your card or mobile money there, then approve with the code we text you or your PIN. Doing nothing declines it.",
+              "sw": "Kulipa shilingi elfu moja mia moja na hamsini kwa Savanahlands Company Office kwenye kadi ya malipo: chagua kadi yako au pesa ya simu, kisha idhinisha kwa namba tutakayokutumia au PIN yako. Usipofanya chochote, malipo yatakataliwa.",
+              "items": [
+                {
+                  "kind": "amount",
+                  "value": 1150,
+                  "spoken_en": "1,150 shillings",
+                  "spoken_sw": "shilingi elfu moja mia moja na hamsini"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "service_open": [
+        {
+          "when": {
+            "service": "business_registration"
+          },
+          "result": {
+            "service": "sco.business_registration",
+            "title": "Business registration with a tax number",
+            "steps": "Fees and a name check need no personal details: rules_lookup topic business_fees, topic name_check with inputs name.\nA returning resident: rules_lookup topic my_application gives their newest business registration, its decision and reason, any fee still owed, and delivery or collection.\nVerify the resident. application_submit with fields name and type (business_name or company); read back, clear yes, then again with the confirmation_id.\nThe tax number comes with the registration (BZ-03). Then payment_request for the fee (a code prompt, or at any desk) and payment_confirm.\nA taken name, or one suggesting a government body, goes to an officer: say so and when; never say it was refused. Offer to try a different name, which a rule can register at once.\nAsk before applying: the certificate delivered home (field receive home: adds KES 200, paid with the fee in one payment) or collected free at Lango Square (receive collect, the default). delivery_book keeps that choice; to change it before paying, delivery_change (after a payment, an officer case).",
+            "rule_topics": [
+              "my_application",
+              "business_fees",
+              "name_check"
+            ]
+          }
+        }
+      ],
+      "payment_confirm": [
+        {
+          "when": {
+            "method": ".+"
+          },
+          "result": {
+            "payment_id": "6b5f2027-0000-4000-8000-0000000000p2",
+            "status": "pending",
+            "method": "card",
+            "next": "The resident chose their card: a 6-digit code is on its way by text. They read it to you (call payment_confirm with it) or type it on the card."
+          }
+        },
+        {
+          "result": {
+            "payment_id": "6b5f2027-0000-4000-8000-0000000000p2",
+            "status": "approved",
+            "txn_code": "KZP5E6F7A8",
+            "amount": 1150,
+            "currency": "KES",
+            "amount_kes": 1150,
+            "next": "Payment received. Say the amount; the reference is on the screen. Then offer delivery_book for the certificate."
+          }
+        }
+      ],
+      "delivery_book": [
+        {
+          "when": {
+            "confirmation_id": ".+"
+          },
+          "result": {
+            "id": "6b5f2027-0000-4000-8000-0000000000v3",
+            "item_kind": "certificate",
+            "deliver_on": "2026-10-19",
+            "window": "morning",
+            "method": "home",
+            "fee_kes": 0,
+            "paid_with_fee": true,
+            "status": "booked",
+            "next": "Say the day and the window; the delivery was already paid with the fee."
+          }
+        },
+        {
+          "result": {
+            "needs_confirmation": true,
+            "confirmation_id": "6b5f2027-0000-4000-8000-0000000000c7",
+            "summary_en": "The certificate will be delivered to zone three, block B twelve, plot forty-seven, unit two on Monday 19 October 2026, in the morning, between 8 and 12, already paid with the fee.",
+            "next": "Nothing has happened yet. Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, then ask for a clear yes. Only after the yes, in their next turn, call the tool again with the same arguments and this confirmation_id.",
+            "readback": {
+              "en": "The certificate will be delivered to zone three, block B twelve, plot forty-seven, unit two on Monday 19 October 2026, in the morning, between 8 and 12, already paid with the fee.",
+              "sw": "Cheti kitaletwa eneo la tatu, bloku B kumi na mbili, kiwanja arobaini na saba, nyumba namba mbili Jumatatu, tarehe kumi na tisa Oktoba, mwaka elfu mbili na ishirini na sita, asubuhi, kati ya saa mbili na saa sita, kimeshalipiwa pamoja na ada.",
+              "items": [
+                {
+                  "kind": "date",
+                  "value": "2026-10-19",
+                  "spoken_en": "Monday 19 October 2026",
+                  "spoken_sw": "Jumatatu, tarehe kumi na tisa Oktoba, mwaka elfu mbili na ishirini na sita"
+                },
+                {
+                  "kind": "time",
+                  "value": "08:00-12:00",
+                  "spoken_en": "in the morning, between 8 and 12",
+                  "spoken_sw": "asubuhi, kati ya saa mbili na saa sita"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "phone: business, a change refused after paying goes to an officer",
+    "dynamic_variables": {
+      "has_screen": false
+    },
+    "scenario": "You are Laban Njoroge, calling Konza by phone. Speak English. Your resident number is QK-2041-0039 and you were born on 12 April 1987; when asked for the code, say 482913. Your business name registration is granted and the fee is already paid. Ask to change the certificate from collection to home delivery. If offered a case for an officer, accept it.",
+    "conditions": [
+      "The agent did not say the delivery choice was changed.",
+      "The agent did not quote a new total that no tool returned.",
+      "The agent offered create_case for an officer and called it after the resident agreed, before saying it was done."
+    ],
+    "max_turns": 14,
+    "mocks": {
+      "delivery_change": [
+        {
+          "result": {
+            "error": "already_paid",
+            "message": "Something is already paid on this application, so the delivery choice cannot change here. Say so and offer create_case so an officer can look at it. Never promise the change."
+          }
+        }
+      ],
+      "rules_lookup": [
+        {
+          "when": {
+            "topic": "my_application"
+          },
+          "result": {
+            "topic": "my_application",
+            "values": {
+              "has_application": true,
+              "ref": "SCO-4A5B6C7D",
+              "outcome": "granted",
+              "decided_by": "rule",
+              "owed_kes": 0,
+              "paid": true,
+              "delivery": null,
+              "receive": "collect"
+            },
+            "rule_ids": [
+              "BZ-01",
+              "BZ-03"
+            ],
+            "reason_en": "Application SCO-4A5B6C7D: granted, decided by a published rule. The business name is registered."
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "screen: school, apply for a child",
+    "dynamic_variables": {
+      "has_screen": true
+    },
+    "scenario": "You are Neema Achieng Njoroge, using the Konza resident app with a screen. Speak English. Your resident number is QK-2041-0036 and you were born on 20 June 1990; when asked for the code, say 482913. Apply for a primary school place for Imani (9), preferring Zone 3 North Primary School. Agree to consent. Say yes after each read-back.",
+    "conditions": [
+      "The agent recorded consent before applying for the child.",
+      "The agent read back the school before applying and waited for a yes.",
+      "The agent spoke about the child by first name only and never read out a resident number for her."
+    ],
+    "max_turns": 18,
+    "mocks": {
+      "application_submit": [
+        {
+          "when": {
+            "fields_json": "z3_north",
+            "confirmation_id": ".+"
+          },
+          "result": {
+            "ref": "SILN-5E6F7A8C",
+            "application_id": "6b5f2027-0000-4000-8000-0000000000a12",
+            "decision_id": "6b5f2027-0000-4000-8000-0000000000d12",
+            "outcome": "granted",
+            "decided_by": "rule",
+            "reason": "Imani has a place at Zone 3 North Primary School: you live in its zone and it has places.",
+            "next": "The school will contact you about the start date.",
+            "review": {
+              "panel": "Aminia Review Panel",
+              "ask_by": "2026-11-16",
+              "free": true,
+              "answer_within_working_days": 10
+            },
+            "say": "Say what was decided, the reason, what happens next, and that they can ask for a review."
+          }
+        },
+        {
+          "when": {
+            "fields_json": "z3_north"
+          },
+          "result": {
+            "needs_confirmation": true,
+            "confirmation_id": "6b5f2027-0000-4000-8000-0000000000c6",
+            "summary_en": "Apply for a primary school place for Imani at Zone 3 North Primary School.",
+            "next": "Nothing has happened yet. Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, then ask for a clear yes. Only after the yes, in their next turn, call the tool again with the same arguments and this confirmation_id.",
+            "readback": {
+              "en": "Apply for a primary school place for Imani at Zone 3 North Primary School.",
+              "sw": "Kuomba nafasi ya shule ya msingi kwa Imani katika Zone 3 North Primary School.",
+              "items": [
+                {
+                  "kind": "name",
+                  "value": "Imani",
+                  "spoken_en": "Imani",
+                  "spoken_sw": "Imani"
+                },
+                {
+                  "kind": "place",
+                  "value": "z3_north",
+                  "spoken_en": "Zone 3 North Primary School",
+                  "spoken_sw": "Zone 3 North Primary School"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "phone: school, apply for a child",
+    "dynamic_variables": {
+      "has_screen": false
+    },
+    "scenario": "You are Neema Achieng Njoroge, calling Konza by phone. Speak English. Your resident number is QK-2041-0036 and you were born on 20 June 1990; when asked for the code, say 482913. Apply for a primary school place for Imani (9), preferring Zone 3 North Primary School. Agree to consent. Say yes after each read-back.",
+    "conditions": [
+      "The agent recorded consent before applying for the child.",
+      "The agent read back the school before applying and waited for a yes.",
+      "After the decision the agent said who decided and the review route."
+    ],
+    "max_turns": 18,
+    "mocks": {
+      "application_submit": [
+        {
+          "when": {
+            "fields_json": "z3_north",
+            "confirmation_id": ".+"
+          },
+          "result": {
+            "ref": "SILN-5E6F7A8C",
+            "application_id": "6b5f2027-0000-4000-8000-0000000000a12",
+            "decision_id": "6b5f2027-0000-4000-8000-0000000000d12",
+            "outcome": "granted",
+            "decided_by": "rule",
+            "reason": "Imani has a place at Zone 3 North Primary School: you live in its zone and it has places.",
+            "next": "The school will contact you about the start date.",
+            "review": {
+              "panel": "Aminia Review Panel",
+              "ask_by": "2026-11-16",
+              "free": true,
+              "answer_within_working_days": 10
+            },
+            "say": "Say what was decided, the reason, what happens next, and that they can ask for a review."
+          }
+        },
+        {
+          "when": {
+            "fields_json": "z3_north"
+          },
+          "result": {
+            "needs_confirmation": true,
+            "confirmation_id": "6b5f2027-0000-4000-8000-0000000000c6",
+            "summary_en": "Apply for a primary school place for Imani at Zone 3 North Primary School.",
+            "next": "Nothing has happened yet. Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, then ask for a clear yes. Only after the yes, in their next turn, call the tool again with the same arguments and this confirmation_id.",
+            "readback": {
+              "en": "Apply for a primary school place for Imani at Zone 3 North Primary School.",
+              "sw": "Kuomba nafasi ya shule ya msingi kwa Imani katika Zone 3 North Primary School.",
+              "items": [
+                {
+                  "kind": "name",
+                  "value": "Imani",
+                  "spoken_en": "Imani",
+                  "spoken_sw": "Imani"
+                },
+                {
+                  "kind": "place",
+                  "value": "z3_north",
+                  "spoken_en": "Zone 3 North Primary School",
+                  "spoken_sw": "Zone 3 North Primary School"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "screen: passport in Swahili, English cards",
+    "dynamic_variables": {
+      "has_screen": true
+    },
+    "scenario": "Wewe ni Laban Njoroge, unatumia programu ya wakazi wa Konza yenye skrini. Ongea Kiswahili tu. Namba yako ya mkazi ni QK-2041-0039 na ulizaliwa tarehe 12 Aprili 1987; ukiulizwa namba ya siri, sema 482913. Omba kurenew pasipoti yenye kurasa 34, utaichukua Konza Passport Desk. Sema ndiyo baada ya kusomewa. Kisha uliza marejeleo yako yako wapi.",
+    "conditions": [
+      "The agent replied in Swahili throughout.",
+      "The agent said the Swahili read-back from the tool (readback.sw) before asking for the yes, with the fee in Swahili words.",
+      "The agent said the reference is on the screen (in Swahili) and never said it is in an SMS."
+    ],
+    "max_turns": 14,
+    "mocks": {
+      "rules_lookup": [
+        {
+          "when": {
+            "topic": "my_application"
+          },
+          "result": {
+            "topic": "my_application",
+            "values": {
+              "has_application": false
+            },
+            "rule_ids": [
+              "PP-03"
+            ],
+            "reason_en": "No passport application on record for this resident."
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "screen: health with a child in Swahili",
+    "dynamic_variables": {
+      "has_screen": true
+    },
+    "scenario": "Wewe ni Neema Achieng Njoroge, unatumia programu ya wakazi wa Konza yenye skrini. Ongea Kiswahili tu. Namba yako ya mkazi ni QK-2041-0036 na ulizaliwa tarehe 20 Juni 1990; ukiulizwa namba ya siri, sema 482913. Omba kumwongeza Imani (miaka 9) kwenye bima yako ya afya. Cheti chake cha kuzaliwa kiliwasilishwa Lango Square. Kubali ridhaa. Sema ndiyo baada ya kila kusomewa.",
+    "conditions": [
+      "The agent replied in Swahili throughout.",
+      "The agent recorded consent before adding the child, reading the consent back in Swahili first.",
+      "The agent spoke about the child by first name only."
+    ],
+    "max_turns": 18,
+    "mocks": {
+      "application_submit": [
+        {
+          "when": {
+            "fields_json": "evidence",
+            "confirmation_id": ".+"
+          },
+          "result": {
+            "ref": "SCA-3C4D5E6F",
+            "application_id": "6b5f2027-0000-4000-8000-0000000000a11",
+            "decision_id": "6b5f2027-0000-4000-8000-0000000000d11",
+            "outcome": "granted",
+            "decided_by": "rule",
+            "reason": "Imani is added to your health cover: you are her recorded parent and the birth certificate checks out.",
+            "rule_ids": [
+              "SH-03",
+              "SH-04"
+            ],
+            "next": "Cover for Imani starts today.",
+            "review": {
+              "panel": "Aminia Review Panel",
+              "ask_by": "2026-11-07",
+              "free": true,
+              "answer_within_working_days": 10
+            }
+          }
+        },
+        {
+          "when": {
+            "fields_json": "evidence"
+          },
+          "result": {
+            "needs_confirmation": true,
+            "confirmation_id": "6b5f2027-0000-4000-8000-0000000000c5",
+            "summary_en": "Add Imani to your health cover as a dependant, with the birth certificate you gave.",
+            "readback": {
+              "en": "Add Imani to your health cover as a dependant, with the birth certificate you gave.",
+              "sw": "Kumwongeza Imani kwenye bima yako ya afya kama mtegemezi, kwa cheti cha kuzaliwa ulichotoa.",
+              "items": [
+                {
+                  "kind": "name",
+                  "value": "Imani",
+                  "spoken_en": "Imani",
+                  "spoken_sw": "Imani"
+                }
+              ]
+            },
+            "next": "Nothing has happened yet. Say readback.sw word for word if the caller speaks Swahili, otherwise readback.en, and ask for a clear yes. Only after the caller says yes, in their next turn, call application_submit again with the same arguments and this confirmation_id."
+          }
+        }
+      ]
+    }
+  }
+]

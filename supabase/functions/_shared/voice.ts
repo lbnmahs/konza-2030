@@ -33,7 +33,9 @@ export async function voiceCall(
   if (!twiml.includes("demo")) throw new Error("Voice message must say demo");
   const spoken = twiml.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
   if (await guardOutbound("voice", to, conversationId, spoken)) {
-    console.log(JSON.stringify({ voice_dry_run: { to_last3: to.slice(-3), twiml } }));
+    // As for SMS: the spoken code is printed only for a local dry run, never into project logs.
+    const local = Deno.env.get("SMS_DRY_RUN") === "1";
+    console.log(JSON.stringify({ voice_dry_run: { to_last3: to.slice(-3), ...(local ? { twiml } : {}) } }));
     return { sid: "dry-run" };
   }
   const sid = Deno.env.get("TWILIO_ACCOUNT_SID")!;

@@ -118,9 +118,21 @@ export async function outage(sim: Sim, seed: number) {
     for (const appId of appIds.filter(Boolean)) {
       await core.recordDeskPayment(
         { ...officer, requestId: crypto.randomUUID() },
-        { application_id: appId!, amount_kes: 7550, desk: "konza_passport_desk" },
+        // AD-04: the KES 7,550 fee and KES 200 home delivery, one charge.
+      { application_id: appId!, amount_kes: 7750, desk: "konza_passport_desk" },
       );
     }
+    // MED-331: biometrics come before delivery (the ready date follows from them, PP-04), as on
+    // a resident's real journey; the cut then tests delivery itself.
+    await twoStep(
+      granted.flatMap((r, i) =>
+        appIds[i]
+          ? [(c: string | null) =>
+            core.bookAppointment(as(r.id), { application_id: appIds[i]!, window: "morning" }, c)]
+          : []
+      ),
+      K,
+    );
     await twoStep(
       families.map((f) => (c) =>
         core.recordConsent(as(f.guardian), {

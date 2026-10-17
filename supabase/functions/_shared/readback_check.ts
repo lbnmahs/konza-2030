@@ -19,6 +19,9 @@ export type ReadBackResult = {
   /** Kinds of item (amount, date, time) the agent did not say between prepare and commit. */
   missing: string[];
   yes: boolean;
+  /** K8 (plan-k8 2.4): the resident said yes by tapping Confirm on the card that showed the
+   * read-back (the card carries the same words), so the read-back and the yes count. */
+  screen?: true;
 };
 
 /** Kinds the caller must hear before a yes counts: what costs money, and when. */
@@ -207,8 +210,13 @@ function said(text: string, i: ReadBackItem): boolean {
 }
 
 /** One result per asks-first commit in the call (a prepare followed by a call with its id). */
-export function readBackResults(transcript: Turn[]): ReadBackResult[] {
+export function readBackResults(
+  transcript: Turn[],
+  /** Confirmations committed by a tap: id to tool (confirmations.committed_via = screen). */
+  screen: Map<string, string> = new Map(),
+): ReadBackResult[] {
   const out: ReadBackResult[] = [];
+  const counted = new Set<string>();
   // Open prepares by confirmation id: their items and what the agent has said since.
   const open = new Map<
     string,
@@ -218,6 +226,13 @@ export function readBackResults(transcript: Turn[]): ReadBackResult[] {
     for (const call of turn.tool_calls ?? []) {
       const id = String(json(call.params_as_json)?.confirmation_id ?? "");
       const p = id ? open.get(id) : undefined;
+      if (screen.has(id) && !counted.has(id)) {
+        // The agent's later call for a tapped confirmation gets the stored result; the tap was the yes.
+        counted.add(id);
+        open.delete(id);
+        out.push({ tool: screen.get(id)!, ok: true, missing: [], yes: true, screen: true });
+        continue;
+      }
       if (!p || p.tool !== call.tool_name) continue;
       open.delete(id);
       const missing = [
@@ -244,6 +259,10 @@ export function readBackResults(transcript: Turn[]): ReadBackResult[] {
       if (turn.role === "agent") p.said += ` ${text}`;
       else if (turn.role === "user" && text) p.lastUser = text;
     }
+  }
+  // Taps the agent never followed with a call still count once.
+  for (const [id, tool] of screen) {
+    if (!counted.has(id)) out.push({ tool, ok: true, missing: [], yes: true, screen: true });
   }
   return out;
 }

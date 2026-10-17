@@ -70,6 +70,8 @@ export function deliveryReadBack(o: {
   on: ISODate;
   window: string;
   fee_kes: number;
+  /** The delivery was chosen when applying and paid with the fee (AD-04). */
+  feePaid?: boolean;
 }): ReadBack {
   const kind = ITEM_WORDS[o.item_kind] ?? { en: o.item_kind, sw: o.item_kind };
   const holderEn = o.holderOnly
@@ -97,8 +99,41 @@ export function deliveryReadBack(o: {
       fee: rb.amount(o.fee_kes),
     },
     (s) =>
-      `The ${kind.en} will be delivered to ${s.address} on ${s.on}, ${s.hours}, for ${s.fee}. ${holderEn}`,
-    (s) => `${kind.sw} italetwa ${s.address} ${s.on}, ${s.hours}, kwa ${s.fee}. ${holderSw}`,
+      `The ${kind.en} will be delivered to ${s.address} on ${s.on}, ${s.hours}, for ${s.fee}${o.feePaid ? ", already paid with the fee" : ""}. ${holderEn}`,
+    (s) =>
+      `${kind.sw} italetwa ${s.address} ${s.on}, ${s.hours}, kwa ${s.fee}${o.feePaid ? ", iliyokwisha lipwa pamoja na ada" : ""}. ${holderSw}`,
+  );
+}
+
+/** AD-07: home delivery or collection changed before paying; the total is the charge's. */
+export function deliveryChangeReadBack(o: {
+  item_kind: string;
+  to: "home" | "collect";
+  desk: DeskId;
+  delivery_kes: number;
+  total_kes: number;
+}): ReadBack {
+  const kind = ITEM_WORDS[o.item_kind] ?? { en: o.item_kind, sw: o.item_kind };
+  const sw = kind.sw.toLowerCase();
+  if (o.to === "home") {
+    return readBack(
+      { fee: rb.amount(o.delivery_kes), total: rb.amount(o.total_kes) },
+      (s) => `Change the ${kind.en} to home delivery for ${s.fee}: ${s.total} in all, paid in one payment.`,
+      (s) => `Kubadilisha ${sw} iletwe nyumbani kwa ${s.fee}: jumla ${s.total}, kwa malipo moja.`,
+    );
+  }
+  const d = deskName(o.desk);
+  if (o.total_kes === 0) {
+    return readBack(
+      { desk: rb.place(d.name) },
+      (s) => `Change the ${kind.en} to collection at ${d.the}${s.desk}, free: nothing to pay.`,
+      (s) => `Kubadilisha ${sw} ichukuliwe ${s.desk}, bure: hakuna cha kulipa.`,
+    );
+  }
+  return readBack(
+    { desk: rb.place(d.name), total: rb.amount(o.total_kes) },
+    (s) => `Change the ${kind.en} to collection at ${d.the}${s.desk}, free: ${s.total} in all.`,
+    (s) => `Kubadilisha ${sw} ichukuliwe ${s.desk}, bure: jumla ${s.total}.`,
   );
 }
 
@@ -135,7 +170,18 @@ export const paymentReadBack = (amount_kes: number, payee: string, description: 
   readBack(
     { amount: rb.amount(amount_kes), payee: rb.name(payee) },
     (s) =>
-      `Send a DEMO payment prompt for ${s.amount} to ${s.payee}, ${description}. You approve it by telling me the 6-digit code; doing nothing declines it.`,
+      `Send a payment prompt for ${s.amount} to ${s.payee}, ${description}. You approve it by telling me the 6-digit code; doing nothing declines it.`,
     (s) =>
-      `Kutuma ombi la malipo la DEMO la ${s.amount} kwa ${s.payee}. Utaidhinisha kwa kuniambia namba ya siri yenye tarakimu sita; usipofanya chochote, malipo yatakataliwa.`,
+      `Kutuma ombi la malipo la ${s.amount} kwa ${s.payee}. Utaidhinisha kwa kuniambia namba ya siri yenye tarakimu sita; usipofanya chochote, malipo yatakataliwa.`,
+  );
+
+/** The same on a screen (MED-332, PY-03): the payment card offers the resident's card or mobile
+ * money, approved with a texted code or the PIN typed on the card. */
+export const screenPaymentReadBack = (amount_kes: number, payee: string, description: string) =>
+  readBack(
+    { amount: rb.amount(amount_kes), payee: rb.name(payee) },
+    (s) =>
+      `Pay ${s.amount} to ${s.payee}, ${description}, on the payment card: choose your card or mobile money there, then approve with the code we text you or your PIN. Doing nothing declines it.`,
+    (s) =>
+      `Kulipa ${s.amount} kwa ${s.payee} kwenye kadi ya malipo: chagua kadi yako au pesa ya simu, kisha idhinisha kwa namba tutakayokutumia au PIN yako. Usipofanya chochote, malipo yatakataliwa.`,
   );

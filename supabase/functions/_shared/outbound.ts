@@ -3,7 +3,8 @@
 // - at most SMS_DAILY_BUDGET sends (default 100) in any 24 hours, counted in sms_log,
 // - every send is logged with the last 3 digits only.
 // Text tests (conversation ids starting "test-") never reach Twilio. Browser calls from the
-// panel's handset get their texts and codes in handset_inbox, shown on the panel, not sent.
+// panel's handset get their texts and codes in handset_inbox, shown on the panel, not sent; the
+// resident app (/sia) sends them to the phone.
 
 import { ToolError } from "./errors.ts";
 
@@ -16,6 +17,16 @@ export function allowedRecipients(): string[] {
 /** True when this send must be printed instead of sent. */
 export function dryRun(conversationId?: string): boolean {
   return Deno.env.get("SMS_DRY_RUN") === "1" || !!conversationId?.startsWith("test-");
+}
+
+/** A conversation of the resident app (/sia): a browser conversation bound to a resident session.
+ * The panel's handset is a browser conversation too, without one (and without cards). */
+export async function isResidentApp(conversationId: string): Promise<boolean> {
+  const { db, must } = await import("./db.ts");
+  return !!must(
+    await db.from("handset_tokens").select("conversation_id").eq("conversation_id", conversationId)
+      .not("session_hash", "is", null).limit(1).maybeSingle(),
+  );
 }
 
 /** Throws unless the send is allowed; logs it. Returns whether to print instead of sending. */
@@ -32,7 +43,11 @@ export async function guardOutbound(
       await db.from("conversations").select("channel").eq("id", conversationId).maybeSingle(),
     )
     : null;
-  const browser = conv?.channel === "browser";
+  // The panel's handset keeps its texts in handset_inbox. The resident app (/sia, a browser
+  // conversation bound to a resident session) sends them to the phone like a call does: a resident
+  // waits for the code on their phone.
+  const resident = conv?.channel === "browser" && await isResidentApp(conversationId!);
+  const browser = conv?.channel === "browser" && !resident;
   const dry = dryRun(conversationId) || browser;
   if (!allowedRecipients().includes(normPhone(to))) {
     console.error(JSON.stringify({ outbound_blocked: channel, reason: "not_allowed" }));
@@ -52,7 +67,9 @@ export async function guardOutbound(
     );
   }
   must(await db.from("sms_log").insert({ channel, to_last3: to.slice(-3), dry_run: dry }));
-  if (browser && body) {
+  // Not sent from a browser (the handset, or the resident app in a local dry run): the text waits
+  // in handset_inbox, where the panel and the tests read it.
+  if (conv?.channel === "browser" && dry && body) {
     must(
       await db.from("handset_inbox").insert({
         conversation_id: conversationId,

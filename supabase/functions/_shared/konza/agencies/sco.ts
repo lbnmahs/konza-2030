@@ -10,6 +10,8 @@ import {
   reservedName,
   TRADING_PERMIT_FEE_KES,
 } from "../../rules/konza/rules.ts";
+import { receiveField } from "../delivery.ts";
+import { myApplication } from "../status.ts";
 import type { Agency, ServiceDef } from "../types.ts";
 import { rb, readBack } from "../../readback.ts";
 
@@ -42,12 +44,14 @@ const registration: ServiceDef = {
   title: "Business registration with a tax number",
   card: [
     "Fees and a name check need no personal details: rules_lookup topic business_fees, topic name_check with inputs name.",
+    "A returning resident: rules_lookup topic my_application gives their newest business registration, its decision and reason, any fee still owed, and delivery or collection.",
     "Verify the resident. application_submit with fields name and type (business_name or company); read back, clear yes, then again with the confirmation_id.",
-    "The tax number comes with the registration (BZ-03). Then payment_request for the fee (a DEMO code prompt, or at any desk) and payment_confirm.",
+    "The tax number comes with the registration (BZ-03). Then payment_request for the fee (a code prompt, or at any desk) and payment_confirm.",
     "A taken name, or one suggesting a government body, goes to an officer: say so and when; never say it was refused. Offer to try a different name, which a rule can register at once.",
-    "The certificate can be delivered home or collected free at Lango Square.",
+    "Ask before applying: the certificate delivered home (field receive home: adds KES 200, paid with the fee in one payment) or collected free at Lango Square (receive collect, the default). delivery_book keeps that choice; to change it before paying, delivery_change (after a payment, an officer case).",
   ].join("\n"),
   topics: {
+    my_application: myApplication("sco", "business_registration", "business registration"),
     business_fees: fees,
     name_check: {
       needsResident: false,
@@ -75,8 +79,24 @@ const registration: ServiceDef = {
     required: ["name", "type"],
     additionalProperties: false,
     properties: {
-      name: { type: "string", minLength: 3, maxLength: 60, pattern: "^[A-Za-z0-9 '&.-]+$" },
-      type: { type: "string", enum: ["business_name", "company"] },
+      name: {
+        type: "string",
+        minLength: 3,
+        maxLength: 60,
+        pattern: "^[A-Za-z0-9 '&.-]+$",
+        title: "Business name",
+        "x-konza-title-sw": "Jina la biashara",
+      },
+      type: {
+        type: "string",
+        enum: ["business_name", "company"],
+        title: "Type",
+        "x-konza-title-sw": "Aina",
+        "x-konza-enum-en": ["Business name", "Company"],
+        "x-konza-enum-sw": ["Jina la biashara", "Kampuni"],
+      },
+      // AD-04: the certificate delivered home (KES 200, paid with the fee) or collected free.
+      receive: receiveField("Lango Square"),
     },
   },
   consentScope: null,
@@ -141,14 +161,29 @@ const permit: ServiceDef = {
   title: "Trading permit for a small workshop",
   card: [
     "Verify the resident. The business must be registered first (its reference starts SCO-).",
+    "A returning resident: rules_lookup topic my_application gives their newest trading permit application, its decision and any fee still owed.",
     "application_submit with field business_ref; read back the fee, clear yes, then again with the confirmation_id; then payment_request and payment_confirm.",
+    "Ask before applying: the permit delivered home (field receive home: adds KES 200, paid with the fee) or collected free at Lango Square (receive collect, the default). To change it before paying, delivery_change (after a payment, an officer case).",
   ].join("\n"),
-  topics: { business_fees: fees },
+  topics: {
+    business_fees: fees,
+    my_application: myApplication("sco", "trading_permit", "trading permit application"),
+  },
   applicationSchema: {
     type: "object",
     required: ["business_ref"],
     additionalProperties: false,
-    properties: { business_ref: { type: "string", pattern: "^SCO-[A-F0-9]{8}$" } },
+    properties: {
+      business_ref: {
+        type: "string",
+        pattern: "^SCO-[A-F0-9]{8}$",
+        title: "Business",
+        "x-konza-title-sw": "Biashara",
+        "x-konza-options": "businesses",
+      },
+      // AD-04: the permit delivered home (KES 200, paid with the fee) or collected free.
+      receive: receiveField("Lango Square"),
+    },
   },
   consentScope: null,
   // The business reference is texted, never read aloud (speech layer), so the read-back names the

@@ -77,12 +77,20 @@ export const siln: Agency = {
         required: ["preferred_school_id"],
         additionalProperties: false,
         properties: {
-          preferred_school_id: { type: "string", pattern: "^[a-z0-9_]{1,40}$" },
+          preferred_school_id: {
+            type: "string",
+            pattern: "^[a-z0-9_]{1,40}$",
+            title: "Preferred school",
+            "x-konza-title-sw": "Shule unayopendelea",
+            "x-konza-options": "schools",
+          },
           // ED-02 (K3): the birth certificate and immunisation card, as Lango Square desk records. Without them the place is still decided; they are brought on day one.
           documents: {
             type: "array",
             maxItems: 2,
             items: { type: "string", pattern: "^desk(:[0-9a-f-]{36})?$" },
+            title: "Documents handed in at Lango Square",
+            "x-konza-title-sw": "Hati ulizowasilisha Lango Square",
           },
         },
       },

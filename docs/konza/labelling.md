@@ -7,7 +7,8 @@ K1 (MED-253), 5 Oct 2026; label changed by Mahs on 8 Oct 2026 for the konza-2030
 - Text, exactly: **Independent open-source project · not affiliated with any government body**
 - Where: on every page of the web app (rendered by `web/app/layout.tsx` from `web/lib/labels.ts`), on every slide, video frame and shared screenshot. The README, NOTICE and policy files end with one line: "Independent open-source project. Not affiliated with the Konza Technopolis Development Authority or any government body."
 - Swahili, where a page is in Swahili: **Mradi huru wa chanzo huria · hauhusiani na chombo chochote cha serikali** (native review in K5).
-- Every SMS and email subject carries **DEMO**. Every agent says it is an AI assistant in its first message.
+- Every email subject carries **DEMO**. SMS bodies do not, since 12 Oct 2026 (Mahs, MED-340): they name the fictional sender and keep "Fictional Konza" or "Huduma ya kubuni" where they did; the label stays on every UI surface.
+- AI disclosure: on a phone call every agent says it is an AI assistant in its first message, in the caller's language. On the web (`/sia`, since 12 Oct 2026, Mahs, MED-342) the resident speaks first, so the agent does not greet; instead the screen shows, exactly, **Savannah is an AI assistant from an independent open-source project, not affiliated with any government body.** on the new conversation page and under the composer, in Text, Voice and Live modes alike. This one line carries both the AI disclosure and the label (Mahs, 12 Oct), so the conversation views show no separate footer; the other `/sia` views (applications, settings) keep the label in the footer. `/sia` is public since 17 Oct 2026, so these lines are what a stranger sees first.
 
 ## Never
 

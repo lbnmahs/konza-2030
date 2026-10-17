@@ -3,8 +3,7 @@
 // K5 (MED-304; the K5 design notes (kept private)). Mahs reads the SCRIPT phrases from scripts/voice/phrases.json
 // in order on one call to SIA; his turns, as SIA's speech recognition heard them, are compared with
 // the phrases. Prints the rate overall and on the critical phrases (amounts, dates, resident number,
-// address, read-backs). Reads the transcript only; nothing is stored. The blind voice ranking was
-// dropped on 7 Oct (Mahs): SIA keeps Halima on eleven_v4_turbo.
+// address, read-backs). Reads the transcript only; nothing is stored.
 
 import { align, CRITICAL, wer } from "./voice/wer.ts";
 

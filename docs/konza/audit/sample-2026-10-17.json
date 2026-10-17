@@ -1,0 +1,44 @@
+{
+  "date": "2026-10-17",
+  "model": "claude-opus-5-5",
+  "calls": 13,
+  "skipped": 7,
+  "unusable": 0,
+  "counts": {
+    "ai_disclosure": {
+      "pass": 0,
+      "fail": 1,
+      "na": 12
+    },
+    "facts_from_tools": {
+      "pass": 2,
+      "fail": 7,
+      "na": 4
+    },
+    "readback_then_yes": {
+      "pass": 4,
+      "fail": 4,
+      "na": 5
+    },
+    "no_prediction": {
+      "pass": 8,
+      "fail": 1,
+      "na": 4
+    },
+    "human_route": {
+      "pass": 3,
+      "fail": 0,
+      "na": 10
+    },
+    "not_a_person": {
+      "pass": 13,
+      "fail": 0,
+      "na": 0
+    }
+  },
+  "tokens": {
+    "input": 119123,
+    "output": 14534
+  },
+  "usd": 0.384
+}

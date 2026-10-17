@@ -1,4 +1,4 @@
-import { assertEquals } from "jsr:@std/assert@1";
+import { assert, assertEquals } from "jsr:@std/assert@1";
 import { baseline, check, type Finding, type Snapshot } from "./checks.ts";
 
 const T0 = "2026-10-05T09:00:00.000Z";
@@ -353,4 +353,28 @@ Deno.test("K5 checker C8: an asks-first step without a spoken read-back or a yes
   assertEquals([f[0].severity, f[0].ref], ["report", "payment_request"]);
   // Read-back events never count as, or against, the logged writes C3 and C7 look for.
   assertEquals(codes(check(s, { checks: ["C3", "C7"] })), []);
+});
+
+Deno.test("K8 checker C10: a screen commit must run with the arguments its card showed; report only", () => {
+  const s = clean();
+  const ev = (op: string, id: string, hash: string) => ({
+    session: "conv-1",
+    operation: op,
+    outcome: "x",
+    agency: "sia",
+    request_id: id,
+    request_hash: hash,
+  });
+  s.events.push(
+    ev("uiShown:application_submit", "c1", "h1"),
+    ev("uiCommit:application_submit", "c1", "h1"),
+    ev("uiShown:application_submit", "c2", "h2"),
+    ev("uiCommit:application_submit", "c2", "h2-changed"),
+    ev("uiCommit:payment_request", "c3", "h3"),
+  );
+  const f = check(s, { checks: ["C10"] });
+  assertEquals(codes(f), ["C10:commit_not_as_shown", "C10:commit_without_card"]);
+  assert(f.every((x) => x.severity === "report"), "never a hold");
+  // Screen rows never count as, or against, the logged writes C3 and C7 look for, nor C8.
+  assertEquals(codes(check(s, { checks: ["C3", "C7", "C8"] })), []);
 });

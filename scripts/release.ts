@@ -1,7 +1,7 @@
 // deno task release <out dir> --version vX.Y.Z [--notes <file>] [--repo <git url>]
 // K7 (MED-319): builds the public release from the committed tree (git archive HEAD, so untracked
-// local files such as .env never enter it), removes what stays private and checks it. Since
-// v0.1.3 (Mahs, 9 Oct) a release is a normal commit and tag on top of the release repository's
+// local files such as .env never enter it), removes what stays private and checks it. A release
+// is a normal commit and tag on top of the release repository's
 // history, never a force-pushed orphan: <out dir> is a fresh clone of the release repository
 // with its tree replaced by the export, committed and tagged. Refuses on any failed check, an
 // existing tag or an unchanged tree. Pushing (without --force) is a separate, approved step.
@@ -21,7 +21,7 @@ if (!out || !version || !/^v\d+\.\d+\.\d+$/.test(version)) {
   Deno.exit(2);
 }
 
-/** Paths that stay private (plan-k7 MED-319, Mahs 8 Oct): internal plans, prompts, history,
+/** Paths that stay private (plan-k7 MED-319): internal plans, prompts, history,
  * the release working files, and the notes for the coding assistant. */
 export const PRIVATE = [
   "CLAUDE.md",

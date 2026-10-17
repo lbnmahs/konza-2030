@@ -53,6 +53,8 @@ export const KONZA_TOOLS = [
   "consent_withdraw",
   "address_get",
   "delivery_book",
+  // AD-07: home or collect changed before paying.
+  "delivery_change",
   // K3 (PY-01): paying with a phone code; PP-03: the biometrics appointment.
   "payment_request",
   "payment_confirm",
@@ -65,6 +67,7 @@ export const WRITE_TOOLS = [
   "review_request",
   "consent_record",
   "delivery_book",
+  "delivery_change",
   "appointment_book",
   "calendar_email",
   "payment_request",

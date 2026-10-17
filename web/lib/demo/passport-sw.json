@@ -166,7 +166,7 @@
     },
     {
       "who": "agent",
-      "text": "Kutuma ombi la malipo la DEMO la shilingi elfu kumi na mbili na hamsini kwa Savanahlands Passport Services. Utaidhinisha kwa kuniambia namba ya siri yenye tarakimu sita; usipofanya chochote, malipo yatakataliwa. Niendelee?"
+      "text": "Kutuma ombi la malipo la shilingi elfu kumi na mbili na hamsini kwa Savanahlands Passport Services. Utaidhinisha kwa kuniambia namba ya siri yenye tarakimu sita; usipofanya chochote, malipo yatakataliwa. Niendelee?"
     },
     {
       "who": "caller",
@@ -178,7 +178,7 @@
     },
     {
       "who": "system",
-      "text": "DEMO payment prompt sent; the code is never read aloud."
+      "text": "Payment prompt sent; the code is never read aloud."
     },
     {
       "who": "agent",
